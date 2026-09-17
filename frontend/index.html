@@ -27,6 +27,11 @@
                 <span class="stat-label">SCORE</span>
                 <span class="stat-val" id="hud-score">0</span>
             </div>
+            <div class="stat-item combo-item" id="hud-combo-container" style="display: none;">
+                <span class="stat-label" id="hud-combo-title" style="color: #ff00aa; font-weight: bold;">COMBO</span>
+                <span class="stat-val" id="hud-combo-val" style="color: #ff00aa; font-size: 1.15rem; font-weight: 800; text-shadow: 0 0 10px #ff00aa;">x1.0</span>
+                <div class="combo-decay-track"><div id="hud-combo-fill" class="combo-decay-fill"></div></div>
+            </div>
             <div class="stat-item">
                 <span class="stat-label">JEV DPS</span>
                 <span class="stat-val" id="jev-dps" style="color: #00ffcc;">0</span>
@@ -40,6 +45,8 @@
         <div class="header-controls">
             <button class="ctrl-btn view-btn" id="btn-view-mode" onclick="window.game.toggleRenderMode()">🎮 VIEW: 3D TRON [G]</button>
             <button class="ctrl-btn" id="btn-camera" onclick="window.game.toggleCameraView()">🎥 CAM: CHASE [V]</button>
+            <button class="ctrl-btn" id="btn-lookback" onclick="window.game.toggleLookBack()">↩ REAR: OFF [R]</button>
+            <button class="ctrl-btn" id="btn-mine" onclick="window.game.deployMine()">⚡ EMP MINE [E]</button>
             <button class="ctrl-btn" id="btn-autopilot" onclick="window.game.toggleAutoPilot()">🤖 JEV AUTOPILOT [P]</button>
             <button class="ctrl-btn" onclick="document.getElementById('config-modal').classList.add('active')">⚙ JEV CONFIG</button>
         </div>
@@ -49,6 +56,21 @@
     <div class="main-wrapper">
         <!-- Center Arena: Unbounded Dual-Mode Viewport (2D Retro / 3D Tron) -->
         <main class="arena-container" id="arena-container">
+            <!-- Command Recognizer Boss Threat Banner & Health Bar -->
+            <div id="boss-hud-container" class="boss-hud-container" style="display: none;">
+                <div class="boss-hud-header">
+                    <span class="boss-hud-warning-pulse">⚠ SECTOR THREAT ⚠</span>
+                    <span id="boss-hud-name" class="boss-hud-name">COMMAND RECOGNIZER // CORE MK-VIII</span>
+                    <span id="boss-hud-phase" class="boss-hud-phase">PHASE 1: DUAL BEAM</span>
+                </div>
+                <div class="boss-meter-frame">
+                    <div id="boss-meter-fill" class="boss-meter-fill" style="width: 100%;"></div>
+                    <div class="boss-phase-divider" style="left: 66.6%;"></div>
+                    <div class="boss-phase-divider" style="left: 33.3%;"></div>
+                </div>
+                <div class="boss-hud-status" id="boss-hud-status">CORE INTEGRITY: 100% | CARRIER ESCORTS: READY</div>
+            </div>
+
             <!-- Player Status HUD -->
             <div class="arena-hud">
                 <div class="bar-row">
@@ -78,6 +100,46 @@
                         <span class="dash-dot charged"></span>
                     </div>
                 </div>
+                <div class="bar-row" style="margin-top: 3px;">
+                    <span class="bar-tag">EMP [E]</span>
+                    <div class="meter-frame" style="height: 6px;">
+                        <div id="hud-mine-bar" class="meter-fill" style="width: 100%; background: #00ffcc;"></div>
+                    </div>
+                    <span id="hud-mine-val" style="color:#00ffcc; font-size:0.65rem; font-weight:bold; margin-left:4px;">RDY</span>
+                </div>
+                <div class="bar-row" style="margin-top: 3px;">
+                    <span class="bar-tag">DISC [Q]</span>
+                    <div class="meter-frame" style="height: 6px;">
+                        <div id="hud-disc-bar" class="meter-fill" style="width: 100%; background: #ffaa00;"></div>
+                    </div>
+                    <span id="hud-disc-val" style="color:#ffaa00; font-size:0.65rem; font-weight:bold; margin-left:4px;">RDY</span>
+                </div>
+                <div id="hud-powerup-row" class="bar-row" style="margin-top: 3px; display: none;">
+                    <span class="bar-tag" style="color: #ff00ff;">BOOST</span>
+                    <span id="hud-powerup-val" style="color:#ffff00; font-size:0.7rem; font-weight:bold; letter-spacing:1px;">TRI-PLASMA: 14s</span>
+                </div>
+            </div>
+
+            <!-- Holographic Tron Rearview Mirror & Rear Threat Monitor -->
+            <div id="rearview-mirror-container" class="rearview-container" onclick="window.game && window.game.toggleLookBack()" title="Click or press [R] to toggle Look-Back Camera">
+                <div class="rearview-header">
+                    <span class="rearview-title">REAR THREAT CAM</span>
+                    <span class="rearview-badge" id="rearview-mode-tag">[R] PIVOT</span>
+                </div>
+                <canvas id="rearview-canvas" width="180" height="85"></canvas>
+                <div class="rearview-status" id="rearview-status-tag">6 O'CLOCK: CLEAR</div>
+            </div>
+
+            <!-- Rear Threat Directional Proximity Warning Banner -->
+            <div id="rear-threat-warning" class="rear-threat-banner">
+                <span class="threat-chevron">▼▼</span>
+                <span id="rear-threat-text">WARNING: ENEMY AT 6 O'CLOCK (45m)</span>
+                <span class="threat-chevron">▼▼</span>
+            </div>
+
+            <!-- On-Screen Look-Back Active Banner -->
+            <div id="lookback-banner" class="lookback-banner">
+                ‹‹‹ REAR VIEW ACTIVE [R] ›››
             </div>
 
             <!-- Holographic Tron Radar -->
@@ -124,9 +186,12 @@
             <div class="arena-footer">
                 <span><span class="key-badge">WASD</span> MOVE</span>
                 <span><span class="key-badge">MOUSE</span> AIM & SHOOT</span>
-                <span><span class="key-badge">SPACE</span> BLINK</span>
-                <span><span class="key-badge">G</span> TOGGLE 2D/3D</span>
+                <span><span class="key-badge">SPACE</span> BLINK (HOP)</span>
+                <span><span class="key-badge">Q / M-CLICK</span> DISC</span>
+                <span><span class="key-badge">E / R-CLICK</span> EMP MINE</span>
+                <span><span class="key-badge">R</span> LOOK BACK</span>
                 <span><span class="key-badge">V</span> 3D CAM</span>
+                <span><span class="key-badge">G</span> 2D/3D</span>
                 <span><span class="key-badge">P</span> AUTOPILOT</span>
                 <span><span class="key-badge">M</span> MUSIC</span>
                 <span><span class="key-badge">N</span> SFX</span>

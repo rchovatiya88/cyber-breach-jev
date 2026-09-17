@@ -522,18 +522,161 @@ header {
     z-index: 5;
 }
 
+/* Holographic Tron Rearview Mirror & Rear Threat Monitor */
+.rearview-container {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 184px;
+    background: radial-gradient(circle, rgba(4, 14, 30, 0.92) 0%, rgba(2, 8, 18, 0.96) 100%);
+    border: 1.5px solid rgba(0, 255, 204, 0.4);
+    border-radius: 6px;
+    box-shadow: 0 4px 20px rgba(0, 255, 204, 0.2), inset 0 0 12px rgba(0, 255, 204, 0.1);
+    z-index: 6;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(6px);
+}
+
+.rearview-container:hover {
+    border-color: #00ffcc;
+    box-shadow: 0 0 22px rgba(0, 255, 204, 0.5), inset 0 0 16px rgba(0, 255, 204, 0.2);
+    transform: translateX(-50%) scale(1.03);
+}
+
+.rearview-container.threat-alert {
+    border-color: #ff0055;
+    box-shadow: 0 0 24px rgba(255, 0, 85, 0.7), inset 0 0 16px rgba(255, 0, 85, 0.35);
+    animation: threat-pulse 0.8s infinite alternate;
+}
+
+.rearview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 8px;
+    background: rgba(0, 255, 204, 0.08);
+    border-bottom: 1px solid rgba(0, 255, 204, 0.25);
+    font-size: 0.62rem;
+    letter-spacing: 1px;
+}
+
+.rearview-title {
+    color: #00ffcc;
+    font-weight: bold;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.rearview-badge {
+    color: var(--accent-amber);
+    font-size: 0.58rem;
+    background: rgba(255, 170, 0, 0.15);
+    padding: 1px 4px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 170, 0, 0.3);
+}
+
+#rearview-canvas {
+    display: block;
+    width: 100%;
+    height: 85px;
+    background: #02060e;
+}
+
+.rearview-status {
+    text-align: center;
+    font-size: 0.62rem;
+    padding: 2px 4px;
+    color: #7f99b2;
+    letter-spacing: 1px;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid rgba(0, 255, 204, 0.15);
+}
+
+/* Directional Rear Threat Warning Banner */
+.rear-threat-banner {
+    position: absolute;
+    top: 144px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 6px 18px;
+    border-radius: 4px;
+    background: rgba(255, 0, 85, 0.28);
+    border: 1.5px solid #ff0055;
+    color: #fff;
+    box-shadow: 0 0 25px rgba(255, 0, 85, 0.8), inset 0 0 15px rgba(255, 0, 85, 0.3);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    width: max-content;
+    z-index: 6;
+    pointer-events: none;
+    animation: threat-pulse 0.7s infinite alternate;
+}
+
+.threat-chevron {
+    color: #ff0055;
+    font-size: 1rem;
+    text-shadow: 0 0 10px #ff0055;
+}
+
+@keyframes threat-pulse {
+    from {
+        opacity: 0.82;
+        transform: translateX(-50%) scale(1.0);
+    }
+    to {
+        opacity: 1.0;
+        transform: translateX(-50%) scale(1.04);
+    }
+}
+
+/* On-Screen Look-Back Active Banner */
+.lookback-banner {
+    position: absolute;
+    top: 184px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    padding: 4px 16px;
+    border-radius: 4px;
+    background: rgba(0, 255, 204, 0.18);
+    border: 1px solid #00ffcc;
+    color: #00ffcc;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.72rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    width: max-content;
+    z-index: 6;
+    pointer-events: none;
+    text-shadow: 0 0 10px #00ffcc;
+}
+
 /* Bottom Arena Controls Bar */
 .arena-footer {
     position: absolute;
-    bottom: 10px;
+    bottom: 8px;
     left: 0;
     width: 100%;
     display: flex;
-    gap: 14px;
+    gap: 12px;
     align-items: center;
     justify-content: center;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     color: var(--text-dim);
+    background: linear-gradient(to top, rgba(2, 6, 14, 0.85) 0%, rgba(2, 6, 14, 0.0) 100%);
+    padding: 6px 12px;
     z-index: 5;
     pointer-events: none;
     text-shadow: 0 1px 4px #000;
@@ -897,3 +1040,134 @@ header {
     color: #fff;
     border-color: #fff;
 }
+
+/* ========================================================================= */
+/* PHASE 4: COMMAND RECOGNIZER BOSS HUD & DEREZ STYLE COMBO BADGE            */
+/* ========================================================================= */
+
+.boss-hud-container {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 480px;
+    max-width: 90vw;
+    background: radial-gradient(circle, rgba(20, 2, 12, 0.95) 0%, rgba(8, 1, 6, 0.98) 100%);
+    border: 1.5px solid #ff0055;
+    border-radius: 6px;
+    box-shadow: 0 0 25px rgba(255, 0, 85, 0.4), inset 0 0 15px rgba(255, 0, 85, 0.2);
+    padding: 8px 14px;
+    z-index: 10;
+    pointer-events: none;
+    animation: boss-banner-pulse 2s infinite ease-in-out;
+}
+
+@keyframes boss-banner-pulse {
+    0% { box-shadow: 0 0 20px rgba(255, 0, 85, 0.35); }
+    50% { box-shadow: 0 0 35px rgba(255, 0, 85, 0.7); }
+    100% { box-shadow: 0 0 20px rgba(255, 0, 85, 0.35); }
+}
+
+.boss-hud-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    margin-bottom: 5px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.boss-hud-warning-pulse {
+    color: #ffaa00;
+    font-weight: bold;
+    font-size: 0.65rem;
+    animation: blink-warning 0.8s infinite alternate;
+}
+
+@keyframes blink-warning {
+    0% { opacity: 0.4; }
+    100% { opacity: 1.0; }
+}
+
+.boss-hud-name {
+    color: #ff0055;
+    font-weight: 800;
+    text-shadow: 0 0 8px #ff0055;
+}
+
+.boss-hud-phase {
+    color: #00ffff;
+    font-size: 0.65rem;
+    font-weight: bold;
+    background: rgba(0, 255, 255, 0.15);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 255, 255, 0.4);
+}
+
+.boss-meter-frame {
+    position: relative;
+    width: 100%;
+    height: 12px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 0, 85, 0.5);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.boss-meter-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff00aa 0%, #ff0055 50%, #ff3300 100%);
+    box-shadow: 0 0 12px rgba(255, 0, 85, 0.8);
+    transition: width 0.15s ease-out;
+}
+
+.boss-phase-divider {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 0 4px #ffffff;
+    z-index: 2;
+}
+
+.boss-hud-status {
+    text-align: center;
+    font-size: 0.62rem;
+    color: #ff99bb;
+    letter-spacing: 1px;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+/* Style Combo Streak Badge */
+.combo-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 90px;
+    background: rgba(255, 0, 170, 0.12);
+    border: 1px solid rgba(255, 0, 170, 0.4);
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+
+.combo-decay-track {
+    width: 100%;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 2px;
+}
+
+.combo-decay-fill {
+    height: 100%;
+    width: 100%;
+    background: #ff00aa;
+    box-shadow: 0 0 6px #ff00aa;
+    transition: width 0.1s linear;
+}
+
