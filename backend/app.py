@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from typing import Dict, Any, Optional
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response
@@ -45,6 +45,17 @@ class ConfigPayload(BaseModel):
     model: Optional[str] = None
 
 
+def extract_state(data: Any) -> Dict[str, Any]:
+    if isinstance(data, dict):
+        if "state" in data and isinstance(data["state"], dict):
+            return data["state"]
+        return data
+    if hasattr(data, "state") and isinstance(data.state, dict):
+        return data.state
+    return {}
+
+
+@app.get("/health")
 @app.get("/api/health")
 async def health_check():
     status = jev_service.get_status()
@@ -72,27 +83,30 @@ async def update_config(payload: ConfigPayload):
 
 
 @app.post("/api/ai/enemy")
-async def api_enemy_ai(payload: StatePayload):
+@app.post("/api/tactics")
+async def api_enemy_ai(payload: Dict[str, Any] = Body(...)):
     try:
-        decision = decide_enemy_tactics(payload.state)
+        decision = decide_enemy_tactics(extract_state(payload))
         return decision
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/ai/director")
-async def api_director_ai(payload: StatePayload):
+@app.post("/api/director")
+async def api_director_ai(payload: Dict[str, Any] = Body(...)):
     try:
-        decision = decide_director_event(payload.state)
+        decision = decide_director_event(extract_state(payload))
         return decision
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/ai/bot")
-async def api_bot_ai(payload: StatePayload):
+@app.post("/api/autopilot")
+async def api_bot_ai(payload: Dict[str, Any] = Body(...)):
     try:
-        decision = decide_bot_actions(payload.state)
+        decision = decide_bot_actions(extract_state(payload))
         return decision
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -15,7 +15,7 @@
         <div class="logo-area">
             <span class="logo-title">CYBER-BREACH</span>
             <span class="logo-tag">JEV PROTOCOL</span>
-            <span class="logo-3d-badge">3D TRON INFINITE</span>
+            <span class="logo-3d-badge" id="hud-mode-badge">3D TRON INFINITE</span>
         </div>
 
         <div class="header-stats">
@@ -38,6 +38,7 @@
         </div>
 
         <div class="header-controls">
+            <button class="ctrl-btn view-btn" id="btn-view-mode" onclick="window.game.toggleRenderMode()">🎮 VIEW: 3D TRON [G]</button>
             <button class="ctrl-btn" id="btn-camera" onclick="window.game.toggleCameraView()">🎥 CAM: 3D CHASE [V]</button>
             <button class="ctrl-btn" id="btn-autopilot" onclick="window.game.toggleAutoPilot()">🤖 JEV AUTOPILOT [P]</button>
             <button class="ctrl-btn" onclick="document.getElementById('config-modal').classList.add('active')">⚙ JEV CONFIG</button>
@@ -46,7 +47,7 @@
 
     <!-- Main Game Wrapper -->
     <div class="main-wrapper">
-        <!-- Center Arena: Unbounded 3D Tron Canvas -->
+        <!-- Center Arena: Unbounded Dual-Mode Viewport (2D Retro / 3D Tron) -->
         <main class="arena-container" id="arena-container">
             <!-- Player Status HUD -->
             <div class="arena-hud">
@@ -91,19 +92,29 @@
                 GRID: X: 0 | Z: 0 | BOUNDS: ∞ INFINITE
             </div>
 
-            <!-- 3D Three.js WebGL Canvas Viewport -->
-            <canvas id="game-canvas"></canvas>
+            <!-- Cockpit Tron Canopy Overlay -->
+            <div id="cockpit-overlay">
+                <div class="cockpit-bracket-left"></div>
+                <div class="cockpit-bracket-right"></div>
+                <div class="cockpit-horizon-bar"></div>
+                <div class="cockpit-reticle"></div>
+            </div>
+
+            <!-- Dual Viewport Canvases -->
+            <canvas id="game-canvas-2d"></canvas>
+            <canvas id="game-canvas-3d"></canvas>
 
             <!-- Footer Controls Bar -->
             <div class="arena-footer">
-                <span><span class="key-badge">WASD</span> MOVE INFINITE</span>
-                <span><span class="key-badge">MOUSE</span> 3D AIM & SHOOT</span>
-                <span><span class="key-badge">SPACE</span> QUANTUM BLINK</span>
-                <span><span class="key-badge">V</span> CAM VIEW</span>
-                <span><span class="key-badge">P</span> JEV DOOM BOT AUTOPILOT</span>
+                <span><span class="key-badge">WASD</span> MOVE</span>
+                <span><span class="key-badge">MOUSE</span> AIM & SHOOT</span>
+                <span><span class="key-badge">SPACE</span> BLINK</span>
+                <span><span class="key-badge">G</span> TOGGLE 2D/3D</span>
+                <span><span class="key-badge">V</span> 3D CAM</span>
+                <span><span class="key-badge">P</span> AUTOPILOT</span>
                 <span><span class="key-badge">M</span> MUSIC</span>
                 <span><span class="key-badge">N</span> SFX</span>
-                <span><span class="key-badge">C</span> CRT SCANLINES</span>
+                <span><span class="key-badge">C</span> CRT</span>
             </div>
         </main>
 
@@ -232,11 +243,11 @@
     </script>
 
     <!-- Three.js (Vendor local + CDN fallback) -->
-    <script src="/static/vendor/three.min.js?v=tron3d_v2"></script>
+    <script src="/static/vendor/three.min.js?v=tron_v3"></script>
 
     <!-- Game Scripts -->
-    <script src="/static/audio.js?v=tron3d_v2"></script>
-    <script src="/static/jev_hud.js?v=tron3d_v2"></script>
-    <script src="/static/game.js?v=tron3d_v2"></script>
+    <script src="/static/audio.js?v=tron_v3"></script>
+    <script src="/static/jev_hud.js?v=tron_v3"></script>
+    <script src="/static/game.js?v=tron_v3"></script>
 </body>
 </html>
