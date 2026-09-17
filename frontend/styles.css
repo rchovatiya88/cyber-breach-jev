@@ -1,17 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
 :root {
-    --bg-dark: #070b14;
-    --bg-panel: rgba(13, 20, 36, 0.85);
+    --bg-dark: #050811;
+    --bg-panel: rgba(8, 14, 26, 0.88);
     --border-neon: #00ffcc;
     --border-dim: rgba(0, 255, 204, 0.25);
     --text-neon: #00ffcc;
     --text-dim: #7f99b2;
-    --accent-pink: #ff0077;
+    --accent-pink: #ff0055;
     --accent-amber: #ffaa00;
-    --accent-blue: #0099ff;
-    --glow-cyan: 0 0 12px rgba(0, 255, 204, 0.45);
-    --glow-pink: 0 0 14px rgba(255, 0, 119, 0.55);
+    --accent-blue: #00a2ff;
+    --glow-cyan: 0 0 14px rgba(0, 255, 204, 0.55);
+    --glow-pink: 0 0 16px rgba(255, 0, 85, 0.65);
+    --glow-tron-orange: 0 0 14px rgba(255, 136, 0, 0.6);
 }
 
 * {
@@ -39,7 +40,7 @@ body {
     height: 100%;
     pointer-events: none;
     z-index: 999;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
     background-size: 100% 3px, 6px 100%;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -52,19 +53,20 @@ body {
 /* Header */
 header {
     height: 52px;
-    background: rgba(10, 15, 28, 0.95);
+    background: rgba(6, 10, 20, 0.95);
     border-bottom: 1px solid var(--border-dim);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
     z-index: 10;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.6);
 }
 
 .logo-area {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .logo-title {
@@ -77,13 +79,24 @@ header {
 }
 
 .logo-tag {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--accent-amber);
     background: rgba(255, 170, 0, 0.12);
-    border: 1px solid rgba(255, 170, 0, 0.35);
+    border: 1px solid rgba(255, 170, 0, 0.4);
     padding: 2px 7px;
     border-radius: 4px;
     letter-spacing: 1px;
+}
+
+.logo-3d-badge {
+    font-size: 0.68rem;
+    color: #ff00ff;
+    background: rgba(255, 0, 255, 0.12);
+    border: 1px solid rgba(255, 0, 255, 0.4);
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    font-weight: bold;
 }
 
 .header-stats {
@@ -146,40 +159,42 @@ header {
     display: flex;
     flex: 1;
     overflow: hidden;
+    position: relative;
 }
 
-/* Left Arena Container */
+/* Left Arena Container - Full edge-to-edge infinite viewport */
 .arena-container {
     flex: 1;
     position: relative;
+    overflow: hidden;
+    background: #020409;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-    background: radial-gradient(circle at center, #0e1526 0%, #060913 100%);
 }
 
 #game-canvas {
-    border: 1px solid var(--border-dim);
-    border-radius: 6px;
-    box-shadow: 0 0 24px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0, 255, 204, 0.05);
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+    cursor: crosshair;
 }
 
 /* Player HUD Overlay on Arena */
 .arena-hud {
     position: absolute;
-    top: 20px;
-    left: 25px;
+    top: 16px;
+    left: 18px;
     display: flex;
     flex-direction: column;
-    gap: 7px;
-    background: rgba(6, 10, 18, 0.7);
-    backdrop-filter: blur(4px);
+    gap: 6px;
+    background: rgba(5, 10, 20, 0.78);
+    backdrop-filter: blur(8px);
     border: 1px solid var(--border-dim);
     padding: 10px 14px;
     border-radius: 6px;
     pointer-events: none;
+    z-index: 5;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
 }
 
 .bar-row {
@@ -196,7 +211,7 @@ header {
 }
 
 .meter-frame {
-    width: 130px;
+    width: 140px;
     height: 9px;
     background: rgba(255, 255, 255, 0.08);
     border-radius: 3px;
@@ -231,40 +246,115 @@ header {
     box-shadow: 0 0 8px #00ffff;
 }
 
+/* Holographic Tron Radar */
+.radar-container {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 40, 40, 0.65) 0%, rgba(2, 8, 16, 0.85) 100%);
+    border: 1.5px solid var(--border-neon);
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.3), inset 0 0 15px rgba(0, 255, 204, 0.15);
+    pointer-events: none;
+    z-index: 5;
+    overflow: hidden;
+}
+
+#radar-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.radar-sweep {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, rgba(0, 255, 204, 0.3) 0deg, rgba(0, 255, 204, 0) 60deg);
+    animation: radar-spin 2.5s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes radar-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.radar-label {
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--text-neon);
+    letter-spacing: 1px;
+}
+
+/* Coordinates overlay */
+.coord-display {
+    position: absolute;
+    bottom: 45px;
+    left: 18px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    background: rgba(5, 10, 20, 0.65);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 255, 204, 0.15);
+    pointer-events: none;
+    z-index: 5;
+}
+
 /* Bottom Arena Controls Bar */
 .arena-footer {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
     display: flex;
-    gap: 16px;
+    gap: 14px;
     align-items: center;
     justify-content: center;
-    padding-top: 8px;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: var(--text-dim);
+    z-index: 5;
+    pointer-events: none;
+    text-shadow: 0 1px 4px #000;
 }
 
 .key-badge {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.14);
     color: #fff;
     padding: 2px 6px;
     border-radius: 3px;
     font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Right Sidebar: JEV Decision Matrix */
 .sidebar-panel {
-    width: 380px;
+    width: 370px;
+    min-width: 370px;
     background: var(--bg-panel);
     border-left: 1px solid var(--border-dim);
     display: flex;
     flex-direction: column;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(12px);
     overflow-y: auto;
+    z-index: 10;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
 }
 
 .panel-header {
     padding: 14px 16px;
     border-bottom: 1px solid var(--border-dim);
-    background: rgba(10, 16, 30, 0.6);
+    background: rgba(10, 16, 30, 0.7);
 }
 
 .panel-title {
@@ -308,7 +398,7 @@ header {
 
 /* Telemetry Widgets */
 .telemetry-section {
-    padding: 14px 16px;
+    padding: 13px 16px;
     border-bottom: 1px solid rgba(0, 255, 204, 0.1);
 }
 
@@ -327,7 +417,7 @@ header {
 
 /* Choice Box */
 .choice-box {
-    background: rgba(6, 10, 18, 0.6);
+    background: rgba(6, 10, 18, 0.65);
     border: 1px solid rgba(0, 255, 204, 0.15);
     border-radius: 5px;
     padding: 10px;
@@ -404,7 +494,7 @@ header {
 
 /* Score Box */
 .score-box {
-    background: rgba(6, 10, 18, 0.6);
+    background: rgba(6, 10, 18, 0.65);
     border: 1px solid rgba(0, 255, 204, 0.15);
     border-radius: 5px;
     padding: 10px;
@@ -428,7 +518,7 @@ header {
 }
 
 .score-step.active {
-    background: rgba(255, 0, 119, 0.25);
+    background: rgba(255, 0, 85, 0.25);
     border-color: var(--accent-pink);
     color: #fff;
     font-weight: bold;
@@ -437,7 +527,7 @@ header {
 
 /* Noul Box */
 .noul-box {
-    background: rgba(6, 10, 18, 0.6);
+    background: rgba(6, 10, 18, 0.65);
     border: 1px solid rgba(0, 255, 204, 0.15);
     border-radius: 5px;
     padding: 10px;
@@ -493,7 +583,7 @@ header {
     padding: 8px;
     border-radius: 4px;
     color: #94a3b8;
-    max-height: 90px;
+    max-height: 85px;
     overflow-y: auto;
     font-family: monospace;
 }
@@ -518,8 +608,8 @@ header {
 
 .modal-card {
     background: #0b111e;
-    border: 1px solid var(--border-neon);
-    box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
+    border: 1.5px solid var(--border-neon);
+    box-shadow: 0 0 35px rgba(0, 255, 204, 0.35);
     border-radius: 8px;
     padding: 24px 30px;
     max-width: 440px;

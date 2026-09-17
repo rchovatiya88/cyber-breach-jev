@@ -1,6 +1,16 @@
-# Cyber-Breach: The Jev Protocol
+# Cyber-Breach: The Jev Protocol (3D Tron Infinite)
 
-An arcade cyberpunk tactical arena shooter built to demonstrate **Jev**—the sub-100ms "System One" decision model developed by **TypeSafe AI** (released September 2026).
+An infinite 3D arcade cyberpunk arena shooter built with **Three.js** and powered by **Jev**—the sub-100ms "System One" decision model developed by **TypeSafe AI** (released September 2026).
+
+---
+
+## 🌐 3D Infinite Tron Features
+
+- **Boundless Infinite Movement**: The operative is no longer confined to a box. Move limitlessly across a seamless scrolling 3D Tron grid in all directions with dynamic tracking camera.
+- **3D Tron Aesthetic**: Classic wireframe visuals, glowing neon cyan/magenta/amber palette, 3D Tron interceptor craft with **persistent luminous light-ribbon trails**, and iconic **3D Tron Recognizers**.
+- **Dynamic 3D Camera**: Press `V` to toggle between **3D Chase Cam** (with smooth banking and pitching) and **Tactical Isometric Cam**.
+- **Holographic Grid Radar**: Circular 3D radar in the upper right scans 360° for incoming hostile units, Recognizers, and supply drops across the infinite plane.
+- **Voxel De-Rezzing Explosions**: Shattering 3D wireframe particles when cybernetic entities are eliminated.
 
 ---
 
@@ -69,14 +79,15 @@ The game features three distinct systems powered by Jev:
 
 | Key | Action |
 | :--- | :--- |
-| `W, A, S, D` / Arrows | Move Operative Ship |
-| `Mouse Aim + Left Click` | Aim and Fire Plasma Blasters |
-| `Space` | Quantum Blink / Dash (leaves particles + i-frames) |
+| `W, A, S, D` / Arrows | Move Operative Craft across Infinite Grid |
+| `Mouse Aim + Left Click` | 3D Aim and Fire Plasma Blasters |
+| `Space` | Quantum Blink / Dash (invulnerability frames & after-images) |
+| `V` | **Toggle 3D Camera (Chase Cam / Tactical Isometric)** |
 | `P` | **Toggle JEV Autopilot (Doom Bot Mode)** |
 | `M` | Toggle Synthwave Music |
 | `N` | Toggle Procedural Sound Effects |
 | `C` | Toggle Retro CRT Scanlines |
-| `Enter` / `Space` | Restart upon System Critical |
+| `Enter` / `Space` | Restart / Rematerialize upon De-Rezzing |
 
 ---
 

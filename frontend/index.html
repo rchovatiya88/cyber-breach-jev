@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CYBER-BREACH: THE JEV PROTOCOL</title>
+    <title>CYBER-BREACH: 3D TRON PROTOCOL (JEV POWERED)</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -15,6 +15,7 @@
         <div class="logo-area">
             <span class="logo-title">CYBER-BREACH</span>
             <span class="logo-tag">JEV PROTOCOL</span>
+            <span class="logo-3d-badge">3D TRON INFINITE</span>
         </div>
 
         <div class="header-stats">
@@ -37,6 +38,7 @@
         </div>
 
         <div class="header-controls">
+            <button class="ctrl-btn" id="btn-camera" onclick="window.game.toggleCameraView()">🎥 CAM: 3D CHASE [V]</button>
             <button class="ctrl-btn" id="btn-autopilot" onclick="window.game.toggleAutoPilot()">🤖 JEV AUTOPILOT [P]</button>
             <button class="ctrl-btn" onclick="document.getElementById('config-modal').classList.add('active')">⚙ JEV CONFIG</button>
         </div>
@@ -44,8 +46,8 @@
 
     <!-- Main Game Wrapper -->
     <div class="main-wrapper">
-        <!-- Center Arena -->
-        <main class="arena-container">
+        <!-- Center Arena: Unbounded 3D Tron Canvas -->
+        <main class="arena-container" id="arena-container">
             <!-- Player Status HUD -->
             <div class="arena-hud">
                 <div class="bar-row">
@@ -77,14 +79,27 @@
                 </div>
             </div>
 
-            <!-- Canvas Game Viewport -->
-            <canvas id="game-canvas" width="860" height="640"></canvas>
+            <!-- Holographic Tron Radar -->
+            <div class="radar-container">
+                <canvas id="radar-canvas" width="140" height="140"></canvas>
+                <div class="radar-sweep"></div>
+                <div class="radar-label">GRID RADAR (1500m)</div>
+            </div>
+
+            <!-- Infinite Grid Coordinate Display -->
+            <div class="coord-display" id="coord-display">
+                GRID: X: 0 | Z: 0 | BOUNDS: ∞ INFINITE
+            </div>
+
+            <!-- 3D Three.js WebGL Canvas Viewport -->
+            <canvas id="game-canvas"></canvas>
 
             <!-- Footer Controls Bar -->
             <div class="arena-footer">
-                <span><span class="key-badge">WASD</span> MOVE</span>
-                <span><span class="key-badge">MOUSE</span> AIM & SHOOT</span>
+                <span><span class="key-badge">WASD</span> MOVE INFINITE</span>
+                <span><span class="key-badge">MOUSE</span> 3D AIM & SHOOT</span>
                 <span><span class="key-badge">SPACE</span> QUANTUM BLINK</span>
+                <span><span class="key-badge">V</span> CAM VIEW</span>
                 <span><span class="key-badge">P</span> JEV DOOM BOT AUTOPILOT</span>
                 <span><span class="key-badge">M</span> MUSIC</span>
                 <span><span class="key-badge">N</span> SFX</span>
@@ -170,13 +185,13 @@
     <!-- Game Over Modal -->
     <div id="game-over-modal" class="modal-overlay">
         <div class="modal-card">
-            <h2 class="modal-title" style="color: #ff0055;">SYSTEM CRITICAL</h2>
+            <h2 class="modal-title" style="color: #ff0055;">SYSTEM DE-REZZED</h2>
             <p class="modal-desc">
-                Operative defeated by Jev synthetic forces.<br>
+                Operative purged on the infinite digital grid.<br>
                 Final Wave: <strong id="final-wave" style="color:#00ffcc;">1</strong> | Score: <strong id="final-score" style="color:#ffaa00;">0</strong>
             </p>
             <div class="modal-actions">
-                <button class="btn-primary" onclick="window.game.restartGame()">REINITIALIZE [ENTER]</button>
+                <button class="btn-primary" onclick="window.game.restartGame()">REMATERIALIZE [ENTER]</button>
             </div>
         </div>
     </div>
@@ -213,6 +228,14 @@
             } catch (e) {
                 alert("Error connecting to server to update API key: " + e.message);
             }
+        }
+    </script>
+
+    <!-- Three.js (Vendor local + CDN fallback) -->
+    <script src="/static/vendor/three.min.js"></script>
+    <script>
+        if (typeof THREE === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
         }
     </script>
 
