@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER-BREACH: THE JEV PROTOCOL</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- CRT Filter Scanline Overlay -->
+    <div id="crt-overlay"></div>
+
+    <!-- Top Navigation Header -->
+    <header>
+        <div class="logo-area">
+            <span class="logo-title">CYBER-BREACH</span>
+            <span class="logo-tag">JEV PROTOCOL</span>
+        </div>
+
+        <div class="header-stats">
+            <div class="stat-item">
+                <span class="stat-label">WAVE</span>
+                <span class="stat-val" id="hud-wave">1</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">SCORE</span>
+                <span class="stat-val" id="hud-score">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">JEV DPS</span>
+                <span class="stat-val" id="jev-dps" style="color: #00ffcc;">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">LATENCY</span>
+                <span class="stat-val" id="jev-latency" style="color: #ffaa00; font-size: 0.9rem;">--</span>
+            </div>
+        </div>
+
+        <div class="header-controls">
+            <button class="ctrl-btn" id="btn-autopilot" onclick="window.game.toggleAutoPilot()">🤖 JEV AUTOPILOT [P]</button>
+            <button class="ctrl-btn" onclick="document.getElementById('config-modal').classList.add('active')">⚙ JEV CONFIG</button>
+        </div>
+    </header>
+
+    <!-- Main Game Wrapper -->
+    <div class="main-wrapper">
+        <!-- Center Arena -->
+        <main class="arena-container">
+            <!-- Player Status HUD -->
+            <div class="arena-hud">
+                <div class="bar-row">
+                    <span class="bar-tag">HP</span>
+                    <div class="meter-frame">
+                        <div id="hud-hp-bar" class="meter-fill" style="width: 100%;"></div>
+                    </div>
+                    <span id="hud-hp-val" style="color:#00ff88; font-weight:bold;">100</span>
+                </div>
+                <div class="bar-row">
+                    <span class="bar-tag">SHIELD</span>
+                    <div class="meter-frame">
+                        <div id="hud-shield-bar" class="meter-fill" style="width: 100%;"></div>
+                    </div>
+                    <span id="hud-shield-val" style="color:#00a2ff; font-weight:bold;">100</span>
+                </div>
+                <div class="bar-row">
+                    <span class="bar-tag">HEAT</span>
+                    <div class="meter-frame">
+                        <div id="hud-heat-bar" class="meter-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <div class="bar-row" style="margin-top: 2px;">
+                    <span class="bar-tag">BLINK</span>
+                    <div class="dash-dots" id="hud-dash-dots">
+                        <span class="dash-dot charged"></span>
+                        <span class="dash-dot charged"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Game Viewport -->
+            <canvas id="game-canvas" width="860" height="640"></canvas>
+
+            <!-- Footer Controls Bar -->
+            <div class="arena-footer">
+                <span><span class="key-badge">WASD</span> MOVE</span>
+                <span><span class="key-badge">MOUSE</span> AIM & SHOOT</span>
+                <span><span class="key-badge">SPACE</span> QUANTUM BLINK</span>
+                <span><span class="key-badge">P</span> JEV DOOM BOT AUTOPILOT</span>
+                <span><span class="key-badge">M</span> MUSIC</span>
+                <span><span class="key-badge">N</span> SFX</span>
+                <span><span class="key-badge">C</span> CRT SCANLINES</span>
+            </div>
+        </main>
+
+        <!-- Right Sidebar: Live Jev System One Telemetry -->
+        <aside class="sidebar-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span>JEV TELEMETRY MATRIX</span>
+                    <span id="jev-status-badge" class="status-badge simulated">● CALIBRATED PROTOCOL</span>
+                </div>
+                <div class="panel-meta">
+                    <span>Model: <strong id="jev-model-name" style="color:#00ffcc;">jev-latest</strong></span>
+                    <span>Decisions: <strong id="jev-total-decisions" style="color:#fff;">0</strong></span>
+                </div>
+            </div>
+
+            <!-- Choice Telemetry -->
+            <section class="telemetry-section">
+                <div class="section-label">
+                    <span id="jev-choice-title">CHOICE (TACTICAL):</span>
+                    <span class="metric-highlight">SCHEMATIC TYPE</span>
+                </div>
+                <div class="choice-box">
+                    <div class="winner-row" id="jev-choice-winner">
+                        <span class="badge-choice">AWAITING DECISION</span>
+                        <span class="conf-pct">--</span>
+                    </div>
+                    <div class="prob-bars" id="jev-choice-bars">
+                        <!-- Probability distribution populated dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Score Telemetry -->
+            <section class="telemetry-section">
+                <div class="section-label">
+                    <span id="jev-score-title">SCORE (THREAT / TENSION):</span>
+                    <span id="jev-score-val" class="metric-highlight">--</span>
+                </div>
+                <div class="score-box">
+                    <div class="score-steps" id="jev-score-steps">
+                        <!-- Rubric levels populated dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Noul Telemetry -->
+            <section class="telemetry-section">
+                <div class="section-label">
+                    <span id="jev-noul-title">NOUL (CALIBRATED BOOLEAN):</span>
+                    <span id="jev-noul-val" class="metric-highlight">--</span>
+                </div>
+                <div class="noul-box">
+                    <div class="noul-gauge">
+                        <div id="jev-noul-meter-fill" class="noul-fill" style="width: 50%;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Decision History Stream -->
+            <section class="telemetry-section" style="flex: 1;">
+                <div class="section-label">
+                    <span>ROLLING DECISION STREAM</span>
+                    <span class="metric-highlight">REAL-TIME</span>
+                </div>
+                <div class="history-list" id="jev-history-list"></div>
+            </section>
+
+            <!-- Input State JSON Drawer -->
+            <section class="telemetry-section" style="border-bottom: none;">
+                <div class="section-label">
+                    <span>STATE PAYLOAD (INPUT)</span>
+                </div>
+                <pre class="json-preview" id="jev-state-json">{}</pre>
+            </section>
+        </aside>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h2 class="modal-title" style="color: #ff0055;">SYSTEM CRITICAL</h2>
+            <p class="modal-desc">
+                Operative defeated by Jev synthetic forces.<br>
+                Final Wave: <strong id="final-wave" style="color:#00ffcc;">1</strong> | Score: <strong id="final-score" style="color:#ffaa00;">0</strong>
+            </p>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="window.game.restartGame()">REINITIALIZE [ENTER]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Config Modal -->
+    <div id="config-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h2 class="modal-title">JEV MODEL SETTINGS</h2>
+            <p class="modal-desc">
+                Connect your official TypeSafe AI API Key to run live inference against <code>jev-latest</code>. If left empty, the calibrated local RLCD decision protocol runs at zero latency.
+            </p>
+            <input type="password" id="api-key-input" class="input-field" placeholder="Enter TYPESAFE_API_KEY (optional)">
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="saveApiKey()">APPLY SETTINGS</button>
+                <button class="btn-secondary" onclick="document.getElementById('config-modal').classList.remove('active')">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            try {
+                const res = await fetch(`${API_BASE}/api/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ api_key: key })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    window.jevHud.updateConfigStatus(data.jev);
+                    document.getElementById('config-modal').classList.remove('active');
+                }
+            } catch (e) {
+                alert("Error connecting to server to update API key: " + e.message);
+            }
+        }
+    </script>
+
+    <!-- Game Scripts -->
+    <script src="/static/audio.js"></script>
+    <script src="/static/jev_hud.js"></script>
+    <script src="/static/game.js"></script>
+</body>
+</html>
