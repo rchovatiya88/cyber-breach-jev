@@ -175,29 +175,47 @@ class JevSystemOneService:
 
                 for opt in options:
                     w = 1.0
-                    # Tactic adjustments based on battlefield geometry
-                    if opt in ("flank_left", "circle_strafe_ccw"):
-                        w += 2.0 if dist < 250 else 1.0
-                    elif opt in ("flank_right", "circle_strafe_cw"):
-                        w += 2.0 if dist < 250 else 1.0
-                    elif opt in ("charge", "rush_forward", "direct_charge"):
-                        w += 3.5 if (player_reloading or player_hp < 30) else 0.4
-                        w += 2.0 if enemy_type in ("heavy", "boss") else 0.5
-                    elif opt in ("retreat_cover", "retreat_from_swarms", "retreat"):
-                        w += 4.0 if (player_dashing or incoming_bullets > 3 or player_hp > 80) else 0.5
-                    elif opt in ("suppressive_fire", "emp_blast", "special_ability"):
-                        w += 2.5 if dist > 150 else 1.0
-                    elif opt in ("evasive_dodge",):
-                        w += 5.0 if incoming_bullets > 2 else 0.3
-                    elif opt in ("rush_pickup",):
-                        w += 4.0 if player_hp < 40 else 0.8
-                    elif opt in ("focus_boss",):
-                        w += 3.0 if state.get("boss_present") else 0.2
-                    elif opt in ("focus_nearest", "crowd_control"):
-                        w += 2.0
+                    # Build verification & triage heuristics
+                    if "api_online" in state or "has_webgl" in state or "predicates_satisfied" in state:
+                        api_ok = bool(state.get("api_online", True))
+                        webgl_ok = bool(state.get("has_webgl", True))
+                        preds_ok = bool(state.get("predicates_satisfied", True))
+                        errs = int(state.get("error_count", 0))
+
+                        if opt in ("clean_pass", "approve_and_ship"):
+                            w = 8.0 if (api_ok and webgl_ok and preds_ok and errs == 0) else 0.05
+                        elif opt in ("canvas_webgl_failure", "inspect_webgl_shaders"):
+                            w = 10.0 if not webgl_ok else 0.05
+                        elif opt in ("api_backend_offline", "inspect_api_server"):
+                            w = 10.0 if not api_ok else 0.05
+                        elif opt in ("missing_ui_controls", "retest_interactive_suite"):
+                            w = 6.0 if not preds_ok else 0.05
+                        elif opt in ("halt_and_block_ci",):
+                            w = 8.0 if (not api_ok or not webgl_ok or errs > 3) else 0.05
+                    else:
+                        # Tactic adjustments based on battlefield geometry
+                        if opt in ("flank_left", "circle_strafe_ccw"):
+                            w += 2.0 if dist < 250 else 1.0
+                        elif opt in ("flank_right", "circle_strafe_cw"):
+                            w += 2.0 if dist < 250 else 1.0
+                        elif opt in ("charge", "rush_forward", "direct_charge"):
+                            w += 3.5 if (player_reloading or player_hp < 30) else 0.4
+                            w += 2.0 if enemy_type in ("heavy", "boss") else 0.5
+                        elif opt in ("retreat_cover", "retreat_from_swarms", "retreat"):
+                            w += 4.0 if (player_dashing or incoming_bullets > 3 or player_hp > 80) else 0.5
+                        elif opt in ("suppressive_fire", "emp_blast", "special_ability"):
+                            w += 2.5 if dist > 150 else 1.0
+                        elif opt in ("evasive_dodge",):
+                            w += 5.0 if incoming_bullets > 2 else 0.3
+                        elif opt in ("rush_pickup",):
+                            w += 4.0 if player_hp < 40 else 0.8
+                        elif opt in ("focus_boss",):
+                            w += 3.0 if state.get("boss_present") else 0.2
+                        elif opt in ("focus_nearest", "crowd_control"):
+                            w += 2.0
 
                     # Add slight temperature entropy
-                    raw_weights[opt] = max(0.01, w * random.uniform(0.85, 1.15))
+                    raw_weights[opt] = max(0.01, w * random.uniform(0.92, 1.08))
 
                 total_weight = sum(raw_weights.values())
                 probabilities = {opt: round(raw_weights[opt] / total_weight, 4) for opt in options}
@@ -218,7 +236,13 @@ class JevSystemOneService:
                 num_levels = len(levels)
 
                 # Estimate base intensity between 0.0 and 1.0
-                if "threat" in key or "tension" in key:
+                if "health" in key or "stability" in key:
+                    api_ok = 1.0 if state.get("api_online", True) else 0.0
+                    webgl_ok = 1.0 if state.get("has_webgl", True) else 0.0
+                    preds_ok = 1.0 if state.get("predicates_satisfied", True) else 0.0
+                    errs = min(5, int(state.get("error_count", 0)))
+                    intensity = (api_ok * 0.3 + webgl_ok * 0.35 + preds_ok * 0.35) - (errs * 0.15)
+                elif "threat" in key or "tension" in key:
                     intensity = 1.0 - (player_hp / 100.0) * 0.5 + (incoming_bullets * 0.1)
                 elif "urgency" in key:
                     intensity = urgency_raw + (incoming_bullets * 0.15)
@@ -250,7 +274,18 @@ class JevSystemOneService:
 
             elif q_type == "noul":
                 # Boolean probability (0.0 to 1.0)
-                if "vulnerable" in key:
+                if "ready" in key:
+                    api_ok = bool(state.get("api_online", True))
+                    webgl_ok = bool(state.get("has_webgl", True))
+                    preds_ok = bool(state.get("predicates_satisfied", True))
+                    errs = int(state.get("error_count", 0))
+                    if api_ok and webgl_ok and preds_ok and errs == 0:
+                        prob = 0.96
+                    elif not api_ok or not webgl_ok:
+                        prob = 0.08
+                    else:
+                        prob = 0.45
+                elif "vulnerable" in key:
                     prob = 0.85 if (player_reloading or player_hp < 25) else (0.1 if player_dashing else 0.35)
                 elif "enrage" in key or "boss" in key:
                     prob = 0.9 if player_hp < 35 or dist < 120 else 0.25

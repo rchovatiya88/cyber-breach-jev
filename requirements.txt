@@ -4,3 +4,4 @@ uvicorn>=0.25.0
 pydantic>=2.5.0
 httpx>=0.25.0
 python-dotenv>=1.0.0
+cua-driver>=0.28.2

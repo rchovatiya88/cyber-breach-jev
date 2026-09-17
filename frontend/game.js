@@ -200,21 +200,21 @@ class CyberGameEngine {
             this.renderer.setSize(width, height);
             this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            this.renderer.toneMappingExposure = 1.25;
+            this.renderer.toneMappingExposure = 1.0;
             this.hasWebGL = true;
 
-            // Phase 5: Initialize Three.js UnrealBloomPass Post-Processing Pipeline
+            // Phase 6: Precision Calibrated UnrealBloomPass Pipeline (High-contrast, zero wash-out)
             if (typeof THREE.EffectComposer !== 'undefined' && typeof THREE.UnrealBloomPass !== 'undefined') {
                 try {
                     const renderPass = new THREE.RenderPass(this.scene, this.camera);
                     const bloomRes = new THREE.Vector2(width, height);
-                    // Bloom parameters tuned for Tron Neon: threshold 0.28, strength 1.35, radius 0.42
-                    this.bloomPass = new THREE.UnrealBloomPass(bloomRes, 1.35, 0.42, 0.28);
+                    // Calibrated Bloom: threshold 0.78 (only hot lasers & thrusters bloom), strength 0.45, radius 0.22
+                    this.bloomPass = new THREE.UnrealBloomPass(bloomRes, 0.45, 0.22, 0.78);
                     this.composer = new THREE.EffectComposer(this.renderer);
                     this.composer.addPass(renderPass);
                     this.composer.addPass(this.bloomPass);
                     this.hasBloom = true;
-                    console.log("✨ Phase 5: UnrealBloomPass post-processing pipeline active.");
+                    console.log("✨ Phase 6: Precision UnrealBloomPass pipeline active (threshold: 0.78, strength: 0.45).");
                 } catch (postErr) {
                     console.warn("⚠️ Post-processing bloom failed to initialize:", postErr);
                     this.composer = null;
@@ -227,28 +227,28 @@ class CyberGameEngine {
             this.renderMode = '2d';
         }
 
-        // Atmospheric Tron Fog (Vibrant dark cyber-blue depth)
+        // Atmospheric Tron Fog (Deep dark cyber void)
         this.scene.fog = new THREE.FogExp2(0x020816, 0.0014);
         if (this.renderer) this.renderer.setClearColor(0x020816, 1.0);
 
-        // Luminous Multi-Point Tron Lighting Rig
-        // 1. Sky/Ground Hemisphere Light (Electric Cyan Sky, Deep Violet Bounce)
-        this.hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x4c1d95, 2.8);
+        // Precision Tron Lighting Rig (Deep Void Contrast, No Specular Blowouts)
+        // 1. Sky/Ground Hemisphere Light (Subtle Ambient Cyber Fill)
+        this.hemiLight = new THREE.HemisphereLight(0x1e3a5f, 0x080b18, 0.55);
         this.scene.add(this.hemiLight);
 
-        // 2. Primary Key Sun Light (Radiant Neon Aqua)
-        this.sunLight = new THREE.DirectionalLight(0x00f0ff, 3.0);
+        // 2. Primary Key Sun Light (Cool Cyber Blue)
+        this.sunLight = new THREE.DirectionalLight(0x4a90e2, 0.85);
         this.sunLight.position.set(90, 180, 90);
         this.scene.add(this.sunLight);
 
-        // 3. Secondary Rim Fill Light (Electric Magenta / Neon Pink)
-        this.rimLight = new THREE.DirectionalLight(0xf43f5e, 2.2);
+        // 3. Secondary Rim Fill Light (Subtle Magenta Accent)
+        this.rimLight = new THREE.DirectionalLight(0x881144, 0.45);
         this.rimLight.position.set(-90, 130, -90);
         this.scene.add(this.rimLight);
 
-        // 4. Player Forward Flight Spotlight (High-Intensity Laser Headlight)
-        this.playerHeadlight = new THREE.SpotLight(0x00ffff, 7.5, 420, Math.PI / 3.0, 0.45, 1.0);
-        this.playerHeadlight.position.set(0, 4, 0);
+        // 4. Player Forward Flight Spotlight (Focused road beam, non-blinding)
+        this.playerHeadlight = new THREE.SpotLight(0x00f0ff, 1.6, 280, Math.PI / 4.5, 0.5, 1.2);
+        this.playerHeadlight.position.set(0, 3.5, 0);
         this.playerHeadlightTarget = new THREE.Object3D();
         this.scene.add(this.playerHeadlightTarget);
         this.playerHeadlight.target = this.playerHeadlightTarget;
@@ -327,11 +327,12 @@ class CyberGameEngine {
         this.scene.add(this.proceduralRoot);
 
         // Luminous Monolith & Architectural Materials
+        // Luminous Dark Carbon Obelisks & Architectural Materials
         this.monolithMaterial = new THREE.MeshStandardMaterial({
-            color: 0x0c254b,
-            roughness: 0.18,
-            metalness: 0.8,
-            emissive: 0x061833
+            color: 0x02050b,
+            roughness: 0.70,
+            metalness: 0.20,
+            emissive: 0x000000
         });
         this.neonCyanMat = new THREE.LineBasicMaterial({ color: 0x00f0ff, linewidth: 2.0 });
         this.neonMagentaMat = new THREE.LineBasicMaterial({ color: 0xff0088, linewidth: 2.0 });
@@ -346,7 +347,7 @@ class CyberGameEngine {
             color: 0x00ffff,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.55,
+            opacity: 0.20,
             blending: THREE.AdditiveBlending
         });
     }
@@ -377,13 +378,17 @@ class CyberGameEngine {
 
         // Skip spawn chunk center to keep clear arena for start
         if (Math.abs(cx) > 0 || Math.abs(cz) > 0) {
-            // 2 Monoliths per chunk
+            // 2 Slender Monolith Spires per outer chunk (Strictly outside combat ring)
             for (let m = 0; m < 2; m++) {
-                const w = 22 + rnd() * 20;
-                const d = 22 + rnd() * 20;
-                const h = 60 + rnd() * 110;
                 const posX = originX + (rnd() - 0.5) * 170;
                 const posZ = originZ + (rnd() - 0.5) * 170;
+
+                // Phase 6: Ensure combat dogfighting sector (radius < 310) is 100% unobstructed
+                if (Math.hypot(posX, posZ) < 310) continue;
+
+                const w = 18 + rnd() * 14;
+                const d = 18 + rnd() * 14;
+                const h = 80 + rnd() * 130;
 
                 const boxGeom = new THREE.BoxGeometry(w, h, d);
                 const mesh = new THREE.Mesh(boxGeom, this.monolithMaterial);
@@ -391,110 +396,121 @@ class CyberGameEngine {
 
                 const isCyan = rnd() > 0.45;
                 const edgeMat = isCyan ? this.neonCyanMat : this.neonMagentaMat;
-                const accentHex = isCyan ? 0x00f0ff : 0xff0088;
                 const edges = new THREE.LineSegments(new THREE.EdgesGeometry(boxGeom), edgeMat);
                 mesh.add(edges);
 
-                // Top Glowing Roof Beacon Cap
-                const capGeom = new THREE.BoxGeometry(w * 0.7, 3, d * 0.7);
-                const capMat = new THREE.MeshBasicMaterial({ color: accentHex });
-                const capMesh = new THREE.Mesh(capGeom, capMat);
-                capMesh.position.y = h / 2 + 1.5;
-                mesh.add(capMesh);
+                // Sleek Wireframe Crown on Roof (No solid glowing box caps)
+                const crownGeom = new THREE.BufferGeometry();
+                const cw = w * 0.5;
+                const cd = d * 0.5;
+                const crownVerts = new Float32Array([
+                    -cw, h / 2 + 0.8, -cd,   cw, h / 2 + 0.8, -cd,
+                    cw, h / 2 + 0.8, -cd,    cw, h / 2 + 0.8, cd,
+                    cw, h / 2 + 0.8, cd,     -cw, h / 2 + 0.8, cd,
+                    -cw, h / 2 + 0.8, cd,    -cw, h / 2 + 0.8, -cd
+                ]);
+                crownGeom.setAttribute('position', new THREE.BufferAttribute(crownVerts, 3));
+                mesh.add(new THREE.LineSegments(crownGeom, edgeMat));
 
-                // Multiple Glowing Cyber Circuit Bands
+                // Thin Wireframe Circuit Ribs around Obelisk
                 const numBands = 2 + Math.floor(rnd() * 3);
                 for (let b = 0; b < numBands; b++) {
-                    const bandGeom = new THREE.BoxGeometry(w + 0.6, 2.2, d + 0.6);
-                    const bandMat = new THREE.MeshBasicMaterial({
-                        color: (b % 2 === 0) ? accentHex : 0xffaa00,
-                        transparent: true,
-                        opacity: 0.95
-                    });
-                    const bandMesh = new THREE.Mesh(bandGeom, bandMat);
-                    bandMesh.position.y = -h / 2 + 15 + b * (h / (numBands + 1));
-                    mesh.add(bandMesh);
+                    const bandY = -h / 2 + 20 + b * (h / (numBands + 1));
+                    const ribGeom = new THREE.BufferGeometry();
+                    const rw = w * 0.505;
+                    const rd = d * 0.505;
+                    const ribVerts = new Float32Array([
+                        -rw, bandY, -rd,   rw, bandY, -rd,
+                        rw, bandY, -rd,    rw, bandY, rd,
+                        rw, bandY, rd,     -rw, bandY, rd,
+                        -rw, bandY, rd,    -rw, bandY, -rd
+                    ]);
+                    ribGeom.setAttribute('position', new THREE.BufferAttribute(ribVerts, 3));
+                    mesh.add(new THREE.LineSegments(ribGeom, (b % 2 === 0) ? edgeMat : this.neonAmberMat));
                 }
 
                 chunkGroup.add(mesh);
             }
 
-            // Energy Gate or Cyber Arch
+            // Energy Gate or Cyber Arch (Outside combat ring)
             if ((Math.abs(cx) + Math.abs(cz)) % 2 === 1) {
-                // Interactive Coherent Energy Gate with Brilliant Illumination
-                const gateGroup = new THREE.Group();
                 const gateX = originX + (rnd() - 0.5) * 100;
                 const gateZ = originZ + (rnd() - 0.5) * 100;
 
-                const ringGeom = new THREE.TorusGeometry(15, 1.8, 12, 32);
-                const ringMesh = new THREE.Mesh(ringGeom, this.gateRingMat);
-                gateGroup.add(ringMesh);
+                if (Math.hypot(gateX, gateZ) >= 300) {
+                    const gateGroup = new THREE.Group();
+                    const ringGeom = new THREE.TorusGeometry(15, 1.8, 12, 32);
+                    const ringMesh = new THREE.Mesh(ringGeom, this.gateRingMat);
+                    gateGroup.add(ringMesh);
 
-                // Outer accent ring
-                const outerRingGeom = new THREE.TorusGeometry(18, 0.6, 8, 24);
-                const outerRingMat = new THREE.MeshBasicMaterial({ color: 0xff00aa, wireframe: true });
-                const outerRingMesh = new THREE.Mesh(outerRingGeom, outerRingMat);
-                gateGroup.add(outerRingMesh);
+                    // Outer accent ring
+                    const outerRingGeom = new THREE.TorusGeometry(18, 0.6, 8, 24);
+                    const outerRingMat = new THREE.MeshBasicMaterial({ color: 0xff00aa, wireframe: true });
+                    const outerRingMesh = new THREE.Mesh(outerRingGeom, outerRingMat);
+                    gateGroup.add(outerRingMesh);
 
-                const fieldGeom = new THREE.CircleGeometry(14.0, 24);
-                const fieldMesh = new THREE.Mesh(fieldGeom, this.gateFieldMat);
-                gateGroup.add(fieldMesh);
+                    const fieldGeom = new THREE.CircleGeometry(14.0, 24);
+                    const fieldMesh = new THREE.Mesh(fieldGeom, this.gateFieldMat);
+                    gateGroup.add(fieldMesh);
 
-                // Local Brilliant Point Light (Casts vibrant cyan glow onto ground and craft)
-                const gateLight = new THREE.PointLight(0x00ffff, 4.5, 65, 1.2);
-                gateGroup.add(gateLight);
+                    // Calibrated Point Light
+                    const gateLight = new THREE.PointLight(0x00ffff, 1.2, 45, 1.2);
+                    gateGroup.add(gateLight);
 
-                gateGroup.position.set(gateX, 6.5, gateZ);
-                const isRotated = rnd() > 0.5;
-                if (isRotated) gateGroup.rotation.y = Math.PI / 2;
+                    gateGroup.position.set(gateX, 6.5, gateZ);
+                    const isRotated = rnd() > 0.5;
+                    if (isRotated) gateGroup.rotation.y = Math.PI / 2;
 
-                chunkGroup.add(gateGroup);
+                    chunkGroup.add(gateGroup);
 
-                const gateData = {
-                    x: gateX,
-                    z: gateZ,
-                    mesh: gateGroup,
-                    ring: ringMesh,
-                    outerRing: outerRingMesh,
-                    light: gateLight,
-                    chunkKey: key,
-                    lastTrigger: 0
-                };
-                this.energyGates.push(gateData);
+                    const gateData = {
+                        x: gateX,
+                        z: gateZ,
+                        mesh: gateGroup,
+                        ring: ringMesh,
+                        outerRing: outerRingMesh,
+                        light: gateLight,
+                        chunkKey: key,
+                        lastTrigger: 0
+                    };
+                    this.energyGates.push(gateData);
+                }
             } else {
-                // Cyber Arch spanning data highway
-                const archGroup = new THREE.Group();
+                // Cyber Arch spanning data highway (Strictly outside combat ring)
                 const archX = originX + (rnd() - 0.5) * 110;
                 const archZ = originZ + (rnd() - 0.5) * 110;
 
-                const archGeom = new THREE.BoxGeometry(48, 5, 12);
-                const archMesh = new THREE.Mesh(archGeom, this.monolithMaterial);
-                archMesh.position.y = 28;
-                archMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(archGeom), this.neonCyanMat));
+                if (Math.hypot(archX, archZ) >= 300) {
+                    const archGroup = new THREE.Group();
+                    const archGeom = new THREE.BoxGeometry(48, 5, 12);
+                    const archMesh = new THREE.Mesh(archGeom, this.monolithMaterial);
+                    archMesh.position.y = 28;
+                    archMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(archGeom), this.neonCyanMat));
 
-                // Underside Radiant Highway Light Beam
-                const beamGeom = new THREE.PlaneGeometry(44, 10);
-                const beamMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide });
-                const beamMesh = new THREE.Mesh(beamGeom, beamMat);
-                beamMesh.rotation.x = Math.PI / 2;
-                beamMesh.position.y = -2.6;
-                archMesh.add(beamMesh);
+                    // Underside Radiant Highway Light Beam
+                    const beamGeom = new THREE.PlaneGeometry(44, 10);
+                    const beamMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide });
+                    const beamMesh = new THREE.Mesh(beamGeom, beamMat);
+                    beamMesh.rotation.x = Math.PI / 2;
+                    beamMesh.position.y = -2.6;
+                    archMesh.add(beamMesh);
 
-                archGroup.add(archMesh);
+                    archGroup.add(archMesh);
 
-                const pillarGeom = new THREE.BoxGeometry(5, 28, 10);
-                const pLeft = new THREE.Mesh(pillarGeom, this.monolithMaterial);
-                pLeft.position.set(-21, 14, 0);
-                pLeft.add(new THREE.LineSegments(new THREE.EdgesGeometry(pillarGeom), this.neonCyanMat));
-                archGroup.add(pLeft);
+                    const pillarGeom = new THREE.BoxGeometry(5, 28, 10);
+                    const pLeft = new THREE.Mesh(pillarGeom, this.monolithMaterial);
+                    pLeft.position.set(-21, 14, 0);
+                    pLeft.add(new THREE.LineSegments(new THREE.EdgesGeometry(pillarGeom), this.neonCyanMat));
+                    archGroup.add(pLeft);
 
-                const pRight = new THREE.Mesh(pillarGeom, this.monolithMaterial);
-                pRight.position.set(21, 14, 0);
-                pRight.add(new THREE.LineSegments(new THREE.EdgesGeometry(pillarGeom), this.neonCyanMat));
-                archGroup.add(pRight);
+                    const pRight = new THREE.Mesh(pillarGeom, this.monolithMaterial);
+                    pRight.position.set(21, 14, 0);
+                    pRight.add(new THREE.LineSegments(new THREE.EdgesGeometry(pillarGeom), this.neonCyanMat));
+                    archGroup.add(pRight);
 
-                archGroup.position.set(archX, 0, archZ);
-                chunkGroup.add(archGroup);
+                    archGroup.position.set(archX, 0, archZ);
+                    chunkGroup.add(archGroup);
+                }
             }
         }
 
@@ -583,12 +599,23 @@ class CyberGameEngine {
             const edgeMat = (i % 3 === 0) ? edgePink : edgeCyan;
             tower.add(new THREE.LineSegments(new THREE.EdgesGeometry(boxGeom), edgeMat));
 
-            // Radiant Rooftop Beacon Cap
-            const beaconGeom = new THREE.BoxGeometry(w * 0.6, 4, d * 0.6);
-            const beaconMat = new THREE.MeshBasicMaterial({ color: (i % 3 === 0) ? 0xff00aa : 0x00f0ff });
-            const beacon = new THREE.Mesh(beaconGeom, beaconMat);
-            beacon.position.y = h / 2 + 2;
-            tower.add(beacon);
+            // Sleek Rooftop Wireframe Crown & Antenna (No solid white glare slabs)
+            const crownGeom = new THREE.BufferGeometry();
+            const cw = w * 0.5;
+            const cd = d * 0.5;
+            const crownVerts = new Float32Array([
+                -cw, h / 2 + 1, -cd,   cw, h / 2 + 1, -cd,
+                cw, h / 2 + 1, -cd,    cw, h / 2 + 1, cd,
+                cw, h / 2 + 1, cd,     -cw, h / 2 + 1, cd,
+                -cw, h / 2 + 1, cd,    -cw, h / 2 + 1, -cd
+            ]);
+            crownGeom.setAttribute('position', new THREE.BufferAttribute(crownVerts, 3));
+            tower.add(new THREE.LineSegments(crownGeom, edgeMat));
+
+            // Central Antenna Beacon Line
+            const antGeom = new THREE.BufferGeometry();
+            antGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, h / 2, 0, 0, h / 2 + 10, 0]), 3));
+            tower.add(new THREE.Line(antGeom, edgeMat));
 
             tower.position.set(Math.cos(angle) * dist, h / 2 - 5, Math.sin(angle) * dist);
             tower.rotation.y = angle;
@@ -601,7 +628,7 @@ class CyberGameEngine {
             color: 0x00f0ff,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.95
+            opacity: 0.55
         });
         const horizonRing = new THREE.Mesh(ringGeom, ringMat);
         horizonRing.rotation.x = -Math.PI / 2;
@@ -614,7 +641,7 @@ class CyberGameEngine {
             color: 0xd946ef,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.85
+            opacity: 0.45
         });
         const outerHorizonRing = new THREE.Mesh(outerRingGeom, outerRingMat);
         outerHorizonRing.rotation.x = -Math.PI / 2;
@@ -635,10 +662,10 @@ class CyberGameEngine {
 
         const pylonGeom = new THREE.CylinderGeometry(2.4, 3.8, 85, 6);
         const pylonMat = new THREE.MeshStandardMaterial({
-            color: 0x081b36,
+            color: 0x040e1c,
             metalness: 0.85,
-            roughness: 0.2,
-            emissive: 0x040e20
+            roughness: 0.4,
+            emissive: 0x000000
         });
 
         pylonCoords.forEach(([px, pz], idx) => {
@@ -648,16 +675,16 @@ class CyberGameEngine {
             const isPink = (idx % 2 === 1);
             const edgeMat = new THREE.LineBasicMaterial({
                 color: isPink ? 0xff00aa : 0x00f0ff,
-                linewidth: 2.5
+                linewidth: 2.0
             });
             pylon.add(new THREE.LineSegments(new THREE.EdgesGeometry(pylonGeom), edgeMat));
 
-            // Top beacon orb
-            const orbGeom = new THREE.SphereGeometry(3.5, 12, 12);
+            // Top beacon orb (Calibrated non-glaring node)
+            const orbGeom = new THREE.SphereGeometry(1.6, 8, 8);
             const orbMat = new THREE.MeshBasicMaterial({
                 color: isPink ? 0xff00aa : 0x00f0ff,
                 transparent: true,
-                opacity: 0.95
+                opacity: 0.65
             });
             const orb = new THREE.Mesh(orbGeom, orbMat);
             orb.position.set(0, 44, 0);
@@ -665,9 +692,14 @@ class CyberGameEngine {
 
             // Radiant Energy Rings around column
             [-15, 0, 15].forEach(yOff => {
-                const ringGeom = new THREE.RingGeometry(3.2, 4.6, 16);
+                const ringGeom = new THREE.RingGeometry(2.6, 3.4, 16);
                 ringGeom.rotateX(-Math.PI / 2);
-                const ring = new THREE.Mesh(ringGeom, orbMat);
+                const ringMat = new THREE.MeshBasicMaterial({
+                    color: isPink ? 0xff00aa : 0x00f0ff,
+                    transparent: true,
+                    opacity: 0.45
+                });
+                const ring = new THREE.Mesh(ringGeom, ringMat);
                 ring.position.y = yOff;
                 pylon.add(ring);
             });
@@ -971,9 +1003,9 @@ class CyberGameEngine {
         needle.position.set(0, 0.2, -7.4);
         this.playerGroup.add(needle);
 
-        // Needle Tip Beacon Node
-        const tipGeom = new THREE.SphereGeometry(0.35, 8, 8);
-        const tipMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        // Needle Tip Beacon Node (Subtle cyan apex point, non-blinding)
+        const tipGeom = new THREE.SphereGeometry(0.20, 8, 8);
+        const tipMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
         const tip = new THREE.Mesh(tipGeom, tipMat);
         tip.position.set(0, 0.2, -9.2);
         this.playerGroup.add(tip);
@@ -1136,40 +1168,40 @@ class CyberGameEngine {
         });
 
         // Animated Twin Ion Exhaust Plumes (Extending backwards into +Z wake)
-        const plumeGeom = new THREE.ConeGeometry(0.95, 5.5, 12);
+        const plumeGeom = new THREE.ConeGeometry(0.85, 4.8, 12);
         plumeGeom.rotateX(-Math.PI / 2);
         const plumeMat = new THREE.MeshBasicMaterial({
             color: 0x00ffff,
             transparent: true,
-            opacity: 0.85,
+            opacity: 0.60,
             blending: THREE.AdditiveBlending
         });
 
         const leftPlume = new THREE.Mesh(plumeGeom, plumeMat);
-        leftPlume.position.set(-1.8, 0.25, 8.4);
+        leftPlume.position.set(-1.8, 0.25, 8.0);
         this.playerGroup.add(leftPlume);
 
         const rightPlume = new THREE.Mesh(plumeGeom, plumeMat.clone());
-        rightPlume.position.set(1.8, 0.25, 8.4);
+        rightPlume.position.set(1.8, 0.25, 8.0);
         this.playerGroup.add(rightPlume);
 
         this.exhaustPlumes.push(leftPlume, rightPlume);
 
-        // Dynamic Thruster Point Light
-        this.thrusterLight = new THREE.PointLight(0x00a2ff, 4.0, 40);
-        this.thrusterLight.position.set(0, 0.8, 6.0);
+        // Dynamic Thruster Point Light (Calibrated intensity)
+        this.thrusterLight = new THREE.PointLight(0x00a2ff, 1.4, 25);
+        this.thrusterLight.position.set(0, 0.8, 5.5);
         this.playerGroup.add(this.thrusterLight);
 
-        // 6. Synchronized Grid Under-Glow Aura with Clear Forward Directional Arrow
-        // Added DIRECTLY to playerGroup at y = -2.15 so it is 100% synchronized with rotation & translation!
+        // 6. Synchronized Grid Under-Glow Aura: Sleek Vector Bracket Perimeter Ring
+        // Thin vector ring at Y = -2.15 (ground plane) that never obscures the ship or reticle
         const underGlowGroup = new THREE.Group();
-        const glowGeom = new THREE.RingGeometry(0.5, 7.0, 24);
+        const glowGeom = new THREE.RingGeometry(5.2, 5.6, 32);
         glowGeom.rotateX(-Math.PI / 2);
         const glowMat = new THREE.MeshBasicMaterial({
             color: 0x00ffff,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.45
+            opacity: 0.30
         });
         const ringMesh = new THREE.Mesh(glowGeom, glowMat);
         underGlowGroup.add(ringMesh);
@@ -1177,25 +1209,27 @@ class CyberGameEngine {
         // Forward Heading Chevron Arrow on Floor Ring (Pointing forward to local -Z)
         const arrowGeom = new THREE.BufferGeometry();
         const arrowVerts = new Float32Array([
-            -2.8, 0.01, -3.2,
-            0.0, 0.01, -7.8,
-            2.8, 0.01, -3.2
+            -2.4, 0.01, -3.2,
+            0.0, 0.01, -7.2,
+            2.4, 0.01, -3.2
         ]);
         arrowGeom.setAttribute('position', new THREE.BufferAttribute(arrowVerts, 3));
-        const arrowLine = new THREE.Line(arrowGeom, new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 3.5 }));
+        const arrowLine = new THREE.Line(arrowGeom, new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2.5 }));
         underGlowGroup.add(arrowLine);
 
         underGlowGroup.position.set(0, -2.15, 0); // Position exactly on the ground plane (Y = 0.05 in world space)
         this.playerGroup.add(underGlowGroup);
         this.playerUnderGlow = underGlowGroup;
 
-        // 7. Impact Shield Flash Aura
-        const shieldGeom = new THREE.SphereGeometry(7.2, 24, 16);
+        // 7. Impact Shield Flash Aura: Hexagonal Wireframe Energy Lattice
+        // Wireframe energy shell hugs the ship contours without obscuring the fuselage or visor
+        const shieldGeom = new THREE.IcosahedronGeometry(7.0, 1);
         this.shieldMat = new THREE.MeshBasicMaterial({
-            color: 0x00a2ff,
+            color: 0x00f0ff,
+            wireframe: true,
             transparent: true,
             opacity: 0.0,
-            wireframe: false
+            depthWrite: false
         });
         this.shieldMesh = new THREE.Mesh(shieldGeom, this.shieldMat);
         this.playerGroup.add(this.shieldMesh);
@@ -3003,6 +3037,23 @@ class CyberGameEngine {
         this.player.pos.x += this.player.vel.x * dt;
         this.player.pos.z += this.player.vel.z * dt;
 
+        // Phase 6: Arena Perimeter Forcefield Containment (Keeps dogfight inside illuminated ring)
+        const pDist = Math.hypot(this.player.pos.x, this.player.pos.z);
+        if (pDist > 265) {
+            const nx = this.player.pos.x / pDist;
+            const nz = this.player.pos.z / pDist;
+            this.player.pos.x = nx * 265;
+            this.player.pos.z = nz * 265;
+            const dot = this.player.vel.x * nx + this.player.vel.z * nz;
+            if (dot > 0) {
+                this.player.vel.x -= nx * dot * 1.4;
+                this.player.vel.z -= nz * dot * 1.4;
+            }
+            if (this.forcefieldWall) {
+                this.forcefieldWall.material.opacity = 0.45;
+            }
+        }
+
         // Smooth angle slerp
         let diff = this.player.targetAngle - this.player.angle;
         while (diff < -Math.PI) diff += Math.PI * 2;
@@ -3451,18 +3502,18 @@ class CyberGameEngine {
             this.playerGroup.rotation.y = this.player.angle;
             this.playerGroup.rotation.z = this.player.bankAngle; // Dynamic Roll
 
-            // Shield Flash & Invulnerability Pulse
+            // Shield Flash & Invulnerability Pulse (Subtle wireframe energy flicker)
             if (this.shieldMesh) {
                 const isInvuln = (this.player.invulnerableTimer > 0);
-                const invulnPulse = isInvuln ? (0.35 + 0.25 * Math.sin(performance.now() * 0.02)) : 0;
-                const flash = Math.max(invulnPulse, this.player.shieldHitFlash * 0.5);
+                const invulnPulse = isInvuln ? (0.15 + 0.10 * Math.sin(performance.now() * 0.015)) : 0;
+                const flash = Math.max(invulnPulse, this.player.shieldHitFlash * 0.35);
                 this.shieldMesh.material.opacity = flash;
                 this.shieldMesh.visible = (flash > 0.02 && this.cameraMode !== 'cockpit');
             }
 
             // Thruster point light decay
-            if (this.thrusterLight && this.thrusterLight.intensity > 3.2) {
-                this.thrusterLight.intensity = Math.max(3.2, this.thrusterLight.intensity - dt * 14);
+            if (this.thrusterLight && this.thrusterLight.intensity > 1.4) {
+                this.thrusterLight.intensity = Math.max(1.4, this.thrusterLight.intensity - dt * 8);
             }
         }
 

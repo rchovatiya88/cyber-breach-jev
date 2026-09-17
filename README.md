@@ -115,9 +115,32 @@ To connect directly to live TypeSafe AI servers:
 
 ---
 
-## 🧪 Testing
+## 🧪 Testing & Verification
 
-Run the automated test suite verifying Jev schemas and endpoint behavior:
+### 1. Unit Tests
+Run the automated test suite verifying Jev schemas, Cua predicate evaluation, and endpoint behavior:
 ```bash
 python3 -m unittest discover -s tests -p "test_*.py"
 ```
+
+### 2. Autonomous Cua Browser & Jev Build Verification
+Integrates **[Cua Driver / Cua Browser](https://github.com/trycua/cua)** with **TypeSafe Jev System One** to autonomously test, inspect, and certify web applications:
+
+```bash
+# Run full verification pipeline against the live application
+python3 -m testing.verify_app --url http://localhost:8000 --cdp-port 9225
+```
+
+#### What the Verification Pipeline Does:
+1. **API & Connectivity**: Validates backend endpoints and Jev service availability.
+2. **Cua Semantic Hierarchy**: Discovers and indexes interactive buttons, links, inputs, and canvases (`semantic_v2`).
+3. **Interactive UI Flow Simulation**: Triggers user journeys (camera toggle, autopilot engage, configuration modal) and measures real-time DOM/engine reactions.
+4. **WebGL & Telemetry Inspection**: Probes 3D Three.js scene object count, render context, flight speed, and frame stability.
+5. **Deterministic State Predicates**: Evaluates Cua `verify_state` predicates on window bounds and element states.
+6. **Action Trajectory Recording**: Records full Cua interaction trajectories (`cua_action_trajectory.json`) for benchmark and reproducibility.
+7. **Jev System One Build Gate**: Formulates compact evidence into Jev schemas:
+   - **`build_health_score` (`Score`)**: Rubric evaluation (`critical_breakage` $\to$ `production_verified`).
+   - **`is_build_ready` (`Noul`)**: Calibrated boolean probability ($0.0 \to 1.0$) for release readiness.
+   - **`failure_classification` (`Choice`)**: Identifies root cause if anomalies occur (`clean_pass`, `canvas_webgl_failure`, `missing_ui_controls`, `api_backend_offline`, `performance_frame_drop`).
+   - **`recommended_action` (`Choice`)**: Prescribes immediate workflow step (`approve_and_ship`, `retest_interactive_suite`, `inspect_webgl_shaders`, `inspect_api_server`, `halt_and_block_ci`).
+8. **Artifact Generation**: Outputs structured JSON (`verification_report.json`), Markdown summary (`verification_report.md`), and visual screenshots (`cua_verification_evidence.png`).
