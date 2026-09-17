@@ -1,6 +1,6 @@
 /**
  * CYBER-BREACH: 3D TRON PROTOCOL
- * Infinite 3D Arena Shooter built with Three.js WebGL & powered by TypeSafe AI's Jev Model
+ * Full 3D Tron Arena Combat built with Three.js WebGL & powered by TypeSafe AI's Jev Model
  */
 
 const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
@@ -9,10 +9,11 @@ const API_BASE = window.location.origin.includes('localhost') || window.location
 
 class TronCyberGame {
     constructor() {
+        console.log("⚡ Booting TronCyberGame 3D Engine...");
         this.container = document.getElementById('arena-container');
         this.canvas = document.getElementById('game-canvas');
         this.radarCanvas = document.getElementById('radar-canvas');
-        this.radarCtx = this.radarCanvas.getContext('2d');
+        this.radarCtx = this.radarCanvas ? this.radarCanvas.getContext('2d') : null;
 
         // Game State
         this.score = 0;
@@ -21,12 +22,11 @@ class TronCyberGame {
         this.enemiesDefeated = 0;
         this.isGameOver = false;
         this.autoPilot = false;
-        this.cameraMode = 'chase'; // 'chase' or 'tactical'
+        this.cameraMode = 'chase'; // 'chase', 'tactical', 'cockpit'
+        this.camPitch = 0.35; // controllable pitch
+        this.camZoom = 38;    // controllable zoom
         this.screenShake = 0;
         this.lastTime = performance.now();
-
-        // Infinite World Tracking
-        this.worldBounds = Infinity;
 
         // Director
         this.directorCooldown = 7.0;
@@ -37,10 +37,11 @@ class TronCyberGame {
         this.player = {
             pos: new THREE.Vector3(0, 0, 0),
             vel: new THREE.Vector3(0, 0, 0),
-            speed: 160,
+            speed: 150,
             angle: 0,
             targetAngle: 0,
             bankAngle: 0,
+            pitchAngle: 0,
             hp: 100,
             maxHp: 100,
             shield: 100,
@@ -57,7 +58,7 @@ class TronCyberGame {
             fireCooldown: 0,
             overdriveTimer: 0,
             trailPoints: [],
-            maxTrailPoints: 40,
+            maxTrailPoints: 50,
         };
 
         // Entities collections
@@ -66,11 +67,12 @@ class TronCyberGame {
         this.enemies = [];
         this.pickups = [];
         this.voxelParticles = [];
-        this.floatingTexts = [];
 
         // Controls
         this.keys = {};
         this.mousePos = new THREE.Vector2(0, 0);
+        this.isMouseDown = false;
+        this.isRightMouseDown = false;
         this.raycaster = new THREE.Raycaster();
         this.groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
         this.aimPoint = new THREE.Vector3(0, 0, 0);
@@ -94,184 +96,253 @@ class TronCyberGame {
     }
 
     initThree() {
-        const width = this.container.clientWidth || window.innerWidth - 370;
-        const height = this.container.clientHeight || window.innerHeight - 52;
+        const width = this.container.clientWidth || (window.innerWidth - 370);
+        const height = this.container.clientHeight || (window.innerHeight - 52);
 
-        // Scene
+        // 1. Scene & Receding Tron Fog
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x03060d);
-        this.scene.fog = new THREE.FogExp2(0x03060d, 0.0022);
+        this.scene.background = new THREE.Color(0x02050e);
+        this.scene.fog = new THREE.FogExp2(0x02050e, 0.0025);
 
-        // Camera
-        this.camera = new THREE.PerspectiveCamera(58, width / height, 0.5, 2500);
-        this.camera.position.set(0, 42, 48);
-        this.camera.lookAt(0, 0, 0);
+        // 2. Camera: Dramatic 3D Perspective
+        this.camera = new THREE.PerspectiveCamera(62, width / height, 0.5, 3000);
+        this.updateCameraPos();
 
-        // Renderer
+        // 3. Renderer with Anti-Aliasing & High Performance
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
             antialias: true,
+            alpha: false,
             powerPreference: "high-performance"
         });
         this.renderer.setSize(width, height);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        // Ambient & Directional Lighting
-        const ambientLight = new THREE.AmbientLight(0x1a263d, 1.2);
-        this.scene.add(ambientLight);
+        // 4. Lights
+        const ambient = new THREE.AmbientLight(0x182438, 1.4);
+        this.scene.add(ambient);
 
-        this.dirLight = new THREE.DirectionalLight(0x00ffff, 1.0);
-        this.dirLight.position.set(50, 120, 50);
-        this.scene.add(this.dirLight);
+        this.sunLight = new THREE.DirectionalLight(0x00ffff, 1.2);
+        this.sunLight.position.set(60, 140, 60);
+        this.scene.add(this.sunLight);
 
-        // Infinite Tron Floor Grids
+        // 5. Infinite Tron Cyber-Grids
         this.gridCellSize = 20;
-        this.gridHelper = new THREE.GridHelper(600, 30, 0x00ffcc, 0x003333);
-        this.gridHelper.position.y = -0.05;
+        // Primary Cyan Neon Grid
+        this.gridHelper = new THREE.GridHelper(800, 40, 0x00ffff, 0x004455);
+        this.gridHelper.position.y = 0;
         this.scene.add(this.gridHelper);
 
-        this.subGridHelper = new THREE.GridHelper(1200, 24, 0x0088ff, 0x001122);
-        this.subGridHelper.position.y = -0.1;
+        // Secondary Outer Deep Blue Sub-Grid
+        this.subGridHelper = new THREE.GridHelper(1600, 40, 0x0088ff, 0x001a33);
+        this.subGridHelper.position.y = -0.05;
         this.scene.add(this.subGridHelper);
 
-        // Build Player Craft 3D Mesh
+        // 6. Glowing Distant Tron Mountains / Cyber Skyline
+        this.createTronHorizonSkyline();
+
+        // 7. Player 3D Interceptor Craft
         this.buildPlayerMesh();
 
-        // Build Tron Ribbon Light Trail
+        // 8. Player Persistent 3D Light Ribbon Trail
         this.initPlayerLightTrail();
 
-        // Horizon Glow Line
-        this.createHorizonElements();
-
-        // Handle Resize
+        // 9. Resize Listener
         window.addEventListener('resize', () => this.onResize());
+        console.log("✔ Three.js 3D Tron Scene Initialized!");
     }
 
-    createHorizonElements() {
-        // Distant Tron Monoliths / Cyber-Towers scattered in the infinite digital space
-        this.monoliths = [];
-        const geom = new THREE.BoxGeometry(12, 180, 12);
-        const mat = new THREE.MeshStandardMaterial({
-            color: 0x020813,
-            roughness: 0.1,
-            metalness: 0.9,
-            emissive: 0x002244,
-        });
-        const wireMat = new THREE.LineBasicMaterial({ color: 0x00a2ff, transparent: true, opacity: 0.6 });
+    createTronHorizonSkyline() {
+        // Distant Tron mountain pyramids & monolithic towers forming the classic 80s Tron horizon
+        this.skylineGroup = new THREE.Group();
+        const wireMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.35 });
+        const solidMat = new THREE.MeshBasicMaterial({ color: 0x040a17 });
 
-        for (let i = 0; i < 36; i++) {
-            const group = new THREE.Group();
-            const mesh = new THREE.Mesh(geom, mat);
-            const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geom), wireMat);
-            group.add(mesh);
-            group.add(edges);
+        // Mountain pyramids along horizon
+        for (let i = 0; i < 24; i++) {
+            const angle = (i / 24) * Math.PI * 2;
+            const dist = 550 + (i % 3) * 60;
+            const h = 70 + (i % 5) * 35;
+            const w = 90 + (i % 4) * 30;
 
-            const dist = 300 + Math.random() * 500;
-            const ang = Math.random() * Math.PI * 2;
-            group.position.set(Math.cos(ang) * dist, 80, Math.sin(ang) * dist);
-            this.scene.add(group);
-            this.monoliths.push(group);
+            const pyrGeom = new THREE.ConeGeometry(w, h, 4);
+            const pyr = new THREE.Mesh(pyrGeom, solidMat);
+            pyr.add(new THREE.LineSegments(new THREE.EdgesGeometry(pyrGeom), wireMat));
+
+            pyr.position.set(Math.cos(angle) * dist, h / 2 - 5, Math.sin(angle) * dist);
+            pyr.rotation.y = angle;
+            this.skylineGroup.add(pyr);
         }
+        this.scene.add(this.skylineGroup);
     }
 
     buildPlayerMesh() {
         this.playerGroup = new THREE.Group();
 
-        // Central Fuselage / Jet Cockpit
-        const bodyGeom = new THREE.ConeGeometry(3.5, 9, 4);
+        // 1. Sleek geometric Tron interceptor hull
+        const bodyGeom = new THREE.ConeGeometry(3.6, 9.5, 4);
         bodyGeom.rotateX(Math.PI / 2);
         const bodyMat = new THREE.MeshStandardMaterial({
-            color: 0x0a1220,
-            roughness: 0.2,
-            metalness: 0.8,
-            emissive: 0x02111d
+            color: 0x08111e,
+            roughness: 0.15,
+            metalness: 0.85,
+            emissive: 0x021724,
         });
         this.playerBody = new THREE.Mesh(bodyGeom, bodyMat);
         this.playerGroup.add(this.playerBody);
 
-        // Glowing Tron Wireframe Edges
-        const edgesGeom = new THREE.EdgesGeometry(bodyGeom);
-        this.playerEdgeMat = new THREE.LineBasicMaterial({ color: 0x00ffcc, linewidth: 2 });
-        const wire = new THREE.LineSegments(edgesGeom, this.playerEdgeMat);
-        this.playerGroup.add(wire);
+        // Glowing cyan wireframe edges
+        const edgeGeom = new THREE.EdgesGeometry(bodyGeom);
+        this.playerEdgeMat = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 });
+        const edges = new THREE.LineSegments(edgeGeom, this.playerEdgeMat);
+        this.playerGroup.add(edges);
 
-        // Tron Wings
+        // 2. Tron Swept Wings
         const wingGeom = new THREE.BufferGeometry();
-        const vertices = new Float32Array([
+        const wingVertices = new Float32Array([
             // Left wing
             0, 0, 1.5,
-            -6.5, 0, 3.5,
-            0, 0, -3.5,
+            -7.5, 0, 3.8,
+            0, 0, -3.8,
             // Right wing
             0, 0, 1.5,
-            6.5, 0, 3.5,
-            0, 0, -3.5,
+            7.5, 0, 3.8,
+            0, 0, -3.8,
         ]);
-        wingGeom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        wingGeom.setAttribute('position', new THREE.BufferAttribute(wingVertices, 3));
         wingGeom.computeVertexNormals();
 
         const wingMat = new THREE.MeshStandardMaterial({
-            color: 0x050b14,
+            color: 0x050c17,
             roughness: 0.2,
             metalness: 0.8,
             side: THREE.DoubleSide,
-            emissive: 0x001a22
+            emissive: 0x001c26
         });
         const wings = new THREE.Mesh(wingGeom, wingMat);
         this.playerGroup.add(wings);
 
         const wingEdges = new THREE.LineSegments(
             new THREE.EdgesGeometry(wingGeom),
-            new THREE.LineBasicMaterial({ color: 0x00ffcc, linewidth: 2 })
+            new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 })
         );
         this.playerGroup.add(wingEdges);
 
-        // Cockpit canopy glow
-        const canopyGeom = new THREE.BoxGeometry(1.6, 1.2, 3.5);
+        // 3. Glowing Cockpit Canopy
+        const canopyGeom = new THREE.BoxGeometry(1.6, 1.3, 3.8);
         const canopyMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
         const canopy = new THREE.Mesh(canopyGeom, canopyMat);
-        canopy.position.set(0, 1.2, 0.2);
+        canopy.position.set(0, 1.2, 0.4);
         this.playerGroup.add(canopy);
 
-        // Engine Thruster Glow & Light
-        this.thrusterLight = new THREE.PointLight(0x00ffff, 2.5, 25);
-        this.thrusterLight.position.set(0, 0.5, 4.5);
+        // 4. Twin Neon Thruster Engines
+        const engineMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+        const engGeom = new THREE.CylinderGeometry(0.8, 0.8, 2, 8);
+        engGeom.rotateX(Math.PI / 2);
+        const leftEng = new THREE.Mesh(engGeom, engineMat);
+        leftEng.position.set(-2.0, 0.3, 4.2);
+        const rightEng = new THREE.Mesh(engGeom, engineMat);
+        rightEng.position.set(2.0, 0.3, 4.2);
+        this.playerGroup.add(leftEng);
+        this.playerGroup.add(rightEng);
+
+        // Dynamic Thruster PointLight
+        this.thrusterLight = new THREE.PointLight(0x00ffff, 3.0, 30);
+        this.thrusterLight.position.set(0, 0.8, 5.0);
         this.playerGroup.add(this.thrusterLight);
 
-        // Shield Bubble
-        const shieldGeom = new THREE.SphereGeometry(7.5, 16, 12);
+        // 5. Ground Projection Disc (Shadow / Neon Under-glow on the grid)
+        const shadowGeom = new THREE.RingGeometry(0.5, 5.5, 16);
+        shadowGeom.rotateX(-Math.PI / 2);
+        const shadowMat = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.45
+        });
+        this.playerUnderGlow = new THREE.Mesh(shadowGeom, shadowMat);
+        this.playerUnderGlow.position.y = 0.05;
+        this.scene.add(this.playerUnderGlow);
+
+        // 6. Shield Bubble
+        const shieldGeom = new THREE.SphereGeometry(5.8, 16, 12);
         this.shieldMat = new THREE.MeshBasicMaterial({
             color: 0x00a2ff,
             transparent: true,
-            opacity: 0.22,
+            opacity: 0.18,
             wireframe: true,
         });
         this.shieldMesh = new THREE.Mesh(shieldGeom, this.shieldMat);
         this.playerGroup.add(this.shieldMesh);
 
-        this.playerGroup.position.set(0, 1.8, 0);
+        this.playerGroup.position.set(0, 2.2, 0);
         this.scene.add(this.playerGroup);
     }
 
     initPlayerLightTrail() {
-        // Persistent Tron Light Ribbon stretching behind the craft
-        this.trailPositions = new Float32Array(this.player.maxTrailPoints * 3 * 2);
+        // Correct 3D Light Ribbon Wall (Quads with setDrawRange)
+        const maxSegments = this.player.maxTrailPoints;
+        const maxVertices = maxSegments * 6; // 2 triangles per segment = 6 vertices
+
+        this.trailPositions = new Float32Array(maxVertices * 3);
         this.trailGeom = new THREE.BufferGeometry();
         this.trailGeom.setAttribute('position', new THREE.BufferAttribute(this.trailPositions, 3));
+        this.trailGeom.setDrawRange(0, 0);
 
         this.trailMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffcc,
+            color: 0x00ffff,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.75,
+            opacity: 0.82,
         });
         this.trailMesh = new THREE.Mesh(this.trailGeom, this.trailMat);
         this.scene.add(this.trailMesh);
     }
 
+    updatePlayerLightTrail() {
+        // Record new position if player moved
+        const lastPt = this.player.trailPoints[0];
+        if (!lastPt || lastPt.distanceTo(this.player.pos) > 1.8) {
+            this.player.trailPoints.unshift(this.player.pos.clone());
+            if (this.player.trailPoints.length > this.player.maxTrailPoints) {
+                this.player.trailPoints.pop();
+            }
+        }
+
+        const pts = this.player.trailPoints;
+        if (pts.length < 2) {
+            this.trailGeom.setDrawRange(0, 0);
+            return;
+        }
+
+        const positions = this.trailGeom.attributes.position.array;
+        let vIdx = 0;
+        const wallHeight = 3.2;
+
+        for (let i = 0; i < pts.length - 1; i++) {
+            const p1 = pts[i];
+            const p2 = pts[i + 1];
+            const fade1 = (1.0 - i / pts.length) * wallHeight;
+            const fade2 = (1.0 - (i + 1) / pts.length) * wallHeight;
+
+            // Triangle 1: p1_bot, p1_top, p2_bot
+            positions[vIdx++] = p1.x; positions[vIdx++] = 0.05; positions[vIdx++] = p1.z;
+            positions[vIdx++] = p1.x; positions[vIdx++] = fade1; positions[vIdx++] = p1.z;
+            positions[vIdx++] = p2.x; positions[vIdx++] = 0.05; positions[vIdx++] = p2.z;
+
+            // Triangle 2: p2_bot, p1_top, p2_top
+            positions[vIdx++] = p2.x; positions[vIdx++] = 0.05; positions[vIdx++] = p2.z;
+            positions[vIdx++] = p1.x; positions[vIdx++] = fade1; positions[vIdx++] = p1.z;
+            positions[vIdx++] = p2.x; positions[vIdx++] = fade2; positions[vIdx++] = p2.z;
+        }
+
+        this.trailGeom.attributes.position.needsUpdate = true;
+        this.trailGeom.setDrawRange(0, (pts.length - 1) * 6);
+    }
+
     onResize() {
-        const width = this.container.clientWidth;
-        const height = this.container.clientHeight;
+        const width = this.container.clientWidth || (window.innerWidth - 370);
+        const height = this.container.clientHeight || (window.innerHeight - 52);
         if (width === 0 || height === 0) return;
 
         this.camera.aspect = width / height;
@@ -314,10 +385,16 @@ class TronCyberGame {
             this.keys[e.code] = false;
         });
 
+        // Mouse aiming
         this.canvas.addEventListener('mousemove', (e) => {
             const rect = this.canvas.getBoundingClientRect();
             this.mousePos.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
             this.mousePos.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+            // Orbit camera on right mouse drag
+            if (this.isRightMouseDown) {
+                this.camPitch = Math.max(0.15, Math.min(0.85, this.camPitch - e.movementY * 0.004));
+            }
         });
 
         this.canvas.addEventListener('mousedown', (e) => {
@@ -325,14 +402,23 @@ class TronCyberGame {
                 this.isMouseDown = true;
                 window.sounds.init();
                 window.sounds.startMusic();
+            } else if (e.button === 2) {
+                this.isRightMouseDown = true;
             }
         });
 
         window.addEventListener('mouseup', (e) => {
-            if (e.button === 0) {
-                this.isMouseDown = false;
-            }
+            if (e.button === 0) this.isMouseDown = false;
+            if (e.button === 2) this.isRightMouseDown = false;
         });
+
+        this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // Mouse Wheel Zoom
+        this.canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            this.camZoom = Math.max(20, Math.min(90, this.camZoom + Math.sign(e.deltaY) * 4));
+        }, { passive: false });
     }
 
     async checkBackendHealth() {
@@ -349,12 +435,21 @@ class TronCyberGame {
     }
 
     toggleCameraView() {
-        this.cameraMode = (this.cameraMode === 'chase') ? 'tactical' : 'chase';
+        if (this.cameraMode === 'chase') {
+            this.cameraMode = 'tactical';
+        } else if (this.cameraMode === 'tactical') {
+            this.cameraMode = 'cockpit';
+        } else {
+            this.cameraMode = 'chase';
+        }
+
         const btn = document.getElementById('btn-camera');
         if (btn) {
-            btn.textContent = this.cameraMode === 'chase' ? "🎥 CAM: 3D CHASE [V]" : "🎥 CAM: TACTICAL ISOMETRIC [V]";
+            if (this.cameraMode === 'chase') btn.textContent = "🎥 CAM: 3D CHASE [V]";
+            else if (this.cameraMode === 'tactical') btn.textContent = "🎥 CAM: TACTICAL [V]";
+            else btn.textContent = "🎥 CAM: COCKPIT [V]";
         }
-        this.showFloatingText(`CAMERA: ${this.cameraMode.toUpperCase()}`, '#00ffcc');
+        this.showFloatingText(`CAMERA: ${this.cameraMode.toUpperCase()}`, '#00ffff');
     }
 
     toggleAutoPilot() {
@@ -365,7 +460,7 @@ class TronCyberGame {
             btn.textContent = this.autoPilot ? "⚡ JEV AUTOPILOT: ENGAGED [P]" : "🤖 JEV AUTOPILOT: OFF [P]";
         }
         this.showFloatingText(
-            this.autoPilot ? "JEV 3D PROTOCOL ENGAGED" : "MANUAL CONTROL RESTORED",
+            this.autoPilot ? "JEV 3D AUTOPILOT ENGAGED" : "MANUAL CONTROL RESTORED",
             this.autoPilot ? "#00ffcc" : "#ffbb00"
         );
         window.sounds.playAlert();
@@ -377,7 +472,6 @@ class TronCyberGame {
         this.enemiesDefeated = 0;
         this.isGameOver = false;
 
-        // Clear all dynamic 3D meshes
         this.clearMeshes(this.bullets);
         this.clearMeshes(this.enemyBullets);
         this.clearMeshes(this.enemies);
@@ -413,7 +507,7 @@ class TronCyberGame {
         window.sounds.playAlert();
         this.showFloatingText(`WAVE ${w} TRANSMITTING ON GRID`, '#00ffff');
 
-        // Spawn 3D Tron entities in an infinite perimeter radius around the player
+        // Spawn 3D Tron entities in infinite space
         const stalkerCount = 3 + w * 2;
         const droneCount = Math.floor(w * 1.5);
         const heavyCount = Math.floor((w - 1) / 2);
@@ -425,62 +519,59 @@ class TronCyberGame {
 
         if (isBossWave) {
             this.spawnEnemy('boss');
-            this.showFloatingText("⚠ TRON RECOGNIZER / APEX DETECTED ⚠", "#ff0055");
+            this.showFloatingText("⚠ TRON RECOGNIZER DETECTED ⚠", "#ff0055");
         }
 
-        // Query Jev Director
         this.queryDirector();
     }
 
     spawnEnemy(type) {
-        // Spawn randomly in radius between 180 and 320 units away from player
-        const spawnDist = 180 + Math.random() * 140;
+        const spawnDist = 180 + Math.random() * 120;
         const spawnAngle = Math.random() * Math.PI * 2;
         const x = this.player.pos.x + Math.cos(spawnAngle) * spawnDist;
         const z = this.player.pos.z + Math.sin(spawnAngle) * spawnDist;
 
         let hp = 35;
-        let speed = 90;
+        let speed = 85;
         let radius = 4;
         let color = 0xff0055;
         let mesh;
 
         if (type === 'stalker') {
-            // Tron Light Cycle / Stalker: sleek elongated craft with glowing neon edges
+            // Tron Light-Cycle Interceptor with glowing red edges
             const geom = new THREE.ConeGeometry(2.4, 7, 4);
             geom.rotateX(Math.PI / 2);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x14050d, roughness: 0.2, metalness: 0.8, emissive: 0x150007 });
+            const mat = new THREE.MeshStandardMaterial({ color: 0x140308, roughness: 0.2, metalness: 0.8, emissive: 0x1a0005 });
             mesh = new THREE.Mesh(geom, mat);
             const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geom), new THREE.LineBasicMaterial({ color: 0xff0055, linewidth: 2 }));
             mesh.add(edges);
-            speed = 120;
+
+            speed = 115;
             hp = 30;
             radius = 3.5;
             color = 0xff0055;
         } else if (type === 'drone') {
-            // Floating 3D wireframe Icosahedron Bit
+            // Floating 3D Wireframe Icosahedron Bit
             const geom = new THREE.IcosahedronGeometry(3.2, 0);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x101502, roughness: 0.2, metalness: 0.8, emissive: 0x1a1500 });
+            const mat = new THREE.MeshStandardMaterial({ color: 0x121002, roughness: 0.2, metalness: 0.8, emissive: 0x1c1600 });
             mesh = new THREE.Mesh(geom, mat);
             const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geom), new THREE.LineBasicMaterial({ color: 0xffbb00, linewidth: 2 }));
             mesh.add(edges);
 
-            // Floating height
-            mesh.position.y = 5.0;
+            mesh.position.y = 5.5;
             speed = 75;
             hp = 50;
             radius = 4;
             color = 0xffbb00;
         } else if (type === 'heavy') {
-            // Heavy Tron Tank: double-decked polygon with twin cannons
+            // Tron Tank
             const group = new THREE.Group();
             const geom = new THREE.BoxGeometry(6, 3, 8);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x150505, roughness: 0.3, metalness: 0.8 });
+            const mat = new THREE.MeshStandardMaterial({ color: 0x180502, roughness: 0.3, metalness: 0.8 });
             const body = new THREE.Mesh(geom, mat);
             body.add(new THREE.LineSegments(new THREE.EdgesGeometry(geom), new THREE.LineBasicMaterial({ color: 0xff3300 })));
             group.add(body);
 
-            // Turret
             const turretGeom = new THREE.CylinderGeometry(1.8, 2.2, 2, 6);
             const turret = new THREE.Mesh(turretGeom, mat);
             turret.position.y = 2.2;
@@ -493,7 +584,7 @@ class TronCyberGame {
             radius = 6;
             color = 0xff3300;
         } else if (type === 'boss') {
-            // THE ICONIC TRON RECOGNIZER
+            // Iconic flying Tron Recognizer
             mesh = this.buildTronRecognizerMesh();
             speed = 65;
             hp = 700 + this.wave * 120;
@@ -501,7 +592,7 @@ class TronCyberGame {
             color = 0xff00ff;
         }
 
-        mesh.position.set(x, type === 'boss' ? 12 : 1.8, z);
+        mesh.position.set(x, type === 'boss' ? 14 : 2.0, z);
         this.scene.add(mesh);
 
         this.enemies.push({
@@ -521,41 +612,45 @@ class TronCyberGame {
     }
 
     buildTronRecognizerMesh() {
-        // Iconic U-shaped / Archway flying Tron Recognizer
         const group = new THREE.Group();
         const mat = new THREE.MeshStandardMaterial({
-            color: 0x14020a,
+            color: 0x16020c,
             roughness: 0.2,
             metalness: 0.9,
-            emissive: 0x1f0010
+            emissive: 0x220010
         });
         const edgeMat = new THREE.LineBasicMaterial({ color: 0xff0055, linewidth: 2 });
 
-        // Top horizontal bridge
-        const topGeom = new THREE.BoxGeometry(28, 4.5, 14);
+        // Bridge
+        const topGeom = new THREE.BoxGeometry(30, 5, 14);
         const top = new THREE.Mesh(topGeom, mat);
         top.add(new THREE.LineSegments(new THREE.EdgesGeometry(topGeom), edgeMat));
         group.add(top);
 
-        // Left vertical pylon / leg
-        const legGeom = new THREE.BoxGeometry(6, 16, 12);
+        // Left leg
+        const legGeom = new THREE.BoxGeometry(6.5, 18, 12);
         const leftLeg = new THREE.Mesh(legGeom, mat);
-        leftLeg.position.set(-11, -8, 0);
+        leftLeg.position.set(-12, -9, 0);
         leftLeg.add(new THREE.LineSegments(new THREE.EdgesGeometry(legGeom), edgeMat));
         group.add(leftLeg);
 
-        // Right vertical pylon / leg
+        // Right leg
         const rightLeg = new THREE.Mesh(legGeom, mat);
-        rightLeg.position.set(11, -8, 0);
+        rightLeg.position.set(12, -9, 0);
         rightLeg.add(new THREE.LineSegments(new THREE.EdgesGeometry(legGeom), edgeMat));
         group.add(rightLeg);
 
-        // Center glowing MCP eye / cockpit
-        const eyeGeom = new THREE.BoxGeometry(7, 2, 2);
+        // Center glowing eye
+        const eyeGeom = new THREE.BoxGeometry(8, 2.5, 2);
         const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
         const eye = new THREE.Mesh(eyeGeom, eyeMat);
         eye.position.set(0, -1, -7);
         group.add(eye);
+
+        // Downward searchlight beam
+        const light = new THREE.PointLight(0xff0055, 3.5, 60);
+        light.position.set(0, -12, 0);
+        group.add(light);
 
         return group;
     }
@@ -565,12 +660,11 @@ class TronCyberGame {
 
         this.player.dashCharges--;
         this.player.isDashing = true;
-        this.player.dashTimer = 0.2;
-        this.player.invulnerableTimer = 0.28;
+        this.player.dashTimer = 0.22;
+        this.player.invulnerableTimer = 0.3;
         this.screenShake = 6;
         window.sounds.playDash();
 
-        // Dash direction based on input or facing
         let dx = 0, dz = 0;
         if (this.keys['w'] || this.keys['arrowup']) dz -= 1;
         if (this.keys['s'] || this.keys['arrowdown']) dz += 1;
@@ -578,22 +672,20 @@ class TronCyberGame {
         if (this.keys['d'] || this.keys['arrowright']) dx += 1;
 
         if (dx === 0 && dz === 0) {
-            dx = Math.cos(this.player.angle);
-            dz = Math.sin(this.player.angle);
+            dx = Math.sin(this.player.angle);
+            dz = Math.cos(this.player.angle);
         } else {
             const len = Math.hypot(dx, dz);
             dx /= len;
             dz /= len;
         }
 
-        this.player.vel.set(dx * 450, 0, dz * 450);
-
-        // Spawn 3D Tron after-image voxel particles
-        this.spawnVoxelBurst(this.player.pos.x, 1.8, this.player.pos.z, 0x00ffff, 18, 40);
+        this.player.vel.set(dx * 480, 0, dz * 480);
+        this.spawnVoxelBurst(this.player.pos.x, 2.0, this.player.pos.z, 0x00ffff, 20, 45);
     }
 
     // ==========================================
-    // JEV AI QUERIES (INTEGRATING WITH BACKEND)
+    // JEV AI QUERIES
     // ==========================================
 
     async queryEnemyAI(enemy) {
@@ -677,7 +769,6 @@ class TronCyberGame {
         const aidProb = data.answers?.grant_emergency_aid?.noul || 0;
 
         if (eventChoice === 'tactical_supply_drop' || aidProb > 0.7) {
-            // Drop near player on the infinite grid
             const angle = Math.random() * Math.PI * 2;
             const dist = 40 + Math.random() * 50;
             this.spawnPickup(
@@ -759,7 +850,6 @@ class TronCyberGame {
             this.executePlayerDash();
         }
 
-        // Aim towards target in 3D
         if (nearestEnemy) {
             this.aimPoint.copy(nearestEnemy.mesh.position);
         }
@@ -815,22 +905,20 @@ class TronCyberGame {
     }
 
     triggerLaserWallHazard() {
-        // Sweeping 3D neon laser wall on the digital grid
         const isHorizontal = Math.random() > 0.5;
-        const length = 260;
-        const wallGeom = new THREE.BoxGeometry(isHorizontal ? length : 1.5, 12, isHorizontal ? 1.5 : length);
+        const length = 280;
+        const wallGeom = new THREE.BoxGeometry(isHorizontal ? length : 1.5, 14, isHorizontal ? 1.5 : length);
         const wallMat = new THREE.MeshBasicMaterial({
             color: 0xff0055,
             transparent: true,
             opacity: 0.75,
-            wireframe: false,
         });
         const wallMesh = new THREE.Mesh(wallGeom, wallMat);
 
         const offsetDist = 80;
         wallMesh.position.set(
             this.player.pos.x + (isHorizontal ? 0 : (Math.random() > 0.5 ? offsetDist : -offsetDist)),
-            6,
+            7,
             this.player.pos.z + (isHorizontal ? (Math.random() > 0.5 ? offsetDist : -offsetDist) : 0)
         );
         this.scene.add(wallMesh);
@@ -847,9 +935,8 @@ class TronCyberGame {
     }
 
     spawnPickup(x, z, type) {
-        // 3D Tron floating energy polyhedra / power cube
         const geom = new THREE.OctahedronGeometry(2.5, 0);
-        let color = 0x00ffcc;
+        let color = 0x00ffff;
         if (type === 'shield') color = 0x0088ff;
         else if (type === 'overdrive') color = 0xff00ff;
         else if (type === 'nuke') color = 0xffff00;
@@ -875,8 +962,6 @@ class TronCyberGame {
     }
 
     showFloatingText(text, color = '#ffffff') {
-        const hud = document.querySelector('.arena-footer');
-        if (!hud) return;
         const msg = document.createElement('div');
         msg.className = 'floating-3d-msg';
         msg.style.position = 'absolute';
@@ -908,7 +993,6 @@ class TronCyberGame {
     update(dt) {
         if (this.isGameOver) return;
 
-        // Screen Shake
         if (this.screenShake > 0) {
             this.screenShake -= dt * 25;
             if (this.screenShake < 0) this.screenShake = 0;
@@ -923,7 +1007,7 @@ class TronCyberGame {
 
         // Raycasting for Mouse Aim on 3D Ground Plane (Y = 0)
         this.raycaster.setFromCamera(this.mousePos, this.camera);
-        const hit = this.raycaster.ray.intersectPlane(this.groundPlane, this.aimPoint);
+        this.raycaster.ray.intersectPlane(this.groundPlane, this.aimPoint);
 
         // Player Dash Timers
         if (this.player.isDashing) {
@@ -961,7 +1045,6 @@ class TronCyberGame {
             this.player.heat = Math.max(0, this.player.heat - 38 * dt);
         }
 
-        // Overdrive powerup
         if (this.player.overdriveTimer > 0) {
             this.player.overdriveTimer -= dt;
         }
@@ -969,7 +1052,7 @@ class TronCyberGame {
         // Movement: Manual vs Jev Autopilot
         if (this.autoPilot) {
             this.botDecisionTimer += dt;
-            if (this.botDecisionTimer >= 0.16) { // ~6 decisions per sec
+            if (this.botDecisionTimer >= 0.16) {
                 this.botDecisionTimer = 0;
                 this.queryBotPilot();
             }
@@ -978,28 +1061,36 @@ class TronCyberGame {
             this.updateManualMovement(dt);
         }
 
-        // Smoothly rotate and bank player craft
+        // Smooth Craft Banking & Hovering
         this.playerGroup.position.copy(this.player.pos);
-        this.playerGroup.position.y = 1.8 + Math.sin(performance.now() * 0.004) * 0.35;
+        this.playerGroup.position.y = 2.2 + Math.sin(performance.now() * 0.005) * 0.35;
         this.playerGroup.rotation.y = this.player.angle;
         this.playerGroup.rotation.z = this.player.bankAngle;
 
-        // Update Shield Mesh
+        // Under-glow follows player on ground
+        this.playerUnderGlow.position.x = this.player.pos.x;
+        this.playerUnderGlow.position.z = this.player.pos.z;
+
+        // Shield Mesh rotation
         if (this.shieldMesh) {
             this.shieldMesh.visible = (this.player.shield > 0);
-            this.shieldMat.opacity = Math.min(0.4, (this.player.shield / this.player.maxShield) * 0.35);
+            this.shieldMat.opacity = Math.min(0.25, (this.player.shield / this.player.maxShield) * 0.2);
             this.shieldMesh.rotation.y += dt * 2.0;
         }
 
         // Update Light Ribbon Trail
         this.updatePlayerLightTrail();
 
-        // Infinite Grid Follow (Snaps to grid step so it seamlessly scrolls infinitely)
+        // Infinite Grid Position Snapping
         const cell = this.gridCellSize;
         this.gridHelper.position.x = Math.floor(this.player.pos.x / cell) * cell;
         this.gridHelper.position.z = Math.floor(this.player.pos.z / cell) * cell;
         this.subGridHelper.position.x = Math.floor(this.player.pos.x / (cell * 2)) * (cell * 2);
         this.subGridHelper.position.z = Math.floor(this.player.pos.z / (cell * 2)) * (cell * 2);
+
+        // Distant Skyline follows player smoothly so it stays on horizon
+        this.skylineGroup.position.x = this.player.pos.x;
+        this.skylineGroup.position.z = this.player.pos.z;
 
         // Player Firing
         this.player.fireCooldown -= dt;
@@ -1008,13 +1099,12 @@ class TronCyberGame {
             this.firePlayerWeapon();
         }
 
-        // Update Bullets
+        // Bullets
         for (let i = this.bullets.length - 1; i >= 0; i--) {
             const b = this.bullets[i];
             b.mesh.position.addScaledVector(b.vel, dt);
             b.life -= dt;
 
-            // Check enemy hits
             let hit = false;
             for (let j = this.enemies.length - 1; j >= 0; j--) {
                 const e = this.enemies[j];
@@ -1040,7 +1130,7 @@ class TronCyberGame {
             }
         }
 
-        // Update Enemy Bullets
+        // Enemy Bullets
         for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
             const b = this.enemyBullets[i];
             b.mesh.position.addScaledVector(b.vel, dt);
@@ -1061,7 +1151,7 @@ class TronCyberGame {
             }
         }
 
-        // Update Enemies
+        // Enemies
         this.enemyDecisionTimer += dt;
         const triggerEnemyJev = (this.enemyDecisionTimer >= 0.7);
         if (triggerEnemyJev) this.enemyDecisionTimer = 0;
@@ -1073,18 +1163,16 @@ class TronCyberGame {
             }
             this.updateEnemy(e, dt);
 
-            // Collision with player
             const d = e.mesh.position.distanceTo(this.player.pos);
             if (d < e.radius + 3.0 && this.player.invulnerableTimer <= 0) {
                 this.damagePlayer(25);
                 this.screenShake = 10;
-                // Repel vector
                 const push = new THREE.Vector3().subVectors(this.player.pos, e.mesh.position).normalize().multiplyScalar(30);
                 this.player.pos.add(push);
             }
         }
 
-        // Update Pickups
+        // Pickups
         for (let i = this.pickups.length - 1; i >= 0; i--) {
             const p = this.pickups[i];
             p.life -= dt;
@@ -1107,7 +1195,7 @@ class TronCyberGame {
             }
         }
 
-        // Update 3D Voxel Particles
+        // Voxel Particles
         for (let i = this.voxelParticles.length - 1; i >= 0; i--) {
             const p = this.voxelParticles[i];
             p.mesh.position.addScaledVector(p.vel, dt);
@@ -1124,7 +1212,7 @@ class TronCyberGame {
             }
         }
 
-        // Update Active Laser Hazards
+        // Active Laser Hazards
         for (let i = this.activeHazards.length - 1; i >= 0; i--) {
             const h = this.activeHazards[i];
             if (h.warningTimer > 0) {
@@ -1134,10 +1222,9 @@ class TronCyberGame {
                 h.activeTimer -= dt;
                 h.mesh.material.opacity = 0.85;
 
-                // Check player damage
                 if (this.player.invulnerableTimer <= 0) {
                     const dist = this.player.pos.distanceTo(h.mesh.position);
-                    if (dist < 120 && (Math.abs(this.player.pos.x - h.mesh.position.x) < 5 || Math.abs(this.player.pos.z - h.mesh.position.z) < 5)) {
+                    if (dist < 140 && (Math.abs(this.player.pos.x - h.mesh.position.x) < 5 || Math.abs(this.player.pos.z - h.mesh.position.z) < 5)) {
                         this.damagePlayer(45 * dt);
                     }
                 }
@@ -1152,10 +1239,10 @@ class TronCyberGame {
             this.startWave(this.wave + 1);
         }
 
-        // Smooth Camera Follow
-        this.updateCamera(dt);
+        // Camera Follow
+        this.updateCameraPos(dt);
 
-        // Update 2D Holographic Radar & HUD
+        // Render 2D Radar & Update HUD
         this.renderRadar();
         this.updateHUD();
     }
@@ -1174,18 +1261,16 @@ class TronCyberGame {
             this.player.pos.addScaledVector(moveVec, spd * dt);
         }
 
-        // Aim towards 3D raycasted ground hit
+        // Aim towards 3D ground hit point
         const aimDx = this.aimPoint.x - this.player.pos.x;
         const aimDz = this.aimPoint.z - this.player.pos.z;
         this.player.targetAngle = Math.atan2(aimDx, aimDz);
 
-        // Smooth turning interpolation
         let diff = this.player.targetAngle - this.player.angle;
         while (diff < -Math.PI) diff += Math.PI * 2;
         while (diff > Math.PI) diff -= Math.PI * 2;
         this.player.angle += diff * Math.min(1.0, dt * 14);
 
-        // Dynamic 3D banking
         const targetBank = -dx * 0.45;
         this.player.bankAngle += (targetBank - this.player.bankAngle) * Math.min(1.0, dt * 10);
     }
@@ -1218,7 +1303,6 @@ class TronCyberGame {
             }
         }
 
-        // Dodge incoming projectiles
         this.enemyBullets.forEach(b => {
             if (this.player.pos.distanceTo(b.mesh.position) < 50) {
                 moveAng = Math.atan2(this.player.pos.x - b.mesh.position.x, this.player.pos.z - b.mesh.position.z);
@@ -1229,7 +1313,6 @@ class TronCyberGame {
         this.player.pos.x += Math.sin(moveAng) * spd * dt;
         this.player.pos.z += Math.cos(moveAng) * spd * dt;
 
-        // Turn towards aim target
         if (nearest) {
             const aimDx = nearest.mesh.position.x - this.player.pos.x;
             const aimDz = nearest.mesh.position.z - this.player.pos.z;
@@ -1239,34 +1322,6 @@ class TronCyberGame {
             while (diff > Math.PI) diff -= Math.PI * 2;
             this.player.angle += diff * Math.min(1.0, dt * 14);
         }
-    }
-
-    updatePlayerLightTrail() {
-        // Record trail point
-        this.player.trailPoints.unshift(this.player.pos.clone());
-        if (this.player.trailPoints.length > this.player.maxTrailPoints) {
-            this.player.trailPoints.pop();
-        }
-
-        const positions = this.trailGeom.attributes.position.array;
-        let pIdx = 0;
-
-        for (let i = 0; i < this.player.trailPoints.length; i++) {
-            const pt = this.player.trailPoints[i];
-            const height = (1.0 - (i / this.player.trailPoints.length)) * 2.5;
-
-            // Bottom vertex
-            positions[pIdx++] = pt.x;
-            positions[pIdx++] = 0.05;
-            positions[pIdx++] = pt.z;
-
-            // Top vertex
-            positions[pIdx++] = pt.x;
-            positions[pIdx++] = height;
-            positions[pIdx++] = pt.z;
-        }
-
-        this.trailGeom.attributes.position.needsUpdate = true;
     }
 
     firePlayerWeapon() {
@@ -1280,22 +1335,22 @@ class TronCyberGame {
             window.sounds.playAlert();
         }
 
-        // Spawn 3D glowing Tron projectile
-        const bGeom = new THREE.CylinderGeometry(0.35, 0.35, 3.5, 6);
+        // 3D Glowing Tron Projectile (Neon laser cylinder)
+        const bGeom = new THREE.CylinderGeometry(0.35, 0.35, 4.0, 6);
         bGeom.rotateX(Math.PI / 2);
         const bMat = new THREE.MeshBasicMaterial({ color: isOverdrive ? 0xff00ff : 0x00ffff });
         const bMesh = new THREE.Mesh(bGeom, bMat);
 
         const spawnPos = this.player.pos.clone().add(new THREE.Vector3(
             Math.sin(this.player.angle) * 4.0,
-            1.8,
+            2.0,
             Math.cos(this.player.angle) * 4.0
         ));
         bMesh.position.copy(spawnPos);
         bMesh.rotation.y = this.player.angle;
         this.scene.add(bMesh);
 
-        const bSpeed = 380;
+        const bSpeed = 400;
         const spread = (Math.random() - 0.5) * 0.04;
         const fireAng = this.player.angle + spread;
 
@@ -1315,7 +1370,6 @@ class TronCyberGame {
     updateEnemy(e, dt) {
         const dx = this.player.pos.x - e.mesh.position.x;
         const dz = this.player.pos.z - e.mesh.position.z;
-        const dist = Math.hypot(dx, dz);
         let ang = Math.atan2(dx, dz);
 
         if (e.tactic === 'flank_left') {
@@ -1330,14 +1384,12 @@ class TronCyberGame {
         e.mesh.position.z += Math.cos(ang) * e.speed * dt;
         e.mesh.rotation.y = ang;
 
-        // Drone floating bobbing
         if (e.type === 'drone') {
-            e.mesh.position.y = 5.0 + Math.sin(performance.now() * 0.005 + e.mesh.position.x) * 1.5;
+            e.mesh.position.y = 5.5 + Math.sin(performance.now() * 0.005 + e.mesh.position.x) * 1.5;
             e.mesh.rotation.x += dt * 1.5;
             e.mesh.rotation.z += dt * 1.5;
         }
 
-        // Enemy Shooting
         e.shootTimer -= dt;
         if (e.shootTimer <= 0) {
             if (e.type === 'drone') {
@@ -1410,11 +1462,9 @@ class TronCyberGame {
             localStorage.setItem('cyber_high_score', this.highScore.toString());
         }
 
-        // Shattering 3D Voxel De-Rezzing Effect
         this.spawnVoxelBurst(e.mesh.position.x, e.mesh.position.y, e.mesh.position.z, e.color, 32, 60);
         window.sounds.playExplosion();
 
-        // Chance to drop powerup
         if (Math.random() < 0.25 || e.type === 'boss') {
             const types = ['heal', 'shield', 'overdrive', 'nuke'];
             const pType = types[Math.floor(Math.random() * types.length)];
@@ -1475,49 +1525,68 @@ class TronCyberGame {
         }
     }
 
-    updateCamera(dt) {
+    updateCameraPos(dt = 0.016) {
         let targetCamPos;
+        const zoom = this.camZoom;
+
         if (this.cameraMode === 'chase') {
-            // Elevated 3D Chase Cam behind player craft
-            const camDist = 52;
-            const camHeight = 44;
+            // Low-angle 3D Chase Cam (iconic 3D Tron depth looking towards horizon)
+            const height = zoom * this.camPitch;
+            const dist = zoom * (1.0 - this.camPitch * 0.4);
+
             targetCamPos = new THREE.Vector3(
-                this.player.pos.x - Math.sin(this.player.angle) * camDist,
-                camHeight,
-                this.player.pos.z - Math.cos(this.player.angle) * camDist
+                this.player.pos.x - Math.sin(this.player.angle) * dist,
+                height,
+                this.player.pos.z - Math.cos(this.player.angle) * dist
             );
-        } else {
-            // Tactical Isometric Top-down Cam
+        } else if (this.cameraMode === 'tactical') {
+            // Elevated Top-Down Tactical Cam
             targetCamPos = new THREE.Vector3(
                 this.player.pos.x,
-                78,
-                this.player.pos.z + 42
+                zoom * 1.5,
+                this.player.pos.z + zoom * 0.7
+            );
+        } else {
+            // Cockpit First-Person Cam
+            targetCamPos = new THREE.Vector3(
+                this.player.pos.x + Math.sin(this.player.angle) * 1.5,
+                3.2,
+                this.player.pos.z + Math.cos(this.player.angle) * 1.5
             );
         }
 
-        // Screen Shake Offset
         if (this.screenShake > 0) {
             targetCamPos.x += (Math.random() - 0.5) * this.screenShake;
             targetCamPos.y += (Math.random() - 0.5) * this.screenShake;
             targetCamPos.z += (Math.random() - 0.5) * this.screenShake;
         }
 
-        this.camera.position.lerp(targetCamPos, Math.min(1.0, dt * 6.5));
-        this.camera.lookAt(this.player.pos.x, 2.0, this.player.pos.z);
+        this.camera.position.lerp(targetCamPos, Math.min(1.0, dt * 7.0));
+
+        if (this.cameraMode === 'cockpit') {
+            const lookTarget = this.player.pos.clone().add(new THREE.Vector3(
+                Math.sin(this.player.angle) * 80,
+                2.0,
+                Math.cos(this.player.angle) * 80
+            ));
+            this.camera.lookAt(lookTarget);
+        } else {
+            this.camera.lookAt(this.player.pos.x, 2.5, this.player.pos.z);
+        }
     }
 
     renderRadar() {
+        if (!this.radarCtx) return;
         const ctx = this.radarCtx;
         const w = this.radarCanvas.width;
         const h = this.radarCanvas.height;
         const cx = w / 2;
         const cy = h / 2;
         const radarRadius = w / 2 - 4;
-        const worldRadarRange = 360; // range in 3D units
+        const worldRadarRange = 360;
 
         ctx.clearRect(0, 0, w, h);
 
-        // Concentric range circles
         ctx.strokeStyle = 'rgba(0, 255, 204, 0.2)';
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -1526,13 +1595,12 @@ class TronCyberGame {
         ctx.arc(cx, cy, radarRadius, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Crosshairs
         ctx.beginPath();
         ctx.moveTo(cx, 4); ctx.lineTo(cx, h - 4);
         ctx.moveTo(4, cy); ctx.lineTo(w - 4, cy);
         ctx.stroke();
 
-        // Draw Pickups
+        // Pickups
         this.pickups.forEach(p => {
             const rx = (p.mesh.position.x - this.player.pos.x) / worldRadarRange;
             const rz = (p.mesh.position.z - this.player.pos.z) / worldRadarRange;
@@ -1542,7 +1610,7 @@ class TronCyberGame {
             }
         });
 
-        // Draw Enemies
+        // Enemies
         this.enemies.forEach(e => {
             const rx = (e.mesh.position.x - this.player.pos.x) / worldRadarRange;
             const rz = (e.mesh.position.z - this.player.pos.z) / worldRadarRange;
@@ -1555,7 +1623,7 @@ class TronCyberGame {
             }
         });
 
-        // Draw Player Ship (Center triangle facing heading)
+        // Player heading
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(-this.player.angle + Math.PI);
@@ -1632,7 +1700,17 @@ class TronCyberGame {
     }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    window.game = new TronCyberGame();
-    window.game.loop();
-});
+// Robust auto-boot across all DOM states
+function bootGame() {
+    if (!window.game) {
+        console.log("🎮 Initializing TronCyberGame 3D Engine...");
+        window.game = new TronCyberGame();
+        window.game.loop();
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootGame);
+} else {
+    bootGame();
+}
