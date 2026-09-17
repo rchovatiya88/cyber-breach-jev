@@ -280,6 +280,28 @@ header {
     background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.4), transparent);
 }
 
+.cockpit-hud-info {
+    position: absolute;
+    bottom: 22%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 24px;
+    align-items: center;
+}
+
+.cockpit-telemetry-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--neon-cyan);
+    background: rgba(4, 15, 28, 0.65);
+    border: 1px solid rgba(0, 255, 255, 0.35);
+    padding: 3px 10px;
+    border-radius: 4px;
+    text-shadow: 0 0 6px var(--neon-cyan);
+}
+
 /* Player HUD Overlay on Arena */
 .arena-hud {
     position: absolute;

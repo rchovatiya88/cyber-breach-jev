@@ -39,7 +39,7 @@
 
         <div class="header-controls">
             <button class="ctrl-btn view-btn" id="btn-view-mode" onclick="window.game.toggleRenderMode()">🎮 VIEW: 3D TRON [G]</button>
-            <button class="ctrl-btn" id="btn-camera" onclick="window.game.toggleCameraView()">🎥 CAM: 3D CHASE [V]</button>
+            <button class="ctrl-btn" id="btn-camera" onclick="window.game.toggleCameraView()">🎥 CAM: CHASE [V]</button>
             <button class="ctrl-btn" id="btn-autopilot" onclick="window.game.toggleAutoPilot()">🤖 JEV AUTOPILOT [P]</button>
             <button class="ctrl-btn" onclick="document.getElementById('config-modal').classList.add('active')">⚙ JEV CONFIG</button>
         </div>
@@ -98,6 +98,10 @@
                 <div class="cockpit-bracket-right"></div>
                 <div class="cockpit-horizon-bar"></div>
                 <div class="cockpit-reticle"></div>
+                <div class="cockpit-hud-info">
+                    <span id="cockpit-speed" class="cockpit-telemetry-badge">SPD: 0 KPH</span>
+                    <span id="cockpit-heading" class="cockpit-telemetry-badge">HDG: 000° [TRON-SYS]</span>
+                </div>
             </div>
 
             <!-- Dual Viewport Canvases -->

@@ -191,6 +191,9 @@ class CyberGameEngine {
 
         // Player Light Ribbon Wall
         this.initPlayerLightTrail();
+
+        // Holographic 3D Ground Targeting Reticle
+        this.init3DTargetReticle();
     }
 
     buildTronSkyline() {
@@ -397,6 +400,52 @@ class CyberGameEngine {
 
         this.playerTrailMesh = new THREE.Mesh(geom, mat);
         this.scene.add(this.playerTrailMesh);
+    }
+
+    init3DTargetReticle() {
+        this.reticleGroup = new THREE.Group();
+
+        // 1. Segmented Outer Reticle Ring
+        const ringGeom = new THREE.RingGeometry(3.6, 4.4, 32);
+        ringGeom.rotateX(-Math.PI / 2);
+        this.reticleRingMat = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+        this.reticleRing = new THREE.Mesh(ringGeom, this.reticleRingMat);
+        this.reticleGroup.add(this.reticleRing);
+
+        // 2. High-Tech Crosshair Brackets
+        const tickMat = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 });
+        const tickPoints = [
+            new THREE.Vector3(-6.5, 0.1, 0), new THREE.Vector3(-4.8, 0.1, 0),
+            new THREE.Vector3(4.8, 0.1, 0), new THREE.Vector3(6.5, 0.1, 0),
+            new THREE.Vector3(0, 0.1, -6.5), new THREE.Vector3(0, 0.1, -4.8),
+            new THREE.Vector3(0, 0.1, 4.8), new THREE.Vector3(0, 0.1, 6.5),
+        ];
+        const tickGeom = new THREE.BufferGeometry().setFromPoints(tickPoints);
+        this.reticleTicks = new THREE.LineSegments(tickGeom, tickMat);
+        this.reticleGroup.add(this.reticleTicks);
+
+        // 3. Central Pulsing Targeting Core
+        const diamondGeom = new THREE.RingGeometry(0.3, 1.1, 4);
+        diamondGeom.rotateX(-Math.PI / 2);
+        diamondGeom.rotateY(Math.PI / 4);
+        this.reticleDiamondMat = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending
+        });
+        this.reticleDiamond = new THREE.Mesh(diamondGeom, this.reticleDiamondMat);
+        this.reticleGroup.add(this.reticleDiamond);
+
+        this.reticleGroup.position.set(0, 0.15, 0);
+        this.scene.add(this.reticleGroup);
     }
 
     /* --------------------------------------------------------------------- */
@@ -793,9 +842,10 @@ class CyberGameEngine {
         this.waveStartTime = performance.now();
         this.enemiesDefeated = 0;
 
-        const stalkerCount = 4 + w * 2;
-        const droneCount = 2 + Math.floor(w * 1.5);
-        const heavyCount = Math.floor(w * 0.8);
+        // Balanced tactical ramp: Wave 1 starts accessible with 2 stalkers and 1 drone
+        const stalkerCount = Math.max(2, 2 + (w - 1) * 2);
+        const droneCount = Math.max(1, 1 + Math.floor((w - 1) * 1.5));
+        const heavyCount = Math.floor((w - 1) * 0.8);
 
         for (let i = 0; i < stalkerCount; i++) this.spawnEnemy('stalker');
         for (let i = 0; i < droneCount; i++) this.spawnEnemy('drone');
@@ -805,13 +855,18 @@ class CyberGameEngine {
             this.spawnEnemy('boss');
         }
 
+        // Grant 2.5s overcharge shield on wave start to prevent spawn camp
+        this.player.invulnerableTimer = 2.5;
+
         this.spawnPickup('shield');
         this.spawnFloatingText(`GRID INVASION: WAVE ${w}`, this.player.pos.x, this.player.pos.z, '#00ffff');
+        this.spawnFloatingText(`OVERCHARGE SHIELD ACTIVE (2.5s)`, this.player.pos.x, this.player.pos.z - 25, '#00a2ff');
         if (window.audioManager) window.audioManager.playOverdrive();
     }
 
     spawnEnemy(type) {
-        const spawnDist = 200 + Math.random() * 140;
+        // Spawn far enough away (380-580 units) for tactical reaction time
+        const spawnDist = 380 + Math.random() * 200;
         const spawnAngle = Math.random() * Math.PI * 2;
         const x = this.player.pos.x + Math.cos(spawnAngle) * spawnDist;
         const z = this.player.pos.z + Math.sin(spawnAngle) * spawnDist;
@@ -887,51 +942,73 @@ class CyberGameEngine {
     buildTronLightCycleMesh() {
         const group = new THREE.Group();
         const chassisMat = new THREE.MeshStandardMaterial({
-            color: 0x0e0207,
-            roughness: 0.15,
-            metalness: 0.9,
-            emissive: 0x180006
+            color: 0x080104,
+            roughness: 0.12,
+            metalness: 0.95,
+            emissive: 0x140005
         });
-        const neonMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
-        const edgeMat = new THREE.LineBasicMaterial({ color: 0xff0055, linewidth: 2 });
+        const neonCrimson = new THREE.MeshBasicMaterial({ color: 0xff0055 });
+        const neonCore = new THREE.MeshBasicMaterial({ color: 0xff3377 });
+        const edgeCrimson = new THREE.LineBasicMaterial({ color: 0xff0055, linewidth: 2 });
 
-        // Streamlined Cycle Body
-        const bodyGeom = new THREE.BoxGeometry(2.4, 2.2, 7.5);
-        const body = new THREE.Mesh(bodyGeom, chassisMat);
-        body.position.y = 1.1;
-        body.add(new THREE.LineSegments(new THREE.EdgesGeometry(bodyGeom), edgeMat));
-        group.add(body);
+        // 1. Central Aerodynamic Fairing & Chassis
+        const chassisGeom = new THREE.BoxGeometry(2.0, 1.8, 6.4);
+        const chassis = new THREE.Mesh(chassisGeom, chassisMat);
+        chassis.position.y = 1.0;
+        chassis.add(new THREE.LineSegments(new THREE.EdgesGeometry(chassisGeom), edgeCrimson));
+        group.add(chassis);
 
-        // Front Wheel (Hollow glowing neon rim torus)
-        const wheelGeom = new THREE.TorusGeometry(1.6, 0.45, 12, 24);
-        const frontWheel = new THREE.Mesh(wheelGeom, neonMat);
-        frontWheel.rotation.y = Math.PI / 2;
-        frontWheel.position.set(0, 1.2, -3.2);
-        group.add(frontWheel);
-
-        // Rear Wheel
-        const rearWheel = new THREE.Mesh(wheelGeom, neonMat);
-        rearWheel.rotation.y = Math.PI / 2;
-        rearWheel.position.set(0, 1.2, 3.2);
-        group.add(rearWheel);
-
-        // Rider Cockpit Visor Canopy
-        const visorGeom = new THREE.BoxGeometry(1.4, 0.9, 2.8);
-        const visor = new THREE.Mesh(visorGeom, neonMat);
-        visor.position.set(0, 2.2, -0.4);
+        // 2. Rider Canopy / Slanted Visor
+        const visorGeom = new THREE.ConeGeometry(1.0, 3.0, 4);
+        visorGeom.rotateX(Math.PI / 2);
+        const visor = new THREE.Mesh(visorGeom, neonCrimson);
+        visor.position.set(0, 1.8, -0.6);
         group.add(visor);
 
-        // Cycle Ground Glow
-        const cycleGlowGeom = new THREE.RingGeometry(0.5, 4.0, 16);
-        cycleGlowGeom.rotateX(-Math.PI / 2);
-        const cycleGlow = new THREE.Mesh(cycleGlowGeom, new THREE.MeshBasicMaterial({
-            color: 0xff0055,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.35
-        }));
-        cycleGlow.position.y = 0.04;
-        group.add(cycleGlow);
+        // 3. Front Wheel Assembly (Prominent Neon Rim & Enclosed Hub)
+        const wheelGeom = new THREE.TorusGeometry(1.6, 0.4, 12, 28);
+        const frontWheel = new THREE.Mesh(wheelGeom, neonCrimson);
+        frontWheel.rotation.y = Math.PI / 2;
+        frontWheel.position.set(0, 1.4, -3.2);
+        group.add(frontWheel);
+
+        const hubGeom = new THREE.CylinderGeometry(0.8, 0.8, 0.85, 12);
+        hubGeom.rotateZ(Math.PI / 2);
+        const frontHub = new THREE.Mesh(hubGeom, chassisMat);
+        frontHub.position.set(0, 1.4, -3.2);
+        group.add(frontHub);
+
+        // Front Cowl Fairing over front wheel
+        const cowlGeom = new THREE.BoxGeometry(1.6, 0.85, 2.5);
+        const cowl = new THREE.Mesh(cowlGeom, chassisMat);
+        cowl.position.set(0, 2.0, -2.8);
+        cowl.add(new THREE.LineSegments(new THREE.EdgesGeometry(cowlGeom), edgeCrimson));
+        group.add(cowl);
+
+        // 4. Rear Wheel Assembly
+        const rearWheel = new THREE.Mesh(wheelGeom, neonCrimson);
+        rearWheel.rotation.y = Math.PI / 2;
+        rearWheel.position.set(0, 1.4, 3.0);
+        group.add(rearWheel);
+
+        const rearHub = new THREE.Mesh(hubGeom, chassisMat);
+        rearHub.position.set(0, 1.4, 3.0);
+        group.add(rearHub);
+
+        // Rear Light Ribbon Stern Emitter
+        const sternGeom = new THREE.BoxGeometry(1.4, 1.3, 1.2);
+        const stern = new THREE.Mesh(sternGeom, neonCore);
+        stern.position.set(0, 1.2, 3.4);
+        group.add(stern);
+
+        // 5. Dual Neon Side Runners
+        const sideStripGeom = new THREE.BoxGeometry(0.12, 0.3, 4.4);
+        const leftStrip = new THREE.Mesh(sideStripGeom, neonCore);
+        leftStrip.position.set(-1.08, 0.9, 0);
+        const rightStrip = new THREE.Mesh(sideStripGeom, neonCore);
+        rightStrip.position.set(1.08, 0.9, 0);
+        group.add(leftStrip);
+        group.add(rightStrip);
 
         return group;
     }
@@ -1298,26 +1375,44 @@ class CyberGameEngine {
         const dist = Math.hypot(dx, dz) || 1;
         const dirX = dx / dist;
         const dirZ = dz / dist;
-        const bulletSpeed = (e.type === 'heavy') ? 140 : 160;
+        const bulletSpeed = (e.type === 'heavy') ? 135 : 155;
 
-        // 3D Enemy Projectile Mesh: Blazing red energy orb
-        const bGeom = new THREE.SphereGeometry(1.2, 8, 8);
-        const bMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
-        const bMesh = new THREE.Mesh(bGeom, bMat);
-        bMesh.position.set(e.x, 2.0, e.z);
-        this.scene.add(bMesh);
+        // 3D Enemy Projectile Mesh: Blazing Tron Plasma Bolt with additive neon halo
+        const bulletGroup = new THREE.Group();
+        const coreColor = 0xffffff;
+        const auraColor = (e.type === 'heavy') ? 0xff4400 : 0xff0055;
+
+        // Intense inner core
+        const coreGeom = new THREE.SphereGeometry(1.4, 8, 8);
+        const coreMat = new THREE.MeshBasicMaterial({ color: coreColor });
+        const coreMesh = new THREE.Mesh(coreGeom, coreMat);
+        bulletGroup.add(coreMesh);
+
+        // Blazing outer glow sphere
+        const auraGeom = new THREE.SphereGeometry(2.4, 12, 12);
+        const auraMat = new THREE.MeshBasicMaterial({
+            color: auraColor,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+        const auraMesh = new THREE.Mesh(auraGeom, auraMat);
+        bulletGroup.add(auraMesh);
+
+        bulletGroup.position.set(e.x, 2.0, e.z);
+        this.scene.add(bulletGroup);
 
         this.enemyBullets.push({
             x: e.x,
             z: e.z,
             vx: dirX * bulletSpeed,
             vz: dirZ * bulletSpeed,
-            damage: (e.type === 'heavy') ? 25 : 12,
-            life: 2.2,
-            maxLife: 2.2,
+            damage: (e.type === 'heavy') ? 22 : 12,
+            life: 2.4,
+            maxLife: 2.4,
             radius: 5,
-            color: '#ff0055',
-            mesh: bMesh
+            color: (e.type === 'heavy') ? '#ff4400' : '#ff0055',
+            mesh: bulletGroup
         });
     }
 
@@ -1365,6 +1460,8 @@ class CyberGameEngine {
     damagePlayer(amount) {
         if (this.player.invulnerableTimer > 0 || this.isGameOver) return;
 
+        // Apply 450ms invulnerability frames against incoming volleys and contact spikes
+        this.player.invulnerableTimer = 0.45;
         this.player.lastDamageTime = performance.now();
         this.screenShake = 16;
         this.player.shieldHitFlash = 1.0;
@@ -1439,6 +1536,7 @@ class CyberGameEngine {
         this.player.heat = 0;
         this.player.isOverheated = false;
         this.player.trailPoints = [];
+        this.player.invulnerableTimer = 2.5; // Overcharge grace period on respawn
         this.score = 0;
         this.isGameOver = false;
 
@@ -1780,9 +1878,18 @@ class CyberGameEngine {
                 }
             }
 
-            // Ramming Damage
-            if (dist < e.radius + 6) {
-                this.damagePlayer(e.isBerserk ? 20 : 12);
+            // Ramming Damage & Repulsion Physics
+            if (dist < e.radius + 8) {
+                if (this.player.invulnerableTimer <= 0) {
+                    this.damagePlayer(e.isBerserk ? 20 : 12);
+                }
+
+                // Elastic knockback separation impulse to prevent sticky overlapping damage
+                const overlap = (e.radius + 12) - dist;
+                e.x -= ndx * (overlap + 15);
+                e.z -= ndz * (overlap + 15);
+                this.player.vel.x += ndx * 50;
+                this.player.vel.z += ndz * 50;
             }
         });
     }
@@ -1878,10 +1985,13 @@ class CyberGameEngine {
             this.playerGroup.rotation.y = this.player.angle;
             this.playerGroup.rotation.z = this.player.bankAngle; // Dynamic Roll
 
-            // Shield Flash (Only surges on damage)
+            // Shield Flash & Invulnerability Pulse
             if (this.shieldMesh) {
-                this.shieldMesh.material.opacity = this.player.shieldHitFlash * 0.45;
-                this.shieldMesh.visible = (this.player.shieldHitFlash > 0.02);
+                const isInvuln = (this.player.invulnerableTimer > 0);
+                const invulnPulse = isInvuln ? (0.35 + 0.25 * Math.sin(performance.now() * 0.02)) : 0;
+                const flash = Math.max(invulnPulse, this.player.shieldHitFlash * 0.5);
+                this.shieldMesh.material.opacity = flash;
+                this.shieldMesh.visible = (flash > 0.02);
             }
 
             // Thruster point light decay
@@ -1904,7 +2014,39 @@ class CyberGameEngine {
             }
         });
 
-        // 4. Update Cyber Dust (Drifts with velocity for speed sensation)
+        // 4. Sync Holographic 3D Targeting Reticle
+        if (this.reticleGroup) {
+            if (this.cameraMode === 'cockpit' || this.isGameOver) {
+                this.reticleGroup.visible = false;
+            } else {
+                this.reticleGroup.visible = true;
+                this.reticleGroup.position.x = this.aimPoint.x;
+                this.reticleGroup.position.z = this.aimPoint.z;
+                this.reticleRing.rotation.y += dt * 2.2;
+
+                // Check for nearest enemy to aimPoint (Target Lock!)
+                let isLocked = false;
+                for (let e of this.enemies) {
+                    const d = Math.hypot(e.x - this.aimPoint.x, e.z - this.aimPoint.z);
+                    if (d < (e.radius + 16)) {
+                        isLocked = true;
+                        break;
+                    }
+                }
+
+                if (isLocked) {
+                    this.reticleRingMat.color.setHex(0xff0055);
+                    this.reticleDiamondMat.color.setHex(0xff0055);
+                    this.reticleGroup.scale.set(1.2, 1.2, 1.2);
+                } else {
+                    this.reticleRingMat.color.setHex(0x00ffff);
+                    this.reticleDiamondMat.color.setHex(0x00ffff);
+                    this.reticleGroup.scale.set(1.0, 1.0, 1.0);
+                }
+            }
+        }
+
+        // 5. Update Cyber Dust (Drifts with velocity for speed sensation)
         if (this.dustParticles) {
             const posAttr = this.dustParticles.geometry.attributes.position;
             const px = this.player.pos.x;
@@ -1925,10 +2067,10 @@ class CyberGameEngine {
             posAttr.needsUpdate = true;
         }
 
-        // 5. Camera Tracking
+        // 6. Camera Tracking
         this.update3DCamera();
 
-        // 6. Three.js Render
+        // 7. Three.js Render
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -2008,30 +2150,51 @@ class CyberGameEngine {
         const shakeY = (Math.random() - 0.5) * this.screenShake * 0.2;
 
         if (this.cameraMode === 'chase') {
-            // Elevated third-person chase camera
+            // Restore exterior ship & under-glow visibility
+            if (this.playerGroup) this.playerGroup.visible = true;
+            if (this.playerUnderGlow) this.playerUnderGlow.visible = true;
+
+            // Elevated third-person chase camera looking ahead along flight path
             const dist = this.camZoom;
-            const height = dist * 0.62;
+            const height = dist * 0.52 + 7.0;
             const camTargetX = p.x - Math.sin(ang) * dist + shakeX;
             const camTargetY = height + shakeY;
             const camTargetZ = p.z + Math.cos(ang) * dist;
 
             this.camera.position.lerp(new THREE.Vector3(camTargetX, camTargetY, camTargetZ), this.camSmoothing);
-            this.camera.lookAt(p.x, 2.5, p.z);
+            this.camera.lookAt(p.x + Math.sin(ang) * 18, 2.5, p.z - Math.cos(ang) * 18);
         } else if (this.cameraMode === 'tactical') {
-            // Top-down angled tactical view
+            // Restore exterior ship & under-glow visibility
+            if (this.playerGroup) this.playerGroup.visible = true;
+            if (this.playerUnderGlow) this.playerUnderGlow.visible = true;
+
+            // Top-down angled tactical overview
             const camTargetX = p.x + shakeX;
-            const camTargetY = 75 + shakeY;
-            const camTargetZ = p.z + 45;
+            const camTargetY = 82 + shakeY;
+            const camTargetZ = p.z + 52;
 
             this.camera.position.lerp(new THREE.Vector3(camTargetX, camTargetY, camTargetZ), this.camSmoothing);
-            this.camera.lookAt(p.x, 0, p.z);
+            this.camera.lookAt(p.x, 0, p.z - 8);
         } else if (this.cameraMode === 'cockpit') {
-            // First-person cockpit view
+            // CRITICAL FIX: Hide player exterior mesh completely so wings/canopy/thrusters never obstruct view
+            if (this.playerGroup) this.playerGroup.visible = false;
+            if (this.playerUnderGlow) this.playerUnderGlow.visible = false;
+
+            // First-person cockpit view looking forward along ship heading
             const forwardX = Math.sin(ang);
             const forwardZ = -Math.cos(ang);
 
-            this.camera.position.set(p.x, 3.2, p.z);
-            this.camera.lookAt(p.x + forwardX * 100, 3.0, p.z + forwardZ * 100);
+            this.camera.position.set(p.x + shakeX, 2.7 + shakeY, p.z);
+            this.camera.lookAt(p.x + forwardX * 100, 2.5, p.z + forwardZ * 100);
+
+            // Update Cockpit HUD telemetry
+            const spdElem = document.getElementById('cockpit-speed');
+            const hdgElem = document.getElementById('cockpit-heading');
+            if (spdElem) spdElem.innerText = `SPD: ${Math.round(this.player.vel.length() * 3.6)} KPH`;
+            if (hdgElem) {
+                let deg = Math.round(((-ang * 180 / Math.PI) % 360 + 360) % 360);
+                hdgElem.innerText = `HDG: ${String(deg).padStart(3, '0')}° [TRON-SYS]`;
+            }
         }
     }
 
@@ -2284,6 +2447,11 @@ class CyberGameEngine {
     }
 
     draw2DPlayer(ctx) {
+        // Invulnerability strobe flicker
+        if (this.player.invulnerableTimer > 0 && Math.floor(performance.now() / 65) % 2 === 0) {
+            return;
+        }
+
         ctx.save();
         ctx.translate(this.player.pos.x, this.player.pos.z);
         ctx.rotate(this.player.angle);
