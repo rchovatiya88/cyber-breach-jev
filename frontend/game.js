@@ -132,6 +132,7 @@ class CyberGameEngine {
 
         // Perspective Camera
         this.camera = new THREE.PerspectiveCamera(62, width / height, 0.5, 3500);
+        this.camera.rotation.order = 'YXZ';
         this.camera.position.set(0, 30, 45);
         this.camera.lookAt(0, 0, 0);
 
@@ -2333,7 +2334,7 @@ class CyberGameEngine {
                 const invulnPulse = isInvuln ? (0.35 + 0.25 * Math.sin(performance.now() * 0.02)) : 0;
                 const flash = Math.max(invulnPulse, this.player.shieldHitFlash * 0.5);
                 this.shieldMesh.material.opacity = flash;
-                this.shieldMesh.visible = (flash > 0.02);
+                this.shieldMesh.visible = (flash > 0.02 && this.cameraMode !== 'cockpit');
             }
 
             // Thruster point light decay
@@ -2418,6 +2419,13 @@ class CyberGameEngine {
             posAttr.needsUpdate = true;
         }
 
+        // Dynamic Warp Speed FOV kick (dilates FOV from 62° to 74° on gate surge with smooth recovery)
+        const targetFOV = (this.cameraMode === 'cockpit' && this.player.speedBoostTimer > 0) ? 74 : 62;
+        if (Math.abs(this.camera.fov - targetFOV) > 0.05) {
+            this.camera.fov += (targetFOV - this.camera.fov) * Math.min(1.0, dt * 7.0);
+            this.camera.updateProjectionMatrix();
+        }
+
         // 6. Camera Tracking
         this.update3DCamera();
 
@@ -2451,40 +2459,88 @@ class CyberGameEngine {
         const cx = w / 2;
         const cy = h / 2;
 
-        // 1. Flight Horizon & Center Crosshair
+        // 1. Dynamic Collimated Artificial Horizon & Pitch Ladder
         ctx.save();
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
-        ctx.lineWidth = 1.5;
+        ctx.translate(cx, cy);
+        // Bank roll tilts horizon opposite to craft roll (ground tilts relative to pilot)
+        ctx.rotate(-this.player.bankAngle * 0.45);
 
-        // Horizon line segments
+        // Pitch shift: vertical displacement based on flight pitch
+        const pitchShift = (this.camera.rotation.x + 0.018) * 420;
+        ctx.translate(0, pitchShift);
+
+        // Neon Cyan Horizon line segments
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
-        ctx.moveTo(cx - 200, cy);
-        ctx.lineTo(cx - 50, cy);
-        ctx.moveTo(cx + 50, cy);
-        ctx.lineTo(cx + 200, cy);
-        // Pitch tick marks
-        ctx.moveTo(cx - 150, cy - 25); ctx.lineTo(cx - 130, cy - 25);
-        ctx.moveTo(cx + 130, cy - 25); ctx.lineTo(cx + 150, cy - 25);
-        ctx.moveTo(cx - 150, cy + 25); ctx.lineTo(cx - 130, cy + 25);
-        ctx.moveTo(cx + 130, cy + 25); ctx.lineTo(cx + 150, cy + 25);
+        ctx.moveTo(-220, 0); ctx.lineTo(-65, 0);
+        ctx.moveTo(65, 0); ctx.lineTo(220, 0);
         ctx.stroke();
 
-        // Central flight crosshair
+        // Collimated Pitch Ladder (+10°, +5°, -5°, -10°)
+        const pitchLadder = [
+            { deg: 10, y: -48, solid: true },
+            { deg: 5, y: -24, solid: true },
+            { deg: -5, y: 24, solid: false },
+            { deg: -10, y: 48, solid: false }
+        ];
+        pitchLadder.forEach(rung => {
+            const rw = rung.deg % 10 === 0 ? 50 : 32;
+            ctx.beginPath();
+            if (rung.solid) {
+                ctx.moveTo(-rw, rung.y); ctx.lineTo(-18, rung.y); ctx.lineTo(-18, rung.y + 4);
+                ctx.moveTo(18, rung.y + 4); ctx.lineTo(18, rung.y); ctx.lineTo(rw, rung.y);
+            } else {
+                ctx.setLineDash([4, 4]);
+                ctx.moveTo(-rw, rung.y); ctx.lineTo(-18, rung.y); ctx.lineTo(-18, rung.y - 4);
+                ctx.moveTo(18, rung.y - 4); ctx.lineTo(18, rung.y); ctx.lineTo(rw, rung.y);
+                ctx.setLineDash([]);
+            }
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.65)';
+            ctx.font = '9px "Share Tech Mono", monospace';
+            ctx.textAlign = 'right';
+            ctx.fillText(`${rung.deg}°`, -rw - 4, rung.y + 3);
+            ctx.textAlign = 'left';
+            ctx.fillText(`${rung.deg}°`, rw + 4, rung.y + 3);
+        });
+
+        // Center Flight Path Marker (FPM)
         ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.arc(cx, cy, 7, 0, Math.PI * 2);
-        ctx.moveTo(cx - 14, cy); ctx.lineTo(cx - 7, cy);
-        ctx.moveTo(cx + 7, cy); ctx.lineTo(cx + 14, cy);
-        ctx.moveTo(cx, cy - 14); ctx.lineTo(cx, cy - 7);
-        ctx.moveTo(cx, cy + 7); ctx.lineTo(cx, cy + 14);
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.moveTo(-12, 0); ctx.lineTo(-6, 0);
+        ctx.moveTo(6, 0); ctx.lineTo(12, 0);
+        ctx.moveTo(0, -9); ctx.lineTo(0, -6);
         ctx.stroke();
 
-        // Speed boost active banner
+        ctx.restore();
+
+        // Dynamic Warp Speed Radial Tunnel Streaks
         if (this.player.speedBoostTimer > 0) {
+            ctx.save();
+            const surgeAlpha = Math.min(1.0, this.player.speedBoostTimer * 0.75);
+            ctx.strokeStyle = `rgba(0, 255, 204, ${0.35 * surgeAlpha})`;
+            ctx.lineWidth = 1.6;
+            const now = performance.now() * 0.006;
+            for (let i = 0; i < 24; i++) {
+                const angle = (i / 24) * Math.PI * 2 + Math.sin(now + i) * 0.08;
+                const r1 = 110 + ((now * 320 + i * 42) % (Math.max(w, h) * 0.6));
+                const r2 = r1 + 38 + (i % 3) * 18;
+                ctx.beginPath();
+                ctx.moveTo(cx + Math.cos(angle) * r1, cy + Math.sin(angle) * r1);
+                ctx.lineTo(cx + Math.cos(angle) * r2, cy + Math.sin(angle) * r2);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // Speed boost active banner
             ctx.fillStyle = '#ffaa00';
             ctx.font = 'bold 12px "Orbitron", monospace';
             ctx.textAlign = 'center';
-            ctx.fillText(`⚡ COHERENT WARP SURGE ACTIVE (${this.player.speedBoostTimer.toFixed(1)}s)`, cx, cy - 65);
+            ctx.fillText(`⚡ COHERENT WARP SURGE ACTIVE (${this.player.speedBoostTimer.toFixed(1)}s)`, cx, cy - 68);
         }
 
         // 2. Spatial Threat Tracking: Enemies
@@ -2699,19 +2755,24 @@ class CyberGameEngine {
             this.camera.position.lerp(new THREE.Vector3(camTargetX, camTargetY, camTargetZ), this.camSmoothing);
             this.camera.lookAt(p.x, 0, p.z - 8);
         } else if (this.cameraMode === 'cockpit') {
-            // CRITICAL FIX: Hide player exterior mesh completely so wings/canopy/thrusters never obstruct view
+            // CRITICAL FIX: Hide player exterior mesh, under-glow, and shield mesh so cockpit view is 100% unobstructed
             if (this.playerGroup) this.playerGroup.visible = false;
             if (this.playerUnderGlow) this.playerUnderGlow.visible = false;
+            if (this.shieldMesh) this.shieldMesh.visible = false;
 
-            // First-person cockpit view looking forward along ship heading
-            const forwardX = Math.sin(ang);
-            const forwardZ = -Math.cos(ang);
-
+            // CRITICAL FIX: Aeronautical 'YXZ' (Yaw-Pitch-Roll) Euler Sequence
+            // In Three.js, default 'XYZ' order flips 180° upside-down when lookAt() is followed by roll.
+            // Explicitly setting camera rotation in 'YXZ' order guarantees the camera is always upright,
+            // the horizon is properly positioned, and flight banking tilts into turns naturally.
+            this.camera.rotation.order = 'YXZ';
             this.camera.position.set(p.x + shakeX, 2.7 + shakeY, p.z);
-            this.camera.lookAt(p.x + forwardX * 100, 2.5, p.z + forwardZ * 100);
 
-            // Dynamic Flight Banking Roll (Cockpit rolls into turns)
-            this.camera.rotation.z = -this.player.bankAngle * 0.45;
+            const thrustPitch = this.keys['w'] ? -0.012 : (this.keys['s'] ? 0.01 : 0);
+            const flightPitch = -0.016 + thrustPitch;
+            const flightYaw = -ang;
+            const flightRoll = this.player.bankAngle * 0.45;
+
+            this.camera.rotation.set(flightPitch, flightYaw, flightRoll, 'YXZ');
 
             // Update Cockpit HUD telemetry
             const spdElem = document.getElementById('cockpit-speed');

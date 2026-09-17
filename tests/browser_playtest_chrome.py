@@ -6,6 +6,7 @@ Uses jev-ultrafast / browser-harness to connect to real Chrome (non-headless).
 import os
 import sys
 import time
+import json
 from pathlib import Path
 
 # Ensure browser-harness and jev-ultrafast are importable
@@ -99,7 +100,7 @@ def run_playtest():
     time.sleep(1.5)
     
     # Check flight telemetry
-    flight_data = js("""({
+    flight_data_raw = js("""JSON.stringify({
         speed: Math.round(window.game.player.vel.length() * 3.6),
         heading: Math.round(((-window.game.player.angle * 180 / Math.PI) % 360 + 360) % 360),
         bankAngle: Number(window.game.player.bankAngle.toFixed(2)),
@@ -108,6 +109,7 @@ def run_playtest():
         posX: Math.round(window.game.player.pos.x),
         posZ: Math.round(window.game.player.pos.z)
     })""")
+    flight_data = json.loads(flight_data_raw)
     print("✈️ Cockpit Flight Telemetry:", flight_data)
     assert flight_data["speed"] > 0, "Expected positive flight velocity"
     assert flight_data["hudCanvasWidth"] > 0, "Expected HUD canvas to be sized and active"

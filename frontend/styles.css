@@ -216,6 +216,105 @@ header {
     pointer-events: none;
     z-index: 4;
     display: none;
+    overflow: hidden;
+}
+
+/* Top Visor Arch */
+.canopy-top-visor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    background: linear-gradient(180deg, rgba(4, 14, 30, 0.95) 0%, rgba(4, 14, 30, 0.6) 70%, transparent 100%);
+    border-bottom: 1.5px solid rgba(0, 240, 255, 0.45);
+    box-shadow: 0 4px 20px rgba(0, 240, 255, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 60px) 100%, 60px 100%);
+    z-index: 3;
+}
+
+.visor-line {
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, #00f0ff, transparent);
+    box-shadow: 0 0 8px #00f0ff;
+}
+
+.visor-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(0, 240, 255, 0.7);
+    text-shadow: 0 0 6px rgba(0, 240, 255, 0.5);
+}
+
+/* Angled Tron A-Pillar Canopy Struts */
+.canopy-strut-left {
+    position: absolute;
+    top: 0;
+    bottom: 65px;
+    left: 0;
+    width: 95px;
+    background: linear-gradient(90deg, rgba(3, 10, 24, 0.92) 0%, rgba(5, 16, 36, 0.4) 80%, transparent 100%);
+    border-right: 2px solid rgba(0, 240, 255, 0.55);
+    box-shadow: inset -2px 0 16px rgba(0, 240, 255, 0.25), 2px 0 12px rgba(0, 240, 255, 0.3);
+    clip-path: polygon(0 0, 85px 0, 24px 100%, 0 100%);
+    z-index: 3;
+}
+
+.canopy-strut-right {
+    position: absolute;
+    top: 0;
+    bottom: 65px;
+    right: 0;
+    width: 95px;
+    background: linear-gradient(-90deg, rgba(3, 10, 24, 0.92) 0%, rgba(5, 16, 36, 0.4) 80%, transparent 100%);
+    border-left: 2px solid rgba(0, 240, 255, 0.55);
+    box-shadow: inset 2px 0 16px rgba(0, 240, 255, 0.25), -2px 0 12px rgba(0, 240, 255, 0.3);
+    clip-path: polygon(10px 0, 100% 0, 100% 100%, 71px 100%);
+    z-index: 3;
+}
+
+/* Lower Console Instrument Dashboard Cowl */
+.canopy-dash-cowl {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 68px;
+    background: linear-gradient(0deg, rgba(2, 8, 18, 0.98) 0%, rgba(5, 15, 32, 0.9) 70%, rgba(0, 240, 255, 0.12) 100%);
+    border-top: 2px solid rgba(0, 240, 255, 0.65);
+    box-shadow: 0 -4px 28px rgba(0, 240, 255, 0.3);
+    clip-path: polygon(0 38%, 110px 0, calc(100% - 110px) 0, 100% 38%, 100% 100%, 0 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3;
+}
+
+.dash-bezel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dash-grid-lines {
+    position: absolute;
+    top: 0;
+    left: 15%;
+    right: 15%;
+    height: 100%;
+    background-image: linear-gradient(rgba(0, 240, 255, 0.08) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0, 240, 255, 0.08) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
 }
 
 .cockpit-reticle {
@@ -223,19 +322,20 @@ header {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 80px;
-    height: 80px;
-    border: 1.5px dashed rgba(0, 255, 204, 0.5);
+    width: 74px;
+    height: 74px;
+    border: 1.5px dashed rgba(0, 255, 204, 0.45);
     border-radius: 50%;
-    box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
+    box-shadow: 0 0 14px rgba(0, 255, 204, 0.25);
+    z-index: 2;
 }
 
 .cockpit-reticle::before {
     content: '';
     position: absolute;
     top: 50%;
-    left: -15px;
-    right: -15px;
+    left: -14px;
+    right: -14px;
     height: 1px;
     background: rgba(0, 255, 204, 0.6);
 }
@@ -244,52 +344,19 @@ header {
     content: '';
     position: absolute;
     left: 50%;
-    top: -15px;
-    bottom: -15px;
+    top: -14px;
+    bottom: -14px;
     width: 1px;
     background: rgba(0, 255, 204, 0.6);
 }
 
-.cockpit-bracket-left,
-.cockpit-bracket-right {
-    position: absolute;
-    top: 25%;
-    bottom: 25%;
-    width: 40px;
-    border: 2px solid rgba(0, 255, 255, 0.5);
-    box-shadow: 0 0 14px rgba(0, 255, 255, 0.25);
-}
-
-.cockpit-bracket-left {
-    left: 15%;
-    border-right: none;
-    border-radius: 8px 0 0 8px;
-}
-
-.cockpit-bracket-right {
-    right: 15%;
-    border-left: none;
-    border-radius: 0 8px 8px 0;
-}
-
-.cockpit-horizon-bar {
-    position: absolute;
-    top: 52%;
-    left: 30%;
-    right: 30%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.6), transparent);
-    box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
-}
-
 .cockpit-hud-info {
-    position: absolute;
-    bottom: 22%;
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
+    z-index: 4;
     display: flex;
-    gap: 24px;
+    gap: 18px;
     align-items: center;
+    padding-top: 4px;
 }
 
 .cockpit-telemetry-badge {
@@ -297,7 +364,7 @@ header {
     font-size: 11px;
     letter-spacing: 1.5px;
     color: var(--neon-cyan);
-    background: rgba(8, 24, 48, 0.88);
+    background: rgba(8, 24, 48, 0.9);
     border: 1px solid rgba(0, 255, 255, 0.6);
     box-shadow: 0 0 14px rgba(0, 255, 255, 0.35);
     padding: 4px 12px;
@@ -307,7 +374,7 @@ header {
 
 .copilot-badge {
     color: #ffaa00;
-    background: rgba(36, 20, 6, 0.88);
+    background: rgba(36, 20, 6, 0.9);
     border: 1px solid #ffaa00;
     box-shadow: 0 0 14px rgba(255, 170, 0, 0.35);
     text-shadow: 0 0 8px #ffaa00;
