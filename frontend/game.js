@@ -18,6 +18,8 @@ class CyberGameEngine {
         this.radarCanvas = document.getElementById('radar-canvas');
         this.radarCtx = this.radarCanvas ? this.radarCanvas.getContext('2d') : null;
         this.cockpitOverlay = document.getElementById('cockpit-overlay');
+        this.hudCanvas = document.getElementById('cockpit-hud-canvas');
+        this.hudCtx = this.hudCanvas ? this.hudCanvas.getContext('2d') : null;
 
         // View Mode: '3d' or '2d'
         this.renderMode = '3d';
@@ -71,6 +73,7 @@ class CyberGameEngine {
             isOverheated: false,
             fireCooldown: 0,
             overdriveTimer: 0,
+            speedBoostTimer: 0,
             lastDamageTime: 0,
             trailPoints: [],
             maxTrailPoints: 48,
@@ -122,10 +125,10 @@ class CyberGameEngine {
         const width = this.container.clientWidth || (window.innerWidth - 370);
         const height = this.container.clientHeight || (window.innerHeight - 52);
 
-        // Scene & Fog
+        // Scene & Fog (Atmospheric Tron Horizon)
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x02050e);
-        this.scene.fog = new THREE.FogExp2(0x02050e, 0.0022);
+        this.scene.background = new THREE.Color(0x020611);
+        this.scene.fog = new THREE.FogExp2(0x020611, 0.0016);
 
         // Perspective Camera
         this.camera = new THREE.PerspectiveCamera(62, width / height, 0.5, 3500);
@@ -194,6 +197,213 @@ class CyberGameEngine {
 
         // Holographic 3D Ground Targeting Reticle
         this.init3DTargetReticle();
+
+        // Procedural Cyber Monoliths, Data Arches & Coherent Energy Gates
+        this.initProceduralGridWorld();
+    }
+
+    /* --------------------------------------------------------------------- */
+    /* PROCEDURAL CYBER GRID WORLD & ENERGY GATES                            */
+    /* --------------------------------------------------------------------- */
+    initProceduralGridWorld() {
+        this.proceduralChunks = new Map();
+        this.energyGates = [];
+        this.proceduralRoot = new THREE.Group();
+        this.scene.add(this.proceduralRoot);
+
+        this.monolithMaterial = new THREE.MeshStandardMaterial({
+            color: 0x050c18,
+            roughness: 0.15,
+            metalness: 0.85,
+            emissive: 0x010814
+        });
+        this.neonCyanMat = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 1.5 });
+        this.neonMagentaMat = new THREE.LineBasicMaterial({ color: 0xff00aa, linewidth: 1.5 });
+        this.neonAmberMat = new THREE.LineBasicMaterial({ color: 0xffaa00, linewidth: 1.5 });
+
+        // Energy Gate Materials
+        this.gateRingMat = new THREE.MeshBasicMaterial({
+            color: 0x00ffcc,
+            side: THREE.DoubleSide
+        });
+        this.gateFieldMat = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.35,
+            blending: THREE.AdditiveBlending
+        });
+    }
+
+    _chunkHash(cx, cz) {
+        return `${cx},${cz}`;
+    }
+
+    _seededRandom(seed) {
+        let t = (seed += 0x6D2B79F5);
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+
+    generateChunk(cx, cz) {
+        const key = this._chunkHash(cx, cz);
+        const chunkGroup = new THREE.Group();
+        let seed = ((cx * 374761393) ^ (cz * 668265263)) >>> 0;
+
+        const rnd = () => {
+            seed = (seed + 0x7ED55D16) >>> 0;
+            return this._seededRandom(seed);
+        };
+
+        const originX = cx * 250;
+        const originZ = cz * 250;
+
+        // Skip spawn chunk center to keep clear arena for start
+        if (Math.abs(cx) > 0 || Math.abs(cz) > 0) {
+            // 2 Monoliths per chunk
+            for (let m = 0; m < 2; m++) {
+                const w = 22 + rnd() * 18;
+                const d = 22 + rnd() * 18;
+                const h = 50 + rnd() * 90;
+                const posX = originX + (rnd() - 0.5) * 170;
+                const posZ = originZ + (rnd() - 0.5) * 170;
+
+                const boxGeom = new THREE.BoxGeometry(w, h, d);
+                const mesh = new THREE.Mesh(boxGeom, this.monolithMaterial);
+                mesh.position.set(posX, h / 2, posZ);
+
+                const edgeMat = (rnd() > 0.5) ? this.neonCyanMat : this.neonMagentaMat;
+                const edges = new THREE.LineSegments(new THREE.EdgesGeometry(boxGeom), edgeMat);
+                mesh.add(edges);
+
+                // Circuit conduit light band on monolith
+                const bandGeom = new THREE.BoxGeometry(w + 0.4, 2.5, d + 0.4);
+                const bandMat = new THREE.MeshBasicMaterial({ color: edgeMat.color, transparent: true, opacity: 0.8 });
+                const bandMesh = new THREE.Mesh(bandGeom, bandMat);
+                bandMesh.position.y = (rnd() - 0.3) * (h * 0.4);
+                mesh.add(bandMesh);
+
+                chunkGroup.add(mesh);
+            }
+
+            // Energy Gate or Cyber Arch
+            if ((Math.abs(cx) + Math.abs(cz)) % 2 === 1) {
+                // Interactive Coherent Energy Gate
+                const gateGroup = new THREE.Group();
+                const gateX = originX + (rnd() - 0.5) * 100;
+                const gateZ = originZ + (rnd() - 0.5) * 100;
+
+                const ringGeom = new THREE.TorusGeometry(14, 1.2, 8, 24);
+                const ringMesh = new THREE.Mesh(ringGeom, this.gateRingMat);
+                gateGroup.add(ringMesh);
+
+                const fieldGeom = new THREE.CircleGeometry(13.2, 16);
+                const fieldMesh = new THREE.Mesh(fieldGeom, this.gateFieldMat);
+                gateGroup.add(fieldMesh);
+
+                gateGroup.position.set(gateX, 6.0, gateZ);
+                const isRotated = rnd() > 0.5;
+                if (isRotated) gateGroup.rotation.y = Math.PI / 2;
+
+                chunkGroup.add(gateGroup);
+
+                const gateData = {
+                    x: gateX,
+                    z: gateZ,
+                    mesh: gateGroup,
+                    ring: ringMesh,
+                    chunkKey: key,
+                    lastTrigger: 0
+                };
+                this.energyGates.push(gateData);
+            } else {
+                // Cyber Arch spanning data highway
+                const archGroup = new THREE.Group();
+                const archX = originX + (rnd() - 0.5) * 110;
+                const archZ = originZ + (rnd() - 0.5) * 110;
+
+                const archGeom = new THREE.BoxGeometry(45, 4, 10);
+                const archMesh = new THREE.Mesh(archGeom, this.monolithMaterial);
+                archMesh.position.y = 26;
+                archMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(archGeom), this.neonCyanMat));
+                archGroup.add(archMesh);
+
+                const pillarGeom = new THREE.BoxGeometry(4, 26, 8);
+                const pLeft = new THREE.Mesh(pillarGeom, this.monolithMaterial);
+                pLeft.position.set(-20, 13, 0);
+                pLeft.add(new THREE.LineSegments(new THREE.EdgesGeometry(pillarGeom), this.neonCyanMat));
+                archGroup.add(pLeft);
+
+                const pRight = new THREE.Mesh(pillarGeom, this.monolithMaterial);
+                pRight.position.set(20, 13, 0);
+                pRight.add(new THREE.LineSegments(new THREE.EdgesGeometry(pillarGeom), this.neonCyanMat));
+                archGroup.add(pRight);
+
+                archGroup.position.set(archX, 0, archZ);
+                chunkGroup.add(archGroup);
+            }
+        }
+
+        this.proceduralRoot.add(chunkGroup);
+        this.proceduralChunks.set(key, { group: chunkGroup, cx, cz });
+    }
+
+    updateProceduralGridWorld(dt) {
+        if (!this.proceduralChunks) return;
+
+        const pX = this.player.pos.x;
+        const pZ = this.player.pos.z;
+        const pcx = Math.round(pX / 250);
+        const pcz = Math.round(pZ / 250);
+
+        // Keep 5x5 chunks around player
+        const range = 2;
+        const activeKeys = new Set();
+
+        for (let dx = -range; dx <= range; dx++) {
+            for (let dz = -range; dz <= range; dz++) {
+                const cx = pcx + dx;
+                const cz = pcz + dz;
+                const key = this._chunkHash(cx, cz);
+                activeKeys.add(key);
+
+                if (!this.proceduralChunks.has(key)) {
+                    this.generateChunk(cx, cz);
+                }
+            }
+        }
+
+        // Cull distant chunks
+        for (const [key, chunk] of this.proceduralChunks.entries()) {
+            if (!activeKeys.has(key)) {
+                this.proceduralRoot.remove(chunk.group);
+                this.energyGates = this.energyGates.filter(g => g.chunkKey !== key);
+                this.proceduralChunks.delete(key);
+            }
+        }
+
+        // Animate & Check Energy Gates fly-through
+        const now = performance.now();
+        for (let i = 0; i < this.energyGates.length; i++) {
+            const gate = this.energyGates[i];
+            if (gate.ring) {
+                gate.ring.rotation.z += dt * 1.8;
+            }
+
+            const dist = Math.hypot(pX - gate.x, pZ - gate.z);
+            if (dist < 14.0 && (now - gate.lastTrigger > 8000)) {
+                gate.lastTrigger = now;
+                this.player.speedBoostTimer = 4.0;
+                this.player.shield = Math.min(this.player.maxShield, this.player.shield + 25);
+                this.spawnFloatingText("⚡ ENERGY GATE SURGE: +35% WARP / +25 SHIELD", pX, pZ, '#00ffcc');
+                if (window.audioManager && window.audioManager.playPowerup) {
+                    window.audioManager.playPowerup();
+                } else if (window.audioManager && window.audioManager.playBlink) {
+                    window.audioManager.playBlink();
+                }
+            }
+        }
     }
 
     buildTronSkyline() {
@@ -616,9 +826,7 @@ class CyberGameEngine {
                 // Aim Angle calculation
                 if (this.renderMode === '3d') {
                     if (this.cameraMode === 'cockpit') {
-                        // In cockpit view, aim forward based on mouse delta from center
-                        const dx = (this.mouseScreen.x - canvas.clientWidth / 2) / (canvas.clientWidth / 2);
-                        this.player.targetAngle = this.player.angle + dx * 0.08;
+                        // In cockpit view, continuous flight yaw is handled smoothly in updatePlayerMovement(dt)
                     } else if (this.aimPoint) {
                         const dx = this.aimPoint.x - this.player.pos.x;
                         const dz = this.aimPoint.z - this.player.pos.z;
@@ -734,6 +942,14 @@ class CyberGameEngine {
 
         if (d.hazard_spawn && Math.random() < 0.6) {
             this.spawnHazard();
+        }
+
+        if (d.tactical_copilot_advisory) {
+            const copilotElem = document.getElementById('cockpit-copilot');
+            if (copilotElem) {
+                copilotElem.innerText = `AI COPILOT: ${d.tactical_copilot_advisory.toUpperCase()}`;
+            }
+            this.lastCopilotMessage = d.tactical_copilot_advisory;
         }
     }
 
@@ -1592,6 +1808,11 @@ class CyberGameEngine {
         // Player Controls (Manual or Autopilot)
         this.updatePlayerMovement(dt);
 
+        // Procedural Grid World & Energy Gates
+        if (this.renderMode === '3d' && this.updateProceduralGridWorld) {
+            this.updateProceduralGridWorld(dt);
+        }
+
         // Player Weapon & Heat
         if (this.player.fireCooldown > 0) this.player.fireCooldown -= dt;
         if (this.player.heat > 0) {
@@ -1600,6 +1821,7 @@ class CyberGameEngine {
         }
         if (this.player.overdriveTimer > 0) this.player.overdriveTimer -= dt;
         if (this.player.invulnerableTimer > 0) this.player.invulnerableTimer -= dt;
+        if (this.player.speedBoostTimer > 0) this.player.speedBoostTimer = Math.max(0, this.player.speedBoostTimer - dt);
 
         // Shield Recharge
         if (performance.now() - this.player.lastDamageTime > 3500 && this.player.shield < this.player.maxShield) {
@@ -1770,11 +1992,47 @@ class CyberGameEngine {
                 }
             }
         } else {
-            // Manual WASD
-            if (this.keys['w'] || this.keys['arrowup']) moveZ -= 1;
-            if (this.keys['s'] || this.keys['arrowdown']) moveZ += 1;
-            if (this.keys['a'] || this.keys['arrowleft']) moveX -= 1;
-            if (this.keys['d'] || this.keys['arrowright']) moveX += 1;
+            if (this.renderMode === '3d' && this.cameraMode === 'cockpit') {
+                // Continuous yaw rate based on mouse offset from center
+                const cx = (this.container.clientWidth || (window.innerWidth - 370)) / 2;
+                const mouseDeltaX = (this.mouseScreen.x - cx) / cx;
+                if (Math.abs(mouseDeltaX) > 0.04) {
+                    this.player.targetAngle += mouseDeltaX * 3.2 * dt;
+                }
+
+                // Keyboard yaw steering
+                if (this.keys['arrowleft'] || this.keys['q']) this.player.targetAngle -= 2.6 * dt;
+                if (this.keys['arrowright'] || this.keys['e']) this.player.targetAngle += 2.6 * dt;
+
+                // Heading-relative flight: W accelerates forward, S brakes/reverses, A/D strafes
+                const fx = Math.sin(this.player.angle);
+                const fz = -Math.cos(this.player.angle);
+                const sx = Math.cos(this.player.angle);
+                const sz = Math.sin(this.player.angle);
+
+                if (this.keys['w'] || this.keys['arrowup']) {
+                    moveX += fx;
+                    moveZ += fz;
+                }
+                if (this.keys['s'] || this.keys['arrowdown']) {
+                    moveX -= fx * 0.6;
+                    moveZ -= fz * 0.6;
+                }
+                if (this.keys['a']) {
+                    moveX -= sx * 0.85;
+                    moveZ -= sz * 0.85;
+                }
+                if (this.keys['d']) {
+                    moveX += sx * 0.85;
+                    moveZ += sz * 0.85;
+                }
+            } else {
+                // 2D Classic Retro Top-Down Arena & 3D Chase mode
+                if (this.keys['w'] || this.keys['arrowup']) moveZ -= 1;
+                if (this.keys['s'] || this.keys['arrowdown']) moveZ += 1;
+                if (this.keys['a'] || this.keys['arrowleft']) moveX -= 1;
+                if (this.keys['d'] || this.keys['arrowright']) moveX += 1;
+            }
 
             if (moveX !== 0 || moveZ !== 0) {
                 const mag = Math.hypot(moveX, moveZ);
@@ -1784,7 +2042,10 @@ class CyberGameEngine {
         }
 
         // Acceleration & Damping
-        const accel = 650;
+        let accel = 650;
+        if (this.player.speedBoostTimer > 0) {
+            accel *= 1.35; // +35% Warp Speed Surge
+        }
         const friction = 0.88;
         this.player.vel.x += moveX * accel * dt;
         this.player.vel.z += moveZ * accel * dt;
@@ -2072,6 +2333,178 @@ class CyberGameEngine {
 
         // 7. Three.js Render
         this.renderer.render(this.scene, this.camera);
+
+        // 8. Cockpit Spatial Threat Tracking HUD Canvas
+        this.renderCockpitThreatTrackingHUD();
+    }
+
+    /* --------------------------------------------------------------------- */
+    /* COCKPIT SPATIAL THREAT TRACKING HUD                                   */
+    /* --------------------------------------------------------------------- */
+    renderCockpitThreatTrackingHUD() {
+        if (!this.hudCanvas || !this.hudCtx) return;
+        const ctx = this.hudCtx;
+        const w = this.container.clientWidth || (window.innerWidth - 370);
+        const h = this.container.clientHeight || (window.innerHeight - 52);
+
+        if (this.hudCanvas.width !== w || this.hudCanvas.height !== h) {
+            this.hudCanvas.width = w;
+            this.hudCanvas.height = h;
+        }
+
+        ctx.clearRect(0, 0, w, h);
+
+        if (this.renderMode !== '3d' || this.cameraMode !== 'cockpit' || this.isGameOver) {
+            return;
+        }
+
+        const cx = w / 2;
+        const cy = h / 2;
+
+        // 1. Flight Horizon & Center Crosshair
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
+        ctx.lineWidth = 1.5;
+
+        // Horizon line segments
+        ctx.beginPath();
+        ctx.moveTo(cx - 200, cy);
+        ctx.lineTo(cx - 50, cy);
+        ctx.moveTo(cx + 50, cy);
+        ctx.lineTo(cx + 200, cy);
+        // Pitch tick marks
+        ctx.moveTo(cx - 150, cy - 25); ctx.lineTo(cx - 130, cy - 25);
+        ctx.moveTo(cx + 130, cy - 25); ctx.lineTo(cx + 150, cy - 25);
+        ctx.moveTo(cx - 150, cy + 25); ctx.lineTo(cx - 130, cy + 25);
+        ctx.moveTo(cx + 130, cy + 25); ctx.lineTo(cx + 150, cy + 25);
+        ctx.stroke();
+
+        // Central flight crosshair
+        ctx.strokeStyle = '#00ffff';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+        ctx.moveTo(cx - 14, cy); ctx.lineTo(cx - 7, cy);
+        ctx.moveTo(cx + 7, cy); ctx.lineTo(cx + 14, cy);
+        ctx.moveTo(cx, cy - 14); ctx.lineTo(cx, cy - 7);
+        ctx.moveTo(cx, cy + 7); ctx.lineTo(cx, cy + 14);
+        ctx.stroke();
+
+        // Speed boost active banner
+        if (this.player.speedBoostTimer > 0) {
+            ctx.fillStyle = '#ffaa00';
+            ctx.font = 'bold 12px "Orbitron", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(`⚡ COHERENT WARP SURGE ACTIVE (${this.player.speedBoostTimer.toFixed(1)}s)`, cx, cy - 65);
+        }
+
+        // 2. Spatial Threat Tracking: Enemies
+        const cameraPos = this.camera.position;
+        const forwardVector = new THREE.Vector3();
+        this.camera.getWorldDirection(forwardVector);
+
+        this.enemies.forEach(e => {
+            const targetPos = new THREE.Vector3(e.x, e.type === 'boss' ? 14 : 2.0, e.z);
+            const dist = Math.round(targetPos.distanceTo(cameraPos));
+
+            const toTarget = targetPos.clone().sub(cameraPos);
+            const dotForward = toTarget.dot(forwardVector);
+
+            const proj = targetPos.clone();
+            proj.project(this.camera);
+
+            const isInFront = dotForward > 0 && proj.z < 1.0;
+            const inFrustum = isInFront && proj.x >= -0.92 && proj.x <= 0.92 && proj.y >= -0.92 && proj.y <= 0.92;
+
+            if (inFrustum) {
+                // In-frustum 3D-to-Screen Targeting Brackets
+                const screenX = (proj.x * 0.5 + 0.5) * w;
+                const screenY = (-(proj.y * 0.5) + 0.5) * h;
+
+                const boxSize = Math.max(24, Math.min(70, 900 / Math.max(1, dist)));
+                const half = boxSize / 2;
+
+                const color = (e.type === 'boss' ? '#ff0055' : (e.type === 'heavy' ? '#ffaa00' : '#00ffff'));
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1.8;
+
+                // 4 Corner Brackets
+                const c = Math.min(8, half * 0.5);
+                ctx.beginPath();
+                // Top-Left
+                ctx.moveTo(screenX - half, screenY - half + c);
+                ctx.lineTo(screenX - half, screenY - half);
+                ctx.lineTo(screenX - half + c, screenY - half);
+                // Top-Right
+                ctx.moveTo(screenX + half - c, screenY - half);
+                ctx.lineTo(screenX + half, screenY - half);
+                ctx.lineTo(screenX + half, screenY - half + c);
+                // Bottom-Right
+                ctx.moveTo(screenX + half, screenY + half - c);
+                ctx.lineTo(screenX + half, screenY + half);
+                ctx.lineTo(screenX + half - c, screenY + half);
+                // Bottom-Left
+                ctx.moveTo(screenX - half + c, screenY + half);
+                ctx.lineTo(screenX - half, screenY + half);
+                ctx.lineTo(screenX - half, screenY + half - c);
+                ctx.stroke();
+
+                // Target readout: [TYPE 85m]
+                ctx.font = '10px "Share Tech Mono", monospace';
+                ctx.fillStyle = color;
+                ctx.textAlign = 'center';
+                ctx.fillText(`[${e.type.toUpperCase()} ${dist}m]`, screenX, screenY - half - 4);
+
+                // Small HP bar
+                const hpPct = Math.max(0, e.hp / e.maxHp);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(screenX - half, screenY + half + 4, boxSize, 3);
+                ctx.fillStyle = (hpPct > 0.5 ? '#00ffaa' : (hpPct > 0.25 ? '#ffaa00' : '#ff0055'));
+                ctx.fillRect(screenX - half, screenY + half + 4, boxSize * hpPct, 3);
+            } else {
+                // Off-screen / Behind: Clamped perimeter warning chevron
+                let dirX = proj.x;
+                let dirY = proj.y;
+                if (!isInFront) {
+                    dirX = -dirX;
+                    dirY = -dirY;
+                }
+                const angle = Math.atan2(dirY, dirX);
+
+                const margin = 50;
+                const edgeX = cx + Math.cos(angle) * (cx - margin);
+                const edgeY = cy - Math.sin(angle) * (cy - margin);
+
+                ctx.save();
+                ctx.translate(edgeX, edgeY);
+                ctx.rotate(-angle + Math.PI / 2);
+
+                const color = (e.type === 'boss' ? '#ff0055' : '#ff2255');
+                ctx.fillStyle = color;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+
+                // Glowing chevron triangle pointing outward
+                ctx.beginPath();
+                ctx.moveTo(0, -10);
+                ctx.lineTo(7, 8);
+                ctx.lineTo(0, 4);
+                ctx.lineTo(-7, 8);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Distance indicator
+                ctx.rotate(angle - Math.PI / 2); // unrotate text
+                ctx.font = '9px "Share Tech Mono", monospace';
+                ctx.fillStyle = '#ff6688';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${dist}m`, 0, 16);
+
+                ctx.restore();
+            }
+        });
+
+        ctx.restore();
     }
 
     updatePlayer3DLightTrail() {
@@ -2187,10 +2620,16 @@ class CyberGameEngine {
             this.camera.position.set(p.x + shakeX, 2.7 + shakeY, p.z);
             this.camera.lookAt(p.x + forwardX * 100, 2.5, p.z + forwardZ * 100);
 
+            // Dynamic Flight Banking Roll (Cockpit rolls into turns)
+            this.camera.rotation.z = -this.player.bankAngle * 0.45;
+
             // Update Cockpit HUD telemetry
             const spdElem = document.getElementById('cockpit-speed');
             const hdgElem = document.getElementById('cockpit-heading');
-            if (spdElem) spdElem.innerText = `SPD: ${Math.round(this.player.vel.length() * 3.6)} KPH`;
+            if (spdElem) {
+                const boostTag = this.player.speedBoostTimer > 0 ? " [⚡WARP]" : "";
+                spdElem.innerText = `SPD: ${Math.round(this.player.vel.length() * 3.6)} KPH${boostTag}`;
+            }
             if (hdgElem) {
                 let deg = Math.round(((-ang * 180 / Math.PI) % 360 + 360) % 360);
                 hdgElem.innerText = `HDG: ${String(deg).padStart(3, '0')}° [TRON-SYS]`;

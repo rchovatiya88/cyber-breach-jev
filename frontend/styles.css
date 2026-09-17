@@ -302,6 +302,22 @@ header {
     text-shadow: 0 0 6px var(--neon-cyan);
 }
 
+.copilot-badge {
+    color: #ffaa00;
+    border-color: rgba(255, 170, 0, 0.45);
+    text-shadow: 0 0 6px rgba(255, 170, 0, 0.6);
+}
+
+#cockpit-hud-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+}
+
 /* Player HUD Overlay on Arena */
 .arena-hud {
     position: absolute;

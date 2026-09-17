@@ -35,6 +35,17 @@ def decide_director_event(state: Dict[str, Any]) -> Dict[str, Any]:
             "type": "noul",
             "instructions": "Has the operative dominated current wave to warrant immediate spawn escalation?",
         },
+        "tactical_copilot_advisory": {
+            "type": "choice",
+            "instructions": "Select the highest priority tactical combat advisory for the operative flight HUD.",
+            "criteria": {
+                "scan_flank_threat": "Flank threat approaching lateral vector; advise pilot to check warning chevrons",
+                "gate_speed_recommended": "Energy recharge gate detected in sector; vector through gate for shield recharge",
+                "evade_incoming_fire": "Heavy projectile barrage inbound; initiate lateral strafe thrusters or quantum blink",
+                "weapons_free_target_lock": "Enemy locked in forward firing cone; unleash twin blasters",
+                "optimal_combat_rhythm": "Grid telemetry optimal; maintain high-speed circular strafe rhythm",
+            },
+        },
     }
 
     result = jev_service.evaluate(state=state, questions=questions)
