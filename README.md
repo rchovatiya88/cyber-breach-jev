@@ -126,9 +126,46 @@ python3 -m unittest discover -s tests -p "test_*.py"
 ### 2. Autonomous Cua Browser & Jev Build Verification
 Integrates **[Cua Driver / Cua Browser](https://github.com/trycua/cua)** with **TypeSafe Jev System One** to autonomously test, inspect, and certify web applications:
 
+```
+                      ┌────────────────────────────────────────────────────────┐
+                      │              Web Application Under Test                │
+                      │             (e.g., http://localhost:8000)             │
+                      └───────────────────────────┬────────────────────────────┘
+                                                  │
+                      ┌───────────────────────────┴────────────────────────────┐
+                      │                     CUA BROWSER                        │
+                      │  (Cua Driver v0.28.2 · OS Accessibility · Chrome CDP)  │
+                      ├────────────────────────────────────────────────────────┤
+                      │ • browser_prepare / browser_navigate                   │
+                      │ • get_browser_state (semantic_v2 / dom_refs_v1)        │
+                      │ • verify_state (deterministic window & DOM predicates) │
+                      │ • browser_click / browser_type / browser_pointer       │
+                      │ • Visual screenshot & trajectory recording             │
+                      └───────────────────────────┬────────────────────────────┘
+                                                  │ Observations & Telemetry
+                                                  ▼
+                      ┌────────────────────────────────────────────────────────┐
+                      │              JEV SYSTEM ONE DECISION LAYER             │
+                      │        (TypeSafe AI SDK & Calibrated Local Engine)     │
+                      ├────────────────────────────────────────────────────────┤
+                      │ • Choice: Action selection, failure categorization     │
+                      │ • Score: Rubric build health & UX quality assessment   │
+                      │ • Noul: Calibrated pass probability & anomaly gate     │
+                      └───────────────────────────┬────────────────────────────┘
+                                                  │ Structured Verdicts
+                                                  ▼
+                      ┌────────────────────────────────────────────────────────┐
+                      │        Autonomous Test Runner & Triage Reporter        │
+                      │ • Smoke verification & DOM hierarchy validation        │
+                      │ • Interactive flow simulation & telemetry analysis     │
+                      │ • Visual diff & state predicate verification           │
+                      │ • Markdown & JSON build verification artifacts         │
+                      └────────────────────────────────────────────────────────┘
+```
+
 ```bash
-# Run full verification pipeline against the live application
-python3 -m testing.verify_app --url http://localhost:8000 --cdp-port 9225
+# Run full verification pipeline against the live application (headed or headless)
+python3 -m testing.verify_app --url http://localhost:8000 --cdp-port 9225 --headed
 ```
 
 #### What the Verification Pipeline Does:

@@ -2,6 +2,43 @@
 
 This repository integrates **Cua Browser** ([trycua/cua](https://github.com/trycua/cua)) and **TypeSafe Jev System One** to autonomously test, inspect, and verify web applications during development and build pipelines.
 
+```
+                      ┌────────────────────────────────────────────────────────┐
+                      │              Web Application Under Test                │
+                      │             (e.g., http://localhost:8000)             │
+                      └───────────────────────────┬────────────────────────────┘
+                                                  │
+                      ┌───────────────────────────┴────────────────────────────┐
+                      │                     CUA BROWSER                        │
+                      │  (Cua Driver v0.28.2 · OS Accessibility · Chrome CDP)  │
+                      ├────────────────────────────────────────────────────────┤
+                      │ • browser_prepare / browser_navigate                   │
+                      │ • get_browser_state (semantic_v2 / dom_refs_v1)        │
+                      │ • verify_state (deterministic window & DOM predicates) │
+                      │ • browser_click / browser_type / browser_pointer       │
+                      │ • Visual screenshot & trajectory recording             │
+                      └───────────────────────────┬────────────────────────────┘
+                                                  │ Observations & Telemetry
+                                                  ▼
+                      ┌────────────────────────────────────────────────────────┐
+                      │              JEV SYSTEM ONE DECISION LAYER             │
+                      │        (TypeSafe AI SDK & Calibrated Local Engine)     │
+                      ├────────────────────────────────────────────────────────┤
+                      │ • Choice: Action selection, failure categorization     │
+                      │ • Score: Rubric build health & UX quality assessment   │
+                      │ • Noul: Calibrated pass probability & anomaly gate     │
+                      └───────────────────────────┬────────────────────────────┘
+                                                  │ Structured Verdicts
+                                                  ▼
+                      ┌────────────────────────────────────────────────────────┐
+                      │        Autonomous Test Runner & Triage Reporter        │
+                      │ • Smoke verification & DOM hierarchy validation        │
+                      │ • Interactive flow simulation & telemetry analysis     │
+                      │ • Visual diff & state predicate verification           │
+                      │ • Markdown & JSON build verification artifacts         │
+                      └────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## ⚡ Quickstart for Agents
