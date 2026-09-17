@@ -21,7 +21,8 @@ from browser_harness.helpers import (
     page_info,
     js,
     capture_screenshot,
-    wait_for_load
+    wait_for_load,
+    goto_url
 )
 
 def run_playtest():
@@ -41,12 +42,21 @@ def run_playtest():
     print(f"✅ Found Game Tab (Target: {game_tab['target_id']})")
     switch_tab(game_tab["target_id"])
     
-    # Reload page to get fresh build
-    js("window.location.reload()")
-    time.sleep(2.0)
-    
-    # Ensure game initialized
-    ready = js("Boolean(window.game && window.game.hasWebGL)")
+    # Navigate/Reload
+    goto_url("http://localhost:8000")
+    time.sleep(1.0)
+
+    # Wait for game to initialize
+    ready = False
+    for _ in range(20):
+        try:
+            if js("Boolean(window.game && window.game.hasWebGL)"):
+                ready = True
+                break
+        except Exception:
+            pass
+        time.sleep(0.5)
+
     if not ready:
         print("❌ Game did not initialize WebGL successfully.")
         sys.exit(1)

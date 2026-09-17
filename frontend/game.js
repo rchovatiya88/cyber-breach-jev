@@ -125,10 +125,10 @@ class CyberGameEngine {
         const width = this.container.clientWidth || (window.innerWidth - 370);
         const height = this.container.clientHeight || (window.innerHeight - 52);
 
-        // Scene & Fog (Atmospheric Tron Horizon)
+        // Scene & Fog (Luminous Tron Cyber Horizon)
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x020611);
-        this.scene.fog = new THREE.FogExp2(0x020611, 0.0016);
+        this.scene.background = new THREE.Color(0x06142a);
+        this.scene.fog = new THREE.FogExp2(0x06142a, 0.0009);
 
         // Perspective Camera
         this.camera = new THREE.PerspectiveCamera(62, width / height, 0.5, 3500);
@@ -152,30 +152,48 @@ class CyberGameEngine {
             this.renderMode = '2d';
         }
 
-        // Lights
-        const ambient = new THREE.AmbientLight(0x1a2638, 1.4);
-        this.scene.add(ambient);
+        // Luminous Multi-Point Tron Lighting Rig
+        // 1. Sky/Ground Hemisphere Light (Electric Cyan Sky, Deep Violet Bounce)
+        this.hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x4c1d95, 2.8);
+        this.scene.add(this.hemiLight);
 
-        this.sunLight = new THREE.DirectionalLight(0x00ffff, 1.3);
-        this.sunLight.position.set(50, 120, 50);
+        // 2. Primary Key Sun Light (Radiant Neon Aqua)
+        this.sunLight = new THREE.DirectionalLight(0x00f0ff, 3.0);
+        this.sunLight.position.set(90, 180, 90);
         this.scene.add(this.sunLight);
 
-        // Infinite Tron Floor Grids
+        // 3. Secondary Rim Fill Light (Electric Magenta / Neon Pink)
+        this.rimLight = new THREE.DirectionalLight(0xf43f5e, 2.2);
+        this.rimLight.position.set(-90, 130, -90);
+        this.scene.add(this.rimLight);
+
+        // 4. Player Forward Flight Spotlight (High-Intensity Laser Headlight)
+        this.playerHeadlight = new THREE.SpotLight(0x00ffff, 7.5, 420, Math.PI / 3.0, 0.45, 1.0);
+        this.playerHeadlight.position.set(0, 4, 0);
+        this.playerHeadlightTarget = new THREE.Object3D();
+        this.scene.add(this.playerHeadlightTarget);
+        this.playerHeadlight.target = this.playerHeadlightTarget;
+        this.scene.add(this.playerHeadlight);
+
+        // Infinite Tron Floor Grids (Radiant Neon Architecture)
         this.gridCellSize = 25;
         // Primary Cyan Glowing Grid
-        this.gridHelper = new THREE.GridHelper(900, 36, 0x00ffff, 0x005566);
+        this.gridHelper = new THREE.GridHelper(1200, 48, 0x00ffff, 0x0099bb);
         this.gridHelper.position.y = 0;
         this.scene.add(this.gridHelper);
 
-        // Deep Sapphire Fine Sub-Grid
-        this.subGridHelper = new THREE.GridHelper(1800, 72, 0x0088ff, 0x001a33);
+        // Electric Purple Radiant Sub-Grid
+        this.subGridHelper = new THREE.GridHelper(2400, 96, 0xd946ef, 0x3b0764);
         this.subGridHelper.position.y = -0.05;
         this.scene.add(this.subGridHelper);
 
-        // Dark reflective floor plane
-        const floorGeom = new THREE.PlaneGeometry(2400, 2400);
-        const floorMat = new THREE.MeshBasicMaterial({
-            color: 0x02050c,
+        // Reflective Tron Digital Highway Floor Plane
+        const floorGeom = new THREE.PlaneGeometry(3200, 3200);
+        const floorMat = new THREE.MeshStandardMaterial({
+            color: 0x081b38,
+            roughness: 0.22,
+            metalness: 0.75,
+            emissive: 0x030e22,
             depthWrite: false
         });
         this.floorMesh = new THREE.Mesh(floorGeom, floorMat);
@@ -211,26 +229,27 @@ class CyberGameEngine {
         this.proceduralRoot = new THREE.Group();
         this.scene.add(this.proceduralRoot);
 
+        // Luminous Monolith & Architectural Materials
         this.monolithMaterial = new THREE.MeshStandardMaterial({
-            color: 0x050c18,
-            roughness: 0.15,
-            metalness: 0.85,
-            emissive: 0x010814
+            color: 0x0c254b,
+            roughness: 0.18,
+            metalness: 0.8,
+            emissive: 0x061833
         });
-        this.neonCyanMat = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 1.5 });
-        this.neonMagentaMat = new THREE.LineBasicMaterial({ color: 0xff00aa, linewidth: 1.5 });
-        this.neonAmberMat = new THREE.LineBasicMaterial({ color: 0xffaa00, linewidth: 1.5 });
+        this.neonCyanMat = new THREE.LineBasicMaterial({ color: 0x00f0ff, linewidth: 2.0 });
+        this.neonMagentaMat = new THREE.LineBasicMaterial({ color: 0xff0088, linewidth: 2.0 });
+        this.neonAmberMat = new THREE.LineBasicMaterial({ color: 0xffaa00, linewidth: 2.0 });
 
-        // Energy Gate Materials
+        // Radiant Energy Gate Materials
         this.gateRingMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffcc,
+            color: 0x00ffff,
             side: THREE.DoubleSide
         });
         this.gateFieldMat = new THREE.MeshBasicMaterial({
             color: 0x00ffff,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.35,
+            opacity: 0.55,
             blending: THREE.AdditiveBlending
         });
     }
@@ -263,9 +282,9 @@ class CyberGameEngine {
         if (Math.abs(cx) > 0 || Math.abs(cz) > 0) {
             // 2 Monoliths per chunk
             for (let m = 0; m < 2; m++) {
-                const w = 22 + rnd() * 18;
-                const d = 22 + rnd() * 18;
-                const h = 50 + rnd() * 90;
+                const w = 22 + rnd() * 20;
+                const d = 22 + rnd() * 20;
+                const h = 60 + rnd() * 110;
                 const posX = originX + (rnd() - 0.5) * 170;
                 const posZ = originZ + (rnd() - 0.5) * 170;
 
@@ -273,36 +292,62 @@ class CyberGameEngine {
                 const mesh = new THREE.Mesh(boxGeom, this.monolithMaterial);
                 mesh.position.set(posX, h / 2, posZ);
 
-                const edgeMat = (rnd() > 0.5) ? this.neonCyanMat : this.neonMagentaMat;
+                const isCyan = rnd() > 0.45;
+                const edgeMat = isCyan ? this.neonCyanMat : this.neonMagentaMat;
+                const accentHex = isCyan ? 0x00f0ff : 0xff0088;
                 const edges = new THREE.LineSegments(new THREE.EdgesGeometry(boxGeom), edgeMat);
                 mesh.add(edges);
 
-                // Circuit conduit light band on monolith
-                const bandGeom = new THREE.BoxGeometry(w + 0.4, 2.5, d + 0.4);
-                const bandMat = new THREE.MeshBasicMaterial({ color: edgeMat.color, transparent: true, opacity: 0.8 });
-                const bandMesh = new THREE.Mesh(bandGeom, bandMat);
-                bandMesh.position.y = (rnd() - 0.3) * (h * 0.4);
-                mesh.add(bandMesh);
+                // Top Glowing Roof Beacon Cap
+                const capGeom = new THREE.BoxGeometry(w * 0.7, 3, d * 0.7);
+                const capMat = new THREE.MeshBasicMaterial({ color: accentHex });
+                const capMesh = new THREE.Mesh(capGeom, capMat);
+                capMesh.position.y = h / 2 + 1.5;
+                mesh.add(capMesh);
+
+                // Multiple Glowing Cyber Circuit Bands
+                const numBands = 2 + Math.floor(rnd() * 3);
+                for (let b = 0; b < numBands; b++) {
+                    const bandGeom = new THREE.BoxGeometry(w + 0.6, 2.2, d + 0.6);
+                    const bandMat = new THREE.MeshBasicMaterial({
+                        color: (b % 2 === 0) ? accentHex : 0xffaa00,
+                        transparent: true,
+                        opacity: 0.95
+                    });
+                    const bandMesh = new THREE.Mesh(bandGeom, bandMat);
+                    bandMesh.position.y = -h / 2 + 15 + b * (h / (numBands + 1));
+                    mesh.add(bandMesh);
+                }
 
                 chunkGroup.add(mesh);
             }
 
             // Energy Gate or Cyber Arch
             if ((Math.abs(cx) + Math.abs(cz)) % 2 === 1) {
-                // Interactive Coherent Energy Gate
+                // Interactive Coherent Energy Gate with Brilliant Illumination
                 const gateGroup = new THREE.Group();
                 const gateX = originX + (rnd() - 0.5) * 100;
                 const gateZ = originZ + (rnd() - 0.5) * 100;
 
-                const ringGeom = new THREE.TorusGeometry(14, 1.2, 8, 24);
+                const ringGeom = new THREE.TorusGeometry(15, 1.8, 12, 32);
                 const ringMesh = new THREE.Mesh(ringGeom, this.gateRingMat);
                 gateGroup.add(ringMesh);
 
-                const fieldGeom = new THREE.CircleGeometry(13.2, 16);
+                // Outer accent ring
+                const outerRingGeom = new THREE.TorusGeometry(18, 0.6, 8, 24);
+                const outerRingMat = new THREE.MeshBasicMaterial({ color: 0xff00aa, wireframe: true });
+                const outerRingMesh = new THREE.Mesh(outerRingGeom, outerRingMat);
+                gateGroup.add(outerRingMesh);
+
+                const fieldGeom = new THREE.CircleGeometry(14.0, 24);
                 const fieldMesh = new THREE.Mesh(fieldGeom, this.gateFieldMat);
                 gateGroup.add(fieldMesh);
 
-                gateGroup.position.set(gateX, 6.0, gateZ);
+                // Local Brilliant Point Light (Casts vibrant cyan glow onto ground and craft)
+                const gateLight = new THREE.PointLight(0x00ffff, 4.5, 65, 1.2);
+                gateGroup.add(gateLight);
+
+                gateGroup.position.set(gateX, 6.5, gateZ);
                 const isRotated = rnd() > 0.5;
                 if (isRotated) gateGroup.rotation.y = Math.PI / 2;
 
@@ -313,6 +358,8 @@ class CyberGameEngine {
                     z: gateZ,
                     mesh: gateGroup,
                     ring: ringMesh,
+                    outerRing: outerRingMesh,
+                    light: gateLight,
                     chunkKey: key,
                     lastTrigger: 0
                 };
@@ -323,20 +370,29 @@ class CyberGameEngine {
                 const archX = originX + (rnd() - 0.5) * 110;
                 const archZ = originZ + (rnd() - 0.5) * 110;
 
-                const archGeom = new THREE.BoxGeometry(45, 4, 10);
+                const archGeom = new THREE.BoxGeometry(48, 5, 12);
                 const archMesh = new THREE.Mesh(archGeom, this.monolithMaterial);
-                archMesh.position.y = 26;
+                archMesh.position.y = 28;
                 archMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(archGeom), this.neonCyanMat));
+
+                // Underside Radiant Highway Light Beam
+                const beamGeom = new THREE.PlaneGeometry(44, 10);
+                const beamMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide });
+                const beamMesh = new THREE.Mesh(beamGeom, beamMat);
+                beamMesh.rotation.x = Math.PI / 2;
+                beamMesh.position.y = -2.6;
+                archMesh.add(beamMesh);
+
                 archGroup.add(archMesh);
 
-                const pillarGeom = new THREE.BoxGeometry(4, 26, 8);
+                const pillarGeom = new THREE.BoxGeometry(5, 28, 10);
                 const pLeft = new THREE.Mesh(pillarGeom, this.monolithMaterial);
-                pLeft.position.set(-20, 13, 0);
+                pLeft.position.set(-21, 14, 0);
                 pLeft.add(new THREE.LineSegments(new THREE.EdgesGeometry(pillarGeom), this.neonCyanMat));
                 archGroup.add(pLeft);
 
                 const pRight = new THREE.Mesh(pillarGeom, this.monolithMaterial);
-                pRight.position.set(20, 13, 0);
+                pRight.position.set(21, 14, 0);
                 pRight.add(new THREE.LineSegments(new THREE.EdgesGeometry(pillarGeom), this.neonCyanMat));
                 archGroup.add(pRight);
 
@@ -409,15 +465,15 @@ class CyberGameEngine {
     buildTronSkyline() {
         this.skylineGroup = new THREE.Group();
         const boxMat = new THREE.MeshStandardMaterial({
-            color: 0x040b17,
-            roughness: 0.1,
-            metalness: 0.9,
-            emissive: 0x020a14
+            color: 0x0c254b,
+            roughness: 0.2,
+            metalness: 0.8,
+            emissive: 0x061a3d
         });
-        const edgeCyan = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 1.5 });
-        const edgePink = new THREE.LineBasicMaterial({ color: 0xff00aa, linewidth: 1.5 });
+        const edgeCyan = new THREE.LineBasicMaterial({ color: 0x00f0ff, linewidth: 2.0 });
+        const edgePink = new THREE.LineBasicMaterial({ color: 0xff00aa, linewidth: 2.0 });
 
-        // 48 Monolithic Towers on distant perimeter
+        // 48 Monolithic Towers on distant perimeter with bright beacon tops
         for (let i = 0; i < 48; i++) {
             const angle = (i / 48) * Math.PI * 2;
             const dist = 650 + (i % 5) * 45;
@@ -430,43 +486,68 @@ class CyberGameEngine {
             const edgeMat = (i % 3 === 0) ? edgePink : edgeCyan;
             tower.add(new THREE.LineSegments(new THREE.EdgesGeometry(boxGeom), edgeMat));
 
+            // Radiant Rooftop Beacon Cap
+            const beaconGeom = new THREE.BoxGeometry(w * 0.6, 4, d * 0.6);
+            const beaconMat = new THREE.MeshBasicMaterial({ color: (i % 3 === 0) ? 0xff00aa : 0x00f0ff });
+            const beacon = new THREE.Mesh(beaconGeom, beaconMat);
+            beacon.position.y = h / 2 + 2;
+            tower.add(beacon);
+
             tower.position.set(Math.cos(angle) * dist, h / 2 - 5, Math.sin(angle) * dist);
             tower.rotation.y = angle;
             this.skylineGroup.add(tower);
         }
 
-        // Horizon Neon Ring
-        const ringGeom = new THREE.RingGeometry(850, 865, 64);
+        // Primary Radiant Horizon Neon Ring
+        const ringGeom = new THREE.RingGeometry(850, 868, 64);
         const ringMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0x00f0ff,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.6
+            opacity: 0.95
         });
         const horizonRing = new THREE.Mesh(ringGeom, ringMat);
         horizonRing.rotation.x = -Math.PI / 2;
         horizonRing.position.y = 0.5;
         this.skylineGroup.add(horizonRing);
 
+        // Secondary Outer Magenta Ring
+        const outerRingGeom = new THREE.RingGeometry(940, 955, 64);
+        const outerRingMat = new THREE.MeshBasicMaterial({
+            color: 0xd946ef,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.85
+        });
+        const outerHorizonRing = new THREE.Mesh(outerRingGeom, outerRingMat);
+        outerHorizonRing.rotation.x = -Math.PI / 2;
+        outerHorizonRing.position.y = 0.6;
+        this.skylineGroup.add(outerHorizonRing);
+
         this.scene.add(this.skylineGroup);
     }
 
     initCyberDust() {
-        const dustCount = 350;
+        const dustCount = 750;
         const dustGeom = new THREE.BufferGeometry();
         const positions = new Float32Array(dustCount * 3);
         const colors = new Float32Array(dustCount * 3);
 
         for (let i = 0; i < dustCount; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 500;
-            positions[i * 3 + 1] = 0.5 + Math.random() * 6.0;
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 500;
+            positions[i * 3] = (Math.random() - 0.5) * 600;
+            positions[i * 3 + 1] = 0.5 + Math.random() * 10.0;
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 600;
 
-            // Cyan or Amber motes
-            if (Math.random() > 0.3) {
-                colors[i * 3] = 0.0; colors[i * 3 + 1] = 1.0; colors[i * 3 + 2] = 0.9;
+            const r = Math.random();
+            if (r > 0.6) {
+                // Intense luminous white/cyan
+                colors[i * 3] = 0.85; colors[i * 3 + 1] = 1.0; colors[i * 3 + 2] = 1.0;
+            } else if (r > 0.3) {
+                // Neon aqua
+                colors[i * 3] = 0.0; colors[i * 3 + 1] = 0.95; colors[i * 3 + 2] = 1.0;
             } else {
-                colors[i * 3] = 1.0; colors[i * 3 + 1] = 0.6; colors[i * 3 + 2] = 0.1;
+                // Electric magenta / pink
+                colors[i * 3] = 1.0; colors[i * 3 + 1] = 0.2; colors[i * 3 + 2] = 0.7;
             }
         }
 
@@ -474,11 +555,11 @@ class CyberGameEngine {
         dustGeom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
         const dustMat = new THREE.PointsMaterial({
-            size: 2.5,
+            size: 3.2,
             sizeAttenuation: false,
             vertexColors: true,
             transparent: true,
-            opacity: 0.85,
+            opacity: 0.95,
             blending: THREE.AdditiveBlending
         });
 
@@ -2259,6 +2340,15 @@ class CyberGameEngine {
             if (this.thrusterLight && this.thrusterLight.intensity > 3.2) {
                 this.thrusterLight.intensity = Math.max(3.2, this.thrusterLight.intensity - dt * 14);
             }
+        }
+
+        // Sync Player High-Intensity Forward Headlight
+        if (this.playerHeadlight && this.playerHeadlightTarget) {
+            const p = this.player.pos;
+            const fx = Math.sin(this.player.angle);
+            const fz = -Math.cos(this.player.angle);
+            this.playerHeadlight.position.set(p.x, 3.5, p.z);
+            this.playerHeadlightTarget.position.set(p.x + fx * 140, 0.5, p.z + fz * 140);
         }
 
         // 2. Sync Player Light Ribbon Trail

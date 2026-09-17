@@ -256,7 +256,8 @@ header {
     top: 25%;
     bottom: 25%;
     width: 40px;
-    border: 2px solid rgba(0, 255, 255, 0.25);
+    border: 2px solid rgba(0, 255, 255, 0.5);
+    box-shadow: 0 0 14px rgba(0, 255, 255, 0.25);
 }
 
 .cockpit-bracket-left {
@@ -277,7 +278,8 @@ header {
     left: 30%;
     right: 30%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.4), transparent);
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.6), transparent);
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
 }
 
 .cockpit-hud-info {
@@ -295,17 +297,20 @@ header {
     font-size: 11px;
     letter-spacing: 1.5px;
     color: var(--neon-cyan);
-    background: rgba(4, 15, 28, 0.65);
-    border: 1px solid rgba(0, 255, 255, 0.35);
-    padding: 3px 10px;
+    background: rgba(8, 24, 48, 0.88);
+    border: 1px solid rgba(0, 255, 255, 0.6);
+    box-shadow: 0 0 14px rgba(0, 255, 255, 0.35);
+    padding: 4px 12px;
     border-radius: 4px;
-    text-shadow: 0 0 6px var(--neon-cyan);
+    text-shadow: 0 0 8px var(--neon-cyan);
 }
 
 .copilot-badge {
     color: #ffaa00;
-    border-color: rgba(255, 170, 0, 0.45);
-    text-shadow: 0 0 6px rgba(255, 170, 0, 0.6);
+    background: rgba(36, 20, 6, 0.88);
+    border: 1px solid #ffaa00;
+    box-shadow: 0 0 14px rgba(255, 170, 0, 0.35);
+    text-shadow: 0 0 8px #ffaa00;
 }
 
 #cockpit-hud-canvas {
