@@ -124,33 +124,39 @@ class CuaBrowserRunner:
             except Exception as e:
                 logger.debug(f"Could not initialize native CuaDriver: {e}")
 
-    async def initialize(self) -> bool:
-        """Initialize connection to the browser target."""
+    async def initialize(self, retries: int = 8, retry_delay: float = 0.6) -> bool:
+        """Initialize connection to the browser target with retry capability."""
         if not self.http_session or self.http_session.closed:
             self.http_session = aiohttp.ClientSession()
 
-        # Probe CDP endpoint
         url = f"http://{self.cdp_host}:{self.cdp_port}/json"
-        try:
-            async with self.http_session.get(url, timeout=3.0) as resp:
-                if resp.status == 200:
-                    tabs = await resp.json()
-                    # Select best tab (app tab or first regular page)
-                    page_tabs = [t for t in tabs if t.get("type") == "page"]
-                    if not page_tabs:
-                        page_tabs = tabs
-                    if page_tabs:
-                        target = next((t for t in page_tabs if "8000" in t.get("url", "")), page_tabs[0])
-                        self.ws_url = target.get("webSocketDebuggerUrl")
-                        logger.info(f"Cua Browser attached to tab: {target.get('title')} ({target.get('url')})")
-        except Exception as e:
-            logger.warning(f"Could not connect to existing CDP at {url}: {e}")
+
+        for attempt in range(retries):
+            try:
+                async with self.http_session.get(url, timeout=3.0) as resp:
+                    if resp.status == 200:
+                        tabs = await resp.json()
+                        page_tabs = [t for t in tabs if t.get("type") == "page"]
+                        if not page_tabs:
+                            page_tabs = tabs
+                        if page_tabs:
+                            target = next((t for t in page_tabs if "8000" in t.get("url", "")), page_tabs[0])
+                            self.ws_url = target.get("webSocketDebuggerUrl")
+                            logger.info(f"Cua Browser attached to tab: {target.get('title')} ({target.get('url')})")
+                            break
+            except Exception as e:
+                logger.debug(f"CDP connection attempt {attempt + 1}/{retries} pending: {e}")
+            await asyncio.sleep(retry_delay)
 
         # Connect WebSocket if URL was discovered
         if self.ws_url:
             try:
                 self.ws = await self.http_session.ws_connect(self.ws_url)
                 logger.info("Connected to Cua CDP WebSocket channel.")
+                try:
+                    await self._send_cdp("Page.bringToFront")
+                except Exception:
+                    pass
                 return True
             except Exception as e:
                 logger.error(f"WebSocket connection failed: {e}")
@@ -168,27 +174,42 @@ class CuaBrowserRunner:
         logger.info("Cua Browser Runner closed.")
 
     async def _send_cdp(self, method: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Send raw DevTools command over active WebSocket."""
-        if not self.ws or self.ws.closed:
-            reconnected = await self.initialize()
-            if not reconnected:
-                raise RuntimeError("No active Cua browser WebSocket connection.")
+        """Send raw DevTools command over active WebSocket with reconnection resilience."""
+        for attempt in range(3):
+            try:
+                if not self.ws or self.ws.closed:
+                    reconnected = await self.initialize()
+                    if not reconnected:
+                        raise RuntimeError("No active Cua browser WebSocket connection.")
 
-        self._msg_counter += 1
-        call_id = self._msg_counter
-        payload = {"id": call_id, "method": method, "params": params or {}}
-        await self.ws.send_str(json.dumps(payload))
+                self._msg_counter += 1
+                call_id = self._msg_counter
+                payload = {"id": call_id, "method": method, "params": params or {}}
+                await self.ws.send_str(json.dumps(payload))
 
-        while True:
-            msg = await self.ws.receive()
-            if msg.type == aiohttp.WSMsgType.TEXT:
-                data = json.loads(msg.data)
-                if data.get("id") == call_id:
-                    if "error" in data:
-                        raise RuntimeError(f"CDP Error in {method}: {data['error']}")
-                    return data.get("result", {})
-            elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
-                raise ConnectionResetError("CDP WebSocket connection closed.")
+                while True:
+                    msg = await self.ws.receive()
+                    if msg.type == aiohttp.WSMsgType.TEXT:
+                        data = json.loads(msg.data)
+                        if data.get("id") == call_id:
+                            if "error" in data:
+                                raise RuntimeError(f"CDP Error in {method}: {data['error']}")
+                            return data.get("result", {})
+                    elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
+                        raise ConnectionResetError("CDP WebSocket connection closed.")
+            except (ConnectionResetError, aiohttp.ClientError, Exception) as e:
+                if attempt < 2:
+                    logger.warning(f"CDP WebSocket glitch during {method} ({e}), reconnecting ({attempt + 1}/3)...")
+                    if self.ws and not self.ws.closed:
+                        try:
+                            await self.ws.close()
+                        except Exception:
+                            pass
+                    self.ws = None
+                    await asyncio.sleep(0.4)
+                    await self.initialize()
+                else:
+                    raise
 
     # ------------------------------------------------------------------------
     # Core Cua Browser Operations
@@ -320,20 +341,49 @@ class CuaBrowserRunner:
 
     async def press_key(self, key: str) -> Dict[str, Any]:
         """Press and release a keyboard key (e.g. 'v', 'p', 'g', 'm', 'Space')."""
-        await self._send_cdp("Input.dispatchKeyEvent", {"type": "keyDown", "text": key, "unmodifiedText": key})
+        k = " " if key.lower() == "space" else key
+        code = "Space" if key.lower() in (" ", "space") else (f"Key{key.upper()}" if len(key) == 1 else key)
+
+        await self._send_cdp("Input.dispatchKeyEvent", {"type": "rawKeyDown", "key": k, "code": code, "text": k, "unmodifiedText": k})
         await asyncio.sleep(0.05)
-        await self._send_cdp("Input.dispatchKeyEvent", {"type": "keyUp", "text": key, "unmodifiedText": key})
+        await self._send_cdp("Input.dispatchKeyEvent", {"type": "keyUp", "key": k, "code": code})
 
         # Also trigger window.game key handlers if bound
         js_dispatch = f"""(() => {{
-            window.dispatchEvent(new KeyboardEvent('keydown', {{ key: '{key}', code: 'Key{key.upper()}' }}));
-            window.dispatchEvent(new KeyboardEvent('keyup', {{ key: '{key}', code: 'Key{key.upper()}' }}));
+            window.dispatchEvent(new KeyboardEvent('keydown', {{ key: '{k}', code: '{code}', bubbles: true }}));
+            window.dispatchEvent(new KeyboardEvent('keyup', {{ key: '{k}', code: '{code}', bubbles: true }}));
         }})()"""
         await self.evaluate_js(js_dispatch)
 
         action_res = {"status": "ok", "key": key}
         if self._recording_active:
             self._record_turn("press_key", {"key": key}, action_res)
+        return action_res
+
+    async def hold_key(self, key: str, duration_sec: float = 0.4) -> Dict[str, Any]:
+        """Hold a key down for a duration (e.g. 'w' for flight acceleration, 'a' for banking)."""
+        k = " " if key.lower() == "space" else key
+        code = "Space" if key.lower() in (" ", "space") else (f"Key{key.upper()}" if len(key) == 1 else key)
+
+        await self._send_cdp("Input.dispatchKeyEvent", {"type": "rawKeyDown", "key": k, "code": code, "text": k, "unmodifiedText": k})
+        js_down = f"""(() => {{
+            if (window.game && window.game.keys) window.game.keys['{k.lower()}'] = true;
+            window.dispatchEvent(new KeyboardEvent('keydown', {{ key: '{k}', code: '{code}', bubbles: true }}));
+        }})()"""
+        await self.evaluate_js(js_down)
+
+        await asyncio.sleep(duration_sec)
+
+        await self._send_cdp("Input.dispatchKeyEvent", {"type": "keyUp", "key": k, "code": code})
+        js_up = f"""(() => {{
+            if (window.game && window.game.keys) window.game.keys['{k.lower()}'] = false;
+            window.dispatchEvent(new KeyboardEvent('keyup', {{ key: '{k}', code: '{code}', bubbles: true }}));
+        }})()"""
+        await self.evaluate_js(js_up)
+
+        action_res = {"status": "ok", "key": key, "duration_sec": duration_sec}
+        if self._recording_active:
+            self._record_turn("hold_key", {"key": key, "duration_sec": duration_sec}, action_res)
         return action_res
 
     async def capture_screenshot(self, out_path: Optional[Union[str, Path]] = None) -> bytes:
