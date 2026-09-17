@@ -1171,3 +1171,102 @@ header {
     transition: width 0.1s linear;
 }
 
+/* ==========================================================================
+   Phase 5: Audio Equalizer & Interactive Unlock Banner
+   ========================================================================== */
+.audio-eq-item {
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(0, 255, 204, 0.06);
+    border: 1px solid rgba(0, 255, 204, 0.2);
+    transition: all 0.2s ease;
+}
+
+.audio-eq-item:hover {
+    background: rgba(0, 255, 204, 0.15);
+    border-color: #00ffcc;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+}
+
+.eq-visualizer {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 16px;
+    min-width: 32px;
+    justify-content: center;
+    padding-top: 2px;
+}
+
+.eq-bar {
+    width: 3px;
+    height: 4px;
+    background: #00ffcc;
+    border-radius: 1px;
+    box-shadow: 0 0 6px rgba(0, 255, 204, 0.8);
+    transition: height 0.08s ease, background 0.2s ease;
+}
+
+.eq-bar:nth-child(2) { background: #38bdf8; box-shadow: 0 0 6px #38bdf8; }
+.eq-bar:nth-child(3) { background: #a855f7; box-shadow: 0 0 6px #a855f7; }
+.eq-bar:nth-child(4) { background: #ec4899; box-shadow: 0 0 6px #ec4899; }
+.eq-bar:nth-child(5) { background: #00ffff; box-shadow: 0 0 6px #00ffff; }
+
+.audio-unlock-banner {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(4, 12, 28, 0.92);
+    border: 1.5px solid #00f0ff;
+    border-radius: 6px;
+    padding: 9px 20px;
+    cursor: pointer;
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.45), inset 0 0 12px rgba(0, 240, 255, 0.2);
+    animation: bannerGlowPulse 2.2s infinite ease-in-out;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    user-select: none;
+}
+
+.audio-unlock-banner:hover {
+    background: rgba(6, 20, 48, 0.98);
+    border-color: #ffffff;
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.75), inset 0 0 18px rgba(0, 240, 255, 0.35);
+    transform: translateX(-50%) scale(1.02);
+}
+
+.audio-banner-icon {
+    font-size: 1.1rem;
+    animation: iconBounce 1.2s infinite alternate ease-in-out;
+}
+
+.audio-banner-text {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 1.8px;
+    color: #ffffff;
+    text-shadow: 0 0 10px #00f0ff;
+}
+
+@keyframes bannerGlowPulse {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.35), inset 0 0 10px rgba(0, 240, 255, 0.15);
+        border-color: rgba(0, 240, 255, 0.8);
+    }
+    50% {
+        box-shadow: 0 0 35px rgba(0, 240, 255, 0.65), 0 0 15px rgba(255, 0, 128, 0.3), inset 0 0 16px rgba(0, 240, 255, 0.25);
+        border-color: #38bdf8;
+    }
+}
+
+@keyframes iconBounce {
+    0% { transform: scale(0.95); }
+    100% { transform: scale(1.18); }
+}
+

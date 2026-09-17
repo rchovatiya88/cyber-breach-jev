@@ -199,7 +199,28 @@ class CyberGameEngine {
             });
             this.renderer.setSize(width, height);
             this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            this.renderer.toneMappingExposure = 1.25;
             this.hasWebGL = true;
+
+            // Phase 5: Initialize Three.js UnrealBloomPass Post-Processing Pipeline
+            if (typeof THREE.EffectComposer !== 'undefined' && typeof THREE.UnrealBloomPass !== 'undefined') {
+                try {
+                    const renderPass = new THREE.RenderPass(this.scene, this.camera);
+                    const bloomRes = new THREE.Vector2(width, height);
+                    // Bloom parameters tuned for Tron Neon: threshold 0.28, strength 1.35, radius 0.42
+                    this.bloomPass = new THREE.UnrealBloomPass(bloomRes, 1.35, 0.42, 0.28);
+                    this.composer = new THREE.EffectComposer(this.renderer);
+                    this.composer.addPass(renderPass);
+                    this.composer.addPass(this.bloomPass);
+                    this.hasBloom = true;
+                    console.log("✨ Phase 5: UnrealBloomPass post-processing pipeline active.");
+                } catch (postErr) {
+                    console.warn("⚠️ Post-processing bloom failed to initialize:", postErr);
+                    this.composer = null;
+                    this.hasBloom = false;
+                }
+            }
         } catch (err) {
             console.warn("⚠️ WebGL context creation failed. Defaulting to 2D Classic Mode:", err);
             this.hasWebGL = false;
@@ -245,13 +266,13 @@ class CyberGameEngine {
         this.subGridHelper.position.y = -0.05;
         this.scene.add(this.subGridHelper);
 
-        // Reflective Tron Digital Highway Floor Plane
+        // High-Gloss Obsidian Tron Digital Highway Floor Plane (Reflective Cyber Mirror)
         const floorGeom = new THREE.PlaneGeometry(3200, 3200);
         const floorMat = new THREE.MeshStandardMaterial({
-            color: 0x081b38,
-            roughness: 0.22,
-            metalness: 0.75,
-            emissive: 0x030e22,
+            color: 0x020409,
+            roughness: 0.08,
+            metalness: 0.92,
+            emissive: 0x010510,
             depthWrite: false
         });
         this.floorMesh = new THREE.Mesh(floorGeom, floorMat);
@@ -291,6 +312,9 @@ class CyberGameEngine {
 
         // Phase 4: Hyperspace Speed Warp Streaks
         this.buildSpeedWarpMesh();
+
+        // Phase 5: Radiant Perimeter Forcefield & Arena Boundary Rings
+        this.buildPerimeterForcefield();
     }
 
     /* --------------------------------------------------------------------- */
@@ -653,6 +677,65 @@ class CyberGameEngine {
 
         this.arenaPylonPositions = pylonCoords.map(([px, pz]) => ({ x: px, z: pz, radius: 12 }));
         this.scene.add(this.pylonGroup);
+    }
+
+    /* --------------------------------------------------------------------- */
+    /* PHASE 5: PERIMETER FORCEFIELD & CYBER BOUNDARIES                      */
+    /* --------------------------------------------------------------------- */
+    buildPerimeterForcefield() {
+        this.forcefieldGroup = new THREE.Group();
+
+        // Circular cylindrical energy boundary wall around radius 270
+        const wallGeom = new THREE.CylinderGeometry(270, 270, 28, 48, 2, true);
+        const wallMat = new THREE.MeshBasicMaterial({
+            color: 0x00f0ff,
+            transparent: true,
+            opacity: 0.22,
+            wireframe: true,
+            side: THREE.DoubleSide,
+            blending: THREE.AdditiveBlending
+        });
+        this.forcefieldWall = new THREE.Mesh(wallGeom, wallMat);
+        this.forcefieldWall.position.y = 14;
+        this.forcefieldGroup.add(this.forcefieldWall);
+
+        // Lower and Upper Glowing Perimeter Rings
+        const ringGeom = new THREE.RingGeometry(268, 272, 64);
+        ringGeom.rotateX(-Math.PI / 2);
+        const ringMat = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.75,
+            blending: THREE.AdditiveBlending
+        });
+        const bottomRing = new THREE.Mesh(ringGeom, ringMat);
+        bottomRing.position.y = 0.1;
+        this.forcefieldGroup.add(bottomRing);
+
+        const topRing = bottomRing.clone();
+        topRing.position.y = 28.0;
+        this.forcefieldGroup.add(topRing);
+
+        // Concentric Sector Pulse Rings on the ground
+        this.sectorPulseRings = [];
+        for (let r = 60; r <= 240; r += 60) {
+            const pulseGeom = new THREE.RingGeometry(r - 0.4, r + 0.4, 48);
+            pulseGeom.rotateX(-Math.PI / 2);
+            const pulseMat = new THREE.MeshBasicMaterial({
+                color: (r % 120 === 0) ? 0xff00aa : 0x00f0ff,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.35,
+                blending: THREE.AdditiveBlending
+            });
+            const pulseMesh = new THREE.Mesh(pulseGeom, pulseMat);
+            pulseMesh.position.y = 0.04;
+            this.forcefieldGroup.add(pulseMesh);
+            this.sectorPulseRings.push(pulseMesh);
+        }
+
+        this.scene.add(this.forcefieldGroup);
     }
 
     buildIdentityDiscMesh() {
@@ -1212,6 +1295,9 @@ class CyberGameEngine {
             this.camera.aspect = width / height;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(width, height);
+            if (this.composer) {
+                this.composer.setSize(width, height);
+            }
         }
     }
 
@@ -1323,6 +1409,15 @@ class CyberGameEngine {
     initEvents() {
         window.addEventListener('resize', () => this.resizeCanvases());
 
+        // Phase 5: Universal interaction unlock to immediately engage Tron Daft Punk soundtrack
+        const unlockAudioHandler = () => {
+            if (window.audioManager && !window.audioManager.isAudioUnlocked) {
+                window.audioManager.unlockAudioAndStartMusic();
+            }
+        };
+        window.addEventListener('pointerdown', unlockAudioHandler, { passive: true });
+        window.addEventListener('keydown', unlockAudioHandler, { passive: true });
+
         window.addEventListener('keydown', (e) => {
             this.keys[e.key.toLowerCase()] = true;
 
@@ -1342,7 +1437,13 @@ class CyberGameEngine {
             } else if (e.key.toLowerCase() === 'p') {
                 this.toggleAutoPilot();
             } else if (e.key.toLowerCase() === 'm') {
-                if (window.audioManager) window.audioManager.toggleMusic();
+                if (window.audioManager) {
+                    if (!window.audioManager.isAudioUnlocked) {
+                        window.audioManager.unlockAudioAndStartMusic();
+                    } else {
+                        window.audioManager.toggleMusic();
+                    }
+                }
             } else if (e.key.toLowerCase() === 'n') {
                 if (window.audioManager) window.audioManager.toggleSfx();
             } else if (e.key.toLowerCase() === 'c') {
@@ -1392,7 +1493,7 @@ class CyberGameEngine {
 
             canvas.addEventListener('mousedown', (e) => {
                 if (window.audioManager && !window.audioManager.isAudioUnlocked) {
-                    window.audioManager.init();
+                    window.audioManager.unlockAudioAndStartMusic();
                 }
 
                 if (e.button === 0) {
@@ -3533,8 +3634,24 @@ class CyberGameEngine {
         // 6. Camera Tracking
         this.update3DCamera();
 
-        // 7. Three.js Render
-        this.renderer.render(this.scene, this.camera);
+        // Phase 5: Animate Perimeter Forcefield & Sector Pulse Rings
+        if (this.forcefieldWall) {
+            this.forcefieldWall.rotation.y += dt * 0.05;
+            this.forcefieldWall.material.opacity = 0.20 + 0.06 * Math.sin(performance.now() * 0.003);
+        }
+        if (this.sectorPulseRings && this.sectorPulseRings.length > 0) {
+            const time = performance.now() * 0.002;
+            this.sectorPulseRings.forEach((ring, idx) => {
+                ring.material.opacity = 0.22 + 0.15 * Math.sin(time + idx * 1.2);
+            });
+        }
+
+        // 7. Three.js Render (UnrealBloomPass Post-Processing or Standard Renderer)
+        if (this.composer && this.hasBloom) {
+            this.composer.render();
+        } else {
+            this.renderer.render(this.scene, this.camera);
+        }
 
         // 8. Cockpit Spatial Threat Tracking HUD Canvas
         this.renderCockpitThreatTrackingHUD();
@@ -5146,6 +5263,24 @@ class CyberGameEngine {
         // Phase 4: Low-Health Tension Audio Filter Sweep (<25 HP)
         if (window.audioManager && window.audioManager.setLowHealthFilter) {
             window.audioManager.setLowHealthFilter(this.player.hp < 25);
+        }
+
+        // Phase 5: Dynamic Equalizer Telemetry & Audio Banner
+        if (window.audioManager && window.audioManager.getAudioActivity) {
+            const eqBars = document.querySelectorAll('#hud-eq-visualizer .eq-bar');
+            if (eqBars && eqBars.length > 0) {
+                const activity = window.audioManager.getAudioActivity();
+                eqBars.forEach((bar, idx) => {
+                    const level = activity[idx] || 0.15;
+                    const h = Math.max(3, Math.min(16, Math.round(level * 16)));
+                    bar.style.height = `${h}px`;
+                });
+            }
+        }
+
+        const banner = document.getElementById('audio-unlock-banner');
+        if (banner && window.audioManager && window.audioManager.isAudioUnlocked) {
+            banner.style.display = 'none';
         }
     }
 }

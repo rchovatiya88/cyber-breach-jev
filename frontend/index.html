@@ -40,6 +40,16 @@
                 <span class="stat-label">LATENCY</span>
                 <span class="stat-val" id="jev-latency" style="color: #ffaa00; font-size: 0.9rem;">--</span>
             </div>
+            <div class="stat-item audio-eq-item" id="audio-eq-item" onclick="window.audioManager && window.audioManager.toggleMusic()" title="Click to toggle soundtrack" style="cursor: pointer;">
+                <span class="stat-label">AUDIO [M]</span>
+                <div class="eq-visualizer" id="hud-eq-visualizer">
+                    <span class="eq-bar"></span>
+                    <span class="eq-bar"></span>
+                    <span class="eq-bar"></span>
+                    <span class="eq-bar"></span>
+                    <span class="eq-bar"></span>
+                </div>
+            </div>
         </div>
 
         <div class="header-controls">
@@ -56,6 +66,13 @@
     <div class="main-wrapper">
         <!-- Center Arena: Unbounded Dual-Mode Viewport (2D Retro / 3D Tron) -->
         <main class="arena-container" id="arena-container">
+            <!-- Interactive Audio Unlock Prompt Banner -->
+            <div id="audio-unlock-banner" class="audio-unlock-banner" onclick="window.audioManager && window.audioManager.unlockAudioAndStartMusic()">
+                <span class="audio-banner-icon">🔊</span>
+                <span class="audio-banner-text">CLICK TO ENGAGE TRON SYNTHWAVE SOUNDTRACK [M]</span>
+                <span class="audio-banner-pulse"></span>
+            </div>
+
             <!-- Command Recognizer Boss Threat Banner & Health Bar -->
             <div id="boss-hud-container" class="boss-hud-container" style="display: none;">
                 <div class="boss-hud-header">
@@ -324,11 +341,18 @@
     </script>
 
     <!-- Three.js (Vendor local + CDN fallback) -->
-    <script src="/static/vendor/three.min.js?v=tron_v3"></script>
+    <script src="/static/vendor/three.min.js?v=tron_v4"></script>
+    <!-- Three.js Post-Processing Shaders & Passes (UnrealBloomPass) -->
+    <script src="/static/vendor/EffectComposer.js?v=tron_v4"></script>
+    <script src="/static/vendor/CopyShader.js?v=tron_v4"></script>
+    <script src="/static/vendor/ShaderPass.js?v=tron_v4"></script>
+    <script src="/static/vendor/RenderPass.js?v=tron_v4"></script>
+    <script src="/static/vendor/LuminosityHighPassShader.js?v=tron_v4"></script>
+    <script src="/static/vendor/UnrealBloomPass.js?v=tron_v4"></script>
 
     <!-- Game Scripts -->
-    <script src="/static/audio.js?v=tron_v3"></script>
-    <script src="/static/jev_hud.js?v=tron_v3"></script>
-    <script src="/static/game.js?v=tron_v3"></script>
+    <script src="/static/audio.js?v=tron_v4"></script>
+    <script src="/static/jev_hud.js?v=tron_v4"></script>
+    <script src="/static/game.js?v=tron_v4"></script>
 </body>
 </html>
