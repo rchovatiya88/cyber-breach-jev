@@ -58,7 +58,7 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
+    padding: 0 10px;
     z-index: 10;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.6);
 }
@@ -66,49 +66,59 @@ header {
 .logo-area {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 .logo-title {
     font-family: 'Orbitron', sans-serif;
     font-weight: 900;
     font-size: 1.15rem;
-    color: var(--text-neon);
+    color: #ffffff;
     letter-spacing: 2px;
     text-shadow: var(--glow-cyan);
 }
 
 .logo-tag {
     font-size: 0.7rem;
+    background: rgba(255, 170, 0, 0.2);
     color: var(--accent-amber);
-    background: rgba(255, 170, 0, 0.12);
-    border: 1px solid rgba(255, 170, 0, 0.4);
-    padding: 2px 7px;
+    border: 1px solid var(--accent-amber);
+    padding: 2px 6px;
     border-radius: 4px;
     letter-spacing: 1px;
 }
 
 .logo-3d-badge {
     font-size: 0.68rem;
+    background: rgba(255, 0, 255, 0.2);
     color: #ff00ff;
-    background: rgba(255, 0, 255, 0.12);
     border: 1px solid rgba(255, 0, 255, 0.4);
-    padding: 2px 7px;
+    padding: 2px 6px;
     border-radius: 4px;
     letter-spacing: 1px;
     font-weight: bold;
 }
 
+@media (max-width: 1400px) {
+    .logo-tag,
+    .logo-3d-badge {
+        display: none !important;
+    }
+}
+
 .header-stats {
     display: flex;
     align-items: center;
-    gap: 22px;
+    gap: 12px;
+    flex-shrink: 0;
 }
 
 .stat-item {
     display: flex;
     flex-direction: column;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .stat-label {
@@ -126,19 +136,21 @@ header {
 
 .header-controls {
     display: flex;
-    gap: 10px;
+    gap: 5px;
+    flex-shrink: 0;
 }
 
 .ctrl-btn {
     background: rgba(0, 255, 204, 0.08);
     border: 1px solid var(--border-dim);
     color: var(--text-neon);
-    padding: 6px 12px;
+    padding: 4px 7px;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
+    font-size: 0.73rem;
     cursor: pointer;
     border-radius: 4px;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .ctrl-btn:hover {
@@ -1147,11 +1159,13 @@ header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 90px;
-    background: rgba(255, 0, 170, 0.12);
-    border: 1px solid rgba(255, 0, 170, 0.4);
+    min-width: 95px;
+    background: rgba(255, 0, 170, 0.14);
+    border: 1px solid rgba(255, 0, 170, 0.5);
     border-radius: 4px;
-    padding: 2px 8px;
+    padding: 1px 7px;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .combo-decay-track {

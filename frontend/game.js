@@ -82,9 +82,7 @@ class CyberGameEngine {
             triPlasmaTimer: 0,
             blinkInvulnTimer: 0,
             isBlinking: false,
-            wallHoppedThisBlink: false,
-            trailPoints: [],
-            maxTrailPoints: 80,
+            wallHoppedThisBlink: false
         };
 
         // Collections
@@ -208,13 +206,30 @@ class CyberGameEngine {
                 try {
                     const renderPass = new THREE.RenderPass(this.scene, this.camera);
                     const bloomRes = new THREE.Vector2(width, height);
-                    // Calibrated Bloom: threshold 0.78 (only hot lasers & thrusters bloom), strength 0.45, radius 0.22
-                    this.bloomPass = new THREE.UnrealBloomPass(bloomRes, 0.45, 0.22, 0.78);
+                    // Calibrated High-Contrast Bloom: threshold 0.82 (laser-tight glow), strength 1.15, radius 0.22
+                    this.bloomPass = new THREE.UnrealBloomPass(bloomRes, 1.15, 0.22, 0.82);
                     this.composer = new THREE.EffectComposer(this.renderer);
                     this.composer.addPass(renderPass);
                     this.composer.addPass(this.bloomPass);
+
+
+                    // Wave 1 Upgrade: CyberPost (Vignette + CRT Shader + Calibrated Aberration)
+                    if (typeof THREE.CyberPostShader !== 'undefined' && typeof THREE.ShaderPass !== 'undefined') {
+                        this.cyberPostPass = new THREE.ShaderPass(THREE.CyberPostShader);
+                        this.cyberPostPass.uniforms['uResolution'].value.set(width, height);
+                        // Clean, razor-sharp default optical clarity
+                        this.cyberPostPass.uniforms['uVignetteStrength'].value = 0.22;
+                        this.cyberPostPass.uniforms['uChromaticStrength'].value = 0.0;
+                        this.cyberPostPass.uniforms['uBarrelDistortion'].value = 0.0;
+                        this.cyberPostPass.uniforms['uScanlineIntensity'].value = 0.0;
+                        this.cyberPostPass.renderToScreen = true;
+                        this.composer.addPass(this.cyberPostPass);
+                        this.hasCyberPost = true;
+                        console.log("🎬 CyberPost shader active (calibrated edge vignette + zero-smear optics).");
+                    }
+
                     this.hasBloom = true;
-                    console.log("✨ Phase 6: Precision UnrealBloomPass pipeline active (threshold: 0.78, strength: 0.45).");
+                    console.log("✨ Calibrated UnrealBloomPass active (threshold: 0.82, strength: 1.15, radius: 0.22).");
                 } catch (postErr) {
                     console.warn("⚠️ Post-processing bloom failed to initialize:", postErr);
                     this.composer = null;
@@ -227,9 +242,9 @@ class CyberGameEngine {
             this.renderMode = '2d';
         }
 
-        // Atmospheric Tron Fog (Deep dark cyber void)
-        this.scene.fog = new THREE.FogExp2(0x020816, 0.0014);
-        if (this.renderer) this.renderer.setClearColor(0x020816, 1.0);
+        // Deep Infinite Cyber Void Atmospheric Fog
+        this.scene.fog = new THREE.FogExp2(0x01050e, 0.0016);
+        if (this.renderer) this.renderer.setClearColor(0x01050e, 1.0);
 
         // Precision Tron Lighting Rig (Deep Void Contrast, No Specular Blowouts)
         // 1. Sky/Ground Hemisphere Light (Subtle Ambient Cyber Fill)
@@ -269,10 +284,10 @@ class CyberGameEngine {
         // High-Gloss Obsidian Tron Digital Highway Floor Plane (Reflective Cyber Mirror)
         const floorGeom = new THREE.PlaneGeometry(3200, 3200);
         const floorMat = new THREE.MeshStandardMaterial({
-            color: 0x020409,
-            roughness: 0.08,
-            metalness: 0.92,
-            emissive: 0x010510,
+            color: 0x010204,
+            roughness: 0.02,
+            metalness: 0.98,
+            emissive: 0x000105,
             depthWrite: false
         });
         this.floorMesh = new THREE.Mesh(floorGeom, floorMat);
@@ -283,6 +298,9 @@ class CyberGameEngine {
         // Tron Horizon Cyber Monoliths & Skyline
         this.buildTronSkyline();
 
+        // Procedural Cyber Starfield Dome (Infinite digital void depth)
+        this.buildCyberStarfield();
+
         // Arena Perimeter Energy Pylons (Parallax speed cues)
         this.buildArenaPylons();
 
@@ -291,9 +309,6 @@ class CyberGameEngine {
 
         // Player 3D Interceptor Craft
         this.buildPlayerMesh();
-
-        // Player Light Ribbon Wall
-        this.initPlayerLightTrail();
 
         // Holographic 3D Ground Targeting Reticle
         this.init3DTargetReticle();
@@ -577,58 +592,85 @@ class CyberGameEngine {
 
     buildTronSkyline() {
         this.skylineGroup = new THREE.Group();
-        const boxMat = new THREE.MeshStandardMaterial({
-            color: 0x0c254b,
-            roughness: 0.2,
-            metalness: 0.8,
-            emissive: 0x061a3d
+        const monolithMat = new THREE.MeshStandardMaterial({
+            color: 0x030814,
+            roughness: 0.20,
+            metalness: 0.92,
+            emissive: 0x01040d
         });
-        const edgeCyan = new THREE.LineBasicMaterial({ color: 0x00f0ff, linewidth: 2.0 });
-        const edgePink = new THREE.LineBasicMaterial({ color: 0xff00aa, linewidth: 2.0 });
 
-        // 48 Monolithic Towers on distant perimeter with bright beacon tops
-        for (let i = 0; i < 48; i++) {
-            const angle = (i / 48) * Math.PI * 2;
-            const dist = 650 + (i % 5) * 45;
-            const w = 35 + (i % 3) * 20;
-            const d = 35 + (i % 4) * 15;
-            const h = 100 + (i % 6) * 60;
+        const neonCyan = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+        const neonPink = new THREE.MeshBasicMaterial({ color: 0xff00aa });
+        const neonAmber = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
+
+        // 36 Monolithic Cyber Towers on perimeter with clean emissive strip lights
+        for (let i = 0; i < 36; i++) {
+            const angle = (i / 36) * Math.PI * 2;
+            const dist = 680 + (i % 4) * 55;
+            const w = 40 + (i % 3) * 22;
+            const d = 40 + (i % 4) * 18;
+            const h = 120 + (i % 5) * 70;
 
             const boxGeom = new THREE.BoxGeometry(w, h, d);
-            const tower = new THREE.Mesh(boxGeom, boxMat);
-            const edgeMat = (i % 3 === 0) ? edgePink : edgeCyan;
-            tower.add(new THREE.LineSegments(new THREE.EdgesGeometry(boxGeom), edgeMat));
+            const tower = new THREE.Mesh(boxGeom, monolithMat);
 
-            // Sleek Rooftop Wireframe Crown & Antenna (No solid white glare slabs)
-            const crownGeom = new THREE.BufferGeometry();
-            const cw = w * 0.5;
-            const cd = d * 0.5;
-            const crownVerts = new Float32Array([
-                -cw, h / 2 + 1, -cd,   cw, h / 2 + 1, -cd,
-                cw, h / 2 + 1, -cd,    cw, h / 2 + 1, cd,
-                cw, h / 2 + 1, cd,     -cw, h / 2 + 1, cd,
-                -cw, h / 2 + 1, cd,    -cw, h / 2 + 1, -cd
-            ]);
-            crownGeom.setAttribute('position', new THREE.BufferAttribute(crownVerts, 3));
-            tower.add(new THREE.LineSegments(crownGeom, edgeMat));
+            const isAccent = (i % 3 === 0);
+            const isAmber = (i % 6 === 1);
+            const stripeMat = isAccent ? neonPink : (isAmber ? neonAmber : neonCyan);
 
-            // Central Antenna Beacon Line
-            const antGeom = new THREE.BufferGeometry();
-            antGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, h / 2, 0, 0, h / 2 + 10, 0]), 3));
-            tower.add(new THREE.Line(antGeom, edgeMat));
+            // Vertical Emissive Neon Conduit Strips (Solid mesh, zero wireframe aliasing)
+            const stripWidth = 2.4;
+            const stripHeight = h * 0.75;
+            const stripGeom = new THREE.PlaneGeometry(stripWidth, stripHeight);
 
-            tower.position.set(Math.cos(angle) * dist, h / 2 - 5, Math.sin(angle) * dist);
+            // Front stripe
+            const frontStrip = new THREE.Mesh(stripGeom, stripeMat);
+            frontStrip.position.set(0, 0, d * 0.5 + 0.1);
+            tower.add(frontStrip);
+
+            // Back stripe
+            const backStrip = new THREE.Mesh(stripGeom, stripeMat);
+            backStrip.rotation.y = Math.PI;
+            backStrip.position.set(0, 0, -d * 0.5 - 0.1);
+            tower.add(backStrip);
+
+            // Luminous Rooftop Crown Band
+            const capGeom = new THREE.BoxGeometry(w * 1.02, 3.2, d * 1.02);
+            const capMesh = new THREE.Mesh(capGeom, stripeMat);
+            capMesh.position.set(0, h * 0.5 + 1.6, 0);
+            tower.add(capMesh);
+
+            // Rooftop Spire Antenna
+            const antGeom = new THREE.CylinderGeometry(0.4, 0.8, 18, 6);
+            const antMesh = new THREE.Mesh(antGeom, stripeMat);
+            antMesh.position.set(0, h * 0.5 + 11.0, 0);
+            tower.add(antMesh);
+
+            // Ground Foundation Light Plinth Ring
+            const baseRingRadius = Math.max(w, d) * 0.72;
+            const baseRingGeom = new THREE.RingGeometry(baseRingRadius, baseRingRadius + 3.0, 16);
+            baseRingGeom.rotateX(-Math.PI / 2);
+            const baseRing = new THREE.Mesh(baseRingGeom, new THREE.MeshBasicMaterial({
+                color: stripeMat.color,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.55
+            }));
+            baseRing.position.set(0, -h * 0.5 + 0.3, 0);
+            tower.add(baseRing);
+
+            tower.position.set(Math.cos(angle) * dist, h / 2 - 2, Math.sin(angle) * dist);
             tower.rotation.y = angle;
             this.skylineGroup.add(tower);
         }
 
         // Primary Radiant Horizon Neon Ring
-        const ringGeom = new THREE.RingGeometry(850, 868, 64);
+        const ringGeom = new THREE.RingGeometry(850, 866, 64);
         const ringMat = new THREE.MeshBasicMaterial({
             color: 0x00f0ff,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.55
+            opacity: 0.50
         });
         const horizonRing = new THREE.Mesh(ringGeom, ringMat);
         horizonRing.rotation.x = -Math.PI / 2;
@@ -636,12 +678,12 @@ class CyberGameEngine {
         this.skylineGroup.add(horizonRing);
 
         // Secondary Outer Magenta Ring
-        const outerRingGeom = new THREE.RingGeometry(940, 955, 64);
+        const outerRingGeom = new THREE.RingGeometry(940, 954, 64);
         const outerRingMat = new THREE.MeshBasicMaterial({
             color: 0xd946ef,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.45
+            opacity: 0.40
         });
         const outerHorizonRing = new THREE.Mesh(outerRingGeom, outerRingMat);
         outerHorizonRing.rotation.x = -Math.PI / 2;
@@ -649,6 +691,120 @@ class CyberGameEngine {
         this.skylineGroup.add(outerHorizonRing);
 
         this.scene.add(this.skylineGroup);
+    }
+
+    /* --------------------------------------------------------------------- */
+    /* PROCEDURAL CYBER STARFIELD DOME                                       */
+    /* --------------------------------------------------------------------- */
+    buildCyberStarfield() {
+        this.starfieldGroup = new THREE.Group();
+
+        // --- 2000 Neon Stars via InstancedMesh (single draw call) ---
+        const starCount = 2000;
+        const starGeo = new THREE.SphereGeometry(0.5, 4, 3); // Low-poly diamond
+        const starMat = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        this.starfieldMesh = new THREE.InstancedMesh(starGeo, starMat, starCount);
+        this.starfieldMesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+
+        // Per-instance colors: Tron palette distribution
+        const starColors = new Float32Array(starCount * 3);
+        const palette = [
+            [0.0, 1.0, 0.95],   // Cyan (40%)
+            [0.85, 0.15, 0.65], // Magenta (25%)
+            [1.0, 0.7, 0.0],    // Amber (15%)
+            [0.9, 0.95, 1.0]    // White-blue (20%)
+        ];
+        const paletteWeights = [0.40, 0.65, 0.80, 1.0];
+
+        const dummy = new THREE.Object3D();
+        const domeRadius = 1400;
+        const minElevation = 0.08; // Stars only above ~5 degrees
+
+        for (let i = 0; i < starCount; i++) {
+            // Uniform hemisphere distribution using spherical coordinates
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(1.0 - Math.random() * (1.0 - minElevation));
+            const r = domeRadius + (Math.random() - 0.5) * 200;
+
+            dummy.position.set(
+                r * Math.sin(phi) * Math.cos(theta),
+                r * Math.cos(phi),
+                r * Math.sin(phi) * Math.sin(theta)
+            );
+            // Random size variation
+            const scale = 0.3 + Math.random() * 1.8;
+            dummy.scale.set(scale, scale, scale);
+            dummy.updateMatrix();
+            this.starfieldMesh.setMatrixAt(i, dummy.matrix);
+
+            // Assign color from palette
+            const roll = Math.random();
+            let col = palette[3];
+            for (let j = 0; j < paletteWeights.length; j++) {
+                if (roll < paletteWeights[j]) { col = palette[j]; break; }
+            }
+            // Brightness variation
+            const brightness = 0.4 + Math.random() * 0.6;
+            starColors[i * 3] = col[0] * brightness;
+            starColors[i * 3 + 1] = col[1] * brightness;
+            starColors[i * 3 + 2] = col[2] * brightness;
+        }
+
+        this.starfieldMesh.instanceColor = new THREE.InstancedBufferAttribute(starColors, 3);
+        this.starfieldMesh.frustumCulled = false;
+        this.starfieldGroup.add(this.starfieldMesh);
+
+        // --- 40 Larger Pulsing Data Nodes (brighter, animated) ---
+        const nodeCount = 40;
+        const nodeGeo = new THREE.OctahedronGeometry(1.5, 0);
+        const nodeMat = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.85,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        this.dataNodeMesh = new THREE.InstancedMesh(nodeGeo, nodeMat, nodeCount);
+        this.dataNodeMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+        const nodeColors = new Float32Array(nodeCount * 3);
+        this._dataNodeBasePositions = [];
+
+        for (let i = 0; i < nodeCount; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(1.0 - Math.random() * 0.7);
+            const r = domeRadius - 100 + Math.random() * 100;
+
+            const px = r * Math.sin(phi) * Math.cos(theta);
+            const py = r * Math.cos(phi);
+            const pz = r * Math.sin(phi) * Math.sin(theta);
+            this._dataNodeBasePositions.push(px, py, pz);
+
+            dummy.position.set(px, py, pz);
+            const s = 1.5 + Math.random() * 2.5;
+            dummy.scale.set(s, s, s);
+            dummy.rotation.set(Math.random() * 6.28, Math.random() * 6.28, 0);
+            dummy.updateMatrix();
+            this.dataNodeMesh.setMatrixAt(i, dummy.matrix);
+
+            // Data nodes glow in cyan/magenta/amber
+            const nCol = palette[Math.floor(Math.random() * 3)];
+            nodeColors[i * 3] = nCol[0];
+            nodeColors[i * 3 + 1] = nCol[1];
+            nodeColors[i * 3 + 2] = nCol[2];
+        }
+
+        this.dataNodeMesh.instanceColor = new THREE.InstancedBufferAttribute(nodeColors, 3);
+        this.dataNodeMesh.frustumCulled = false;
+        this.starfieldGroup.add(this.dataNodeMesh);
+
+        this.scene.add(this.starfieldGroup);
     }
 
     buildArenaPylons() {
@@ -715,59 +871,7 @@ class CyberGameEngine {
     /* PHASE 5: PERIMETER FORCEFIELD & CYBER BOUNDARIES                      */
     /* --------------------------------------------------------------------- */
     buildPerimeterForcefield() {
-        this.forcefieldGroup = new THREE.Group();
-
-        // Circular cylindrical energy boundary wall around radius 270
-        const wallGeom = new THREE.CylinderGeometry(270, 270, 28, 48, 2, true);
-        const wallMat = new THREE.MeshBasicMaterial({
-            color: 0x00f0ff,
-            transparent: true,
-            opacity: 0.22,
-            wireframe: true,
-            side: THREE.DoubleSide,
-            blending: THREE.AdditiveBlending
-        });
-        this.forcefieldWall = new THREE.Mesh(wallGeom, wallMat);
-        this.forcefieldWall.position.y = 14;
-        this.forcefieldGroup.add(this.forcefieldWall);
-
-        // Lower and Upper Glowing Perimeter Rings
-        const ringGeom = new THREE.RingGeometry(268, 272, 64);
-        ringGeom.rotateX(-Math.PI / 2);
-        const ringMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.75,
-            blending: THREE.AdditiveBlending
-        });
-        const bottomRing = new THREE.Mesh(ringGeom, ringMat);
-        bottomRing.position.y = 0.1;
-        this.forcefieldGroup.add(bottomRing);
-
-        const topRing = bottomRing.clone();
-        topRing.position.y = 28.0;
-        this.forcefieldGroup.add(topRing);
-
-        // Concentric Sector Pulse Rings on the ground
-        this.sectorPulseRings = [];
-        for (let r = 60; r <= 240; r += 60) {
-            const pulseGeom = new THREE.RingGeometry(r - 0.4, r + 0.4, 48);
-            pulseGeom.rotateX(-Math.PI / 2);
-            const pulseMat = new THREE.MeshBasicMaterial({
-                color: (r % 120 === 0) ? 0xff00aa : 0x00f0ff,
-                side: THREE.DoubleSide,
-                transparent: true,
-                opacity: 0.35,
-                blending: THREE.AdditiveBlending
-            });
-            const pulseMesh = new THREE.Mesh(pulseGeom, pulseMat);
-            pulseMesh.position.y = 0.04;
-            this.forcefieldGroup.add(pulseMesh);
-            this.sectorPulseRings.push(pulseMesh);
-        }
-
-        this.scene.add(this.forcefieldGroup);
+        // Boundary forcefield removed for infinite flight.
     }
 
     buildIdentityDiscMesh() {
@@ -930,26 +1034,26 @@ class CyberGameEngine {
     }
 
     initCyberDust() {
-        const dustCount = 750;
+        const dustCount = 300;
         const dustGeom = new THREE.BufferGeometry();
         const positions = new Float32Array(dustCount * 3);
         const colors = new Float32Array(dustCount * 3);
 
         for (let i = 0; i < dustCount; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 600;
-            positions[i * 3 + 1] = 0.5 + Math.random() * 10.0;
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 600;
+            positions[i * 3] = (Math.random() - 0.5) * 220;
+            positions[i * 3 + 1] = 1.0 + Math.random() * 14.0;
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 220;
 
             const r = Math.random();
-            if (r > 0.6) {
-                // Intense luminous white/cyan
-                colors[i * 3] = 0.85; colors[i * 3 + 1] = 1.0; colors[i * 3 + 2] = 1.0;
+            if (r > 0.65) {
+                // Subtle cyan mote
+                colors[i * 3] = 0.0; colors[i * 3 + 1] = 0.9; colors[i * 3 + 2] = 1.0;
             } else if (r > 0.3) {
-                // Neon aqua
-                colors[i * 3] = 0.0; colors[i * 3 + 1] = 0.95; colors[i * 3 + 2] = 1.0;
+                // Soft electric blue
+                colors[i * 3] = 0.1; colors[i * 3 + 1] = 0.5; colors[i * 3 + 2] = 1.0;
             } else {
-                // Electric magenta / pink
-                colors[i * 3] = 1.0; colors[i * 3 + 1] = 0.2; colors[i * 3 + 2] = 0.7;
+                // Subtle magenta accent
+                colors[i * 3] = 0.8; colors[i * 3 + 1] = 0.1; colors[i * 3 + 2] = 0.6;
             }
         }
 
@@ -957,12 +1061,13 @@ class CyberGameEngine {
         dustGeom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
         const dustMat = new THREE.PointsMaterial({
-            size: 3.2,
-            sizeAttenuation: false,
+            size: 0.85,
+            sizeAttenuation: true, // Naturally scales and fades with perspective distance
             vertexColors: true,
             transparent: true,
-            opacity: 0.95,
-            blending: THREE.AdditiveBlending
+            opacity: 0.35,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
         });
 
         this.dustParticles = new THREE.Points(dustGeom, dustMat);
@@ -1010,26 +1115,25 @@ class CyberGameEngine {
         tip.position.set(0, 0.2, -9.2);
         this.playerGroup.add(tip);
 
-        // 2. High-Contrast Golden-Amber Cockpit Canopy Visor (Located Forward at -Z = -2.5 to -4.8)
-        // The warm golden-amber glow provides instantaneous front-vs-back color contrast
-        const canopyGeom = new THREE.ConeGeometry(1.2, 4.4, 4);
+        // 2. Streamlined Midnight Cockpit Canopy with Electric Cyan Tracing (Flush Aerodynamic Profile)
+        const canopyGeom = new THREE.ConeGeometry(1.05, 5.0, 4);
         canopyGeom.rotateX(Math.PI / 2);
-        canopyGeom.scale(0.9, 0.6, 1.0);
+        canopyGeom.scale(0.85, 0.40, 1.0);
         const canopyMat = new THREE.MeshStandardMaterial({
-            color: 0xffaa00,
-            emissive: 0xff7700,
-            roughness: 0.08,
-            metalness: 0.35,
+            color: 0x02162a,
+            emissive: 0x00223a,
+            roughness: 0.12,
+            metalness: 0.92,
             transparent: true,
-            opacity: 0.92
+            opacity: 0.88
         });
         this.cockpitCanopy = new THREE.Mesh(canopyGeom, canopyMat);
-        this.cockpitCanopy.position.set(0, 0.95, -3.2);
+        this.cockpitCanopy.position.set(0, 0.70, -2.8);
         this.playerGroup.add(this.cockpitCanopy);
 
         const canopyEdges = new THREE.LineSegments(
             new THREE.EdgesGeometry(canopyGeom),
-            new THREE.LineBasicMaterial({ color: 0xffea00, linewidth: 2 })
+            new THREE.LineBasicMaterial({ color: 0x00f0ff, linewidth: 2.5 })
         );
         canopyEdges.position.copy(this.cockpitCanopy.position);
         this.playerGroup.add(canopyEdges);
@@ -1089,11 +1193,11 @@ class CyberGameEngine {
         this.playerGroup.add(wingEdges);
 
         // Wingtip Navigation Energy Beacons
-        const leftNav = new THREE.Mesh(new THREE.SphereGeometry(0.32, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+        const leftNav = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
         leftNav.position.set(-8.6, 0.15, 3.8);
         this.playerGroup.add(leftNav);
 
-        const rightNav = new THREE.Mesh(new THREE.SphereGeometry(0.32, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff00aa }));
+        const rightNav = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff00aa }));
         rightNav.position.set(8.6, 0.15, 3.8);
         this.playerGroup.add(rightNav);
 
@@ -1144,10 +1248,9 @@ class CyberGameEngine {
             this.playerGroup.add(finEdge);
         });
 
-        // 5. Oversized Dual Turbine Ion Afterburners (Located Stern at +Z = +4.8)
-        const engMat = new THREE.MeshStandardMaterial({ color: 0x0d2138, metalness: 0.9, roughness: 0.2 });
-        const coreGlowMat = new THREE.MeshBasicMaterial({ color: 0x00a2ff });
-        const engGeom = new THREE.CylinderGeometry(1.15, 1.35, 2.6, 12);
+        // 5. Dual Recessed Turbine Ion Afterburners (Located Stern at +Z = +4.5)
+        const engMat = new THREE.MeshStandardMaterial({ color: 0x0d2138, metalness: 0.9, roughness: 0.25 });
+        const engGeom = new THREE.CylinderGeometry(0.95, 1.20, 2.4, 12);
         engGeom.rotateX(Math.PI / 2);
 
         [-1.8, 1.8].forEach(xOff => {
@@ -1155,34 +1258,29 @@ class CyberGameEngine {
             nacelle.position.set(xOff, 0.25, 4.5);
             this.playerGroup.add(nacelle);
 
-            // Glowing Turbine Core Disc inside exhaust nozzle
-            const nozzleCore = new THREE.Mesh(new THREE.CircleGeometry(0.95, 16), coreGlowMat);
-            nozzleCore.position.set(xOff, 0.25, 5.82);
-            this.playerGroup.add(nozzleCore);
-
-            // Outer Neon Rim on Exhaust Bell
-            const rimGeom = new THREE.RingGeometry(0.95, 1.25, 16);
-            const rimMesh = new THREE.Mesh(rimGeom, new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide }));
-            rimMesh.position.set(xOff, 0.25, 5.84);
+            // Recessed glowing turbine ring (non-blinding aperture)
+            const rimGeom = new THREE.RingGeometry(0.35, 0.85, 16);
+            const rimMesh = new THREE.Mesh(rimGeom, new THREE.MeshBasicMaterial({ color: 0x00a2ff, side: THREE.DoubleSide }));
+            rimMesh.position.set(xOff, 0.25, 5.72);
             this.playerGroup.add(rimMesh);
         });
 
         // Animated Twin Ion Exhaust Plumes (Extending backwards into +Z wake)
-        const plumeGeom = new THREE.ConeGeometry(0.85, 4.8, 12);
+        const plumeGeom = new THREE.ConeGeometry(0.50, 4.2, 10);
         plumeGeom.rotateX(-Math.PI / 2);
         const plumeMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0x00f0ff,
             transparent: true,
-            opacity: 0.60,
+            opacity: 0.35,
             blending: THREE.AdditiveBlending
         });
 
         const leftPlume = new THREE.Mesh(plumeGeom, plumeMat);
-        leftPlume.position.set(-1.8, 0.25, 8.0);
+        leftPlume.position.set(-1.8, 0.25, 7.8);
         this.playerGroup.add(leftPlume);
 
         const rightPlume = new THREE.Mesh(plumeGeom, plumeMat.clone());
-        rightPlume.position.set(1.8, 0.25, 8.0);
+        rightPlume.position.set(1.8, 0.25, 7.8);
         this.playerGroup.add(rightPlume);
 
         this.exhaustPlumes.push(leftPlume, rightPlume);
@@ -1238,28 +1336,6 @@ class CyberGameEngine {
         this.scene.add(this.playerGroup);
     }
 
-    initPlayerLightTrail() {
-        const maxSegments = this.player.maxTrailPoints;
-        const maxVertices = maxSegments * 6;
-        const positions = new Float32Array(maxVertices * 3);
-        const colors = new Float32Array(maxVertices * 3);
-
-        const geom = new THREE.BufferGeometry();
-        geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-        const mat = new THREE.MeshBasicMaterial({
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.82,
-            vertexColors: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
-        });
-
-        this.playerTrailMesh = new THREE.Mesh(geom, mat);
-        this.scene.add(this.playerTrailMesh);
-    }
 
     init3DTargetReticle() {
         this.reticleGroup = new THREE.Group();
@@ -1331,6 +1407,10 @@ class CyberGameEngine {
             this.renderer.setSize(width, height);
             if (this.composer) {
                 this.composer.setSize(width, height);
+            }
+
+            if (this.cyberPostPass) {
+                this.cyberPostPass.uniforms['uResolution'].value.set(width, height);
             }
         }
     }
@@ -1576,8 +1656,29 @@ class CyberGameEngine {
     }
 
     toggleCRT() {
-        const crt = document.getElementById('crt-overlay');
-        if (crt) crt.classList.toggle('active');
+        // Prefer GPU CyberPost shader CRT (barrel distortion + scanlines + phosphor triads)
+        if (this.cyberPostPass && this.hasCyberPost) {
+            const u = this.cyberPostPass.uniforms;
+            const isActive = u['uScanlineIntensity'].value > 0.05;
+            if (isActive) {
+                // Turn off CRT shader
+                u['uScanlineIntensity'].value = 0.0;
+                u['uBarrelDistortion'].value = 0.0;
+                console.log("📺 CRT Shader OFF");
+            } else {
+                // Turn on CRT shader with barrel curve
+                u['uScanlineIntensity'].value = 0.25;
+                u['uBarrelDistortion'].value = 0.12;
+                console.log("📺 CRT Shader ON (scanlines + barrel warp)");
+            }
+            // Also sync CSS overlay off when using shader version
+            const crt = document.getElementById('crt-overlay');
+            if (crt) crt.classList.remove('active');
+        } else {
+            // Fallback: CSS overlay
+            const crt = document.getElementById('crt-overlay');
+            if (crt) crt.classList.toggle('active');
+        }
     }
 
     /* --------------------------------------------------------------------- */
@@ -1839,8 +1940,6 @@ class CyberGameEngine {
             tactic: 'direct_charge',
             isBerserk: false,
             angle: Math.atan2(this.player.pos.x - x, this.player.pos.z - z),
-            trailPoints: [],
-            trailMesh: (type === 'stalker') ? this.createLightCycleTrailMesh() : null,
             targetingLaser: (type === 'heavy') ? this.createTargetingLaserMesh() : null,
             // Phase 4 Recognizer Boss State
             bossPhase: 1,
@@ -1851,7 +1950,6 @@ class CyberGameEngine {
             cannonSide: 1,
         };
 
-        if (enemyObj.trailMesh) this.scene.add(enemyObj.trailMesh);
         if (enemyObj.targetingLaser) this.scene.add(enemyObj.targetingLaser);
 
         if (type === 'boss') {
@@ -1941,25 +2039,6 @@ class CyberGameEngine {
         return group;
     }
 
-    createLightCycleTrailMesh() {
-        const maxSegments = 24;
-        const positions = new Float32Array(maxSegments * 6 * 3);
-        const colors = new Float32Array(maxSegments * 6 * 3);
-        const geom = new THREE.BufferGeometry();
-        geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-        const mat = new THREE.MeshBasicMaterial({
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.85,
-            vertexColors: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
-        });
-
-        return new THREE.Mesh(geom, mat);
-    }
 
     // 2. Tron "Bit" Drone
     buildTronBitMesh() {
@@ -2315,14 +2394,26 @@ class CyberGameEngine {
             const bx = this.player.pos.x + rx + fx;
             const bz = this.player.pos.z + rz + fz;
 
-            // 3D Bullet: Tron Identity Disc / Glowing Plasma bolt
-            const bGeom = new THREE.CylinderGeometry(0.35, 0.35, 2.4, 8);
-            bGeom.rotateX(Math.PI / 2);
-            const bMat = new THREE.MeshBasicMaterial({ color: isOverdrive ? 0xff00ff : 0x00ffff });
-            const bMesh = new THREE.Mesh(bGeom, bMat);
-            bMesh.position.set(bx, 2.2, bz);
-            bMesh.rotation.y = this.player.angle;
-            this.scene.add(bMesh);
+            // 3D Laser Lance: Focused High-Energy Dual Plasma Bolt
+            const boltGroup = new THREE.Group();
+            const coreGeom = new THREE.CylinderGeometry(0.18, 0.28, 5.2, 6);
+            coreGeom.rotateX(Math.PI / 2);
+            const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            boltGroup.add(new THREE.Mesh(coreGeom, coreMat));
+
+            const shroudGeom = new THREE.CylinderGeometry(0.42, 0.62, 5.8, 6);
+            shroudGeom.rotateX(Math.PI / 2);
+            const shroudMat = new THREE.MeshBasicMaterial({
+                color: isOverdrive ? 0xff00ff : 0x00f0ff,
+                transparent: true,
+                opacity: 0.85,
+                blending: THREE.AdditiveBlending
+            });
+            boltGroup.add(new THREE.Mesh(shroudGeom, shroudMat));
+
+            boltGroup.position.set(bx, 2.2, bz);
+            boltGroup.rotation.y = this.player.angle;
+            this.scene.add(boltGroup);
 
             this.bullets.push({
                 x: bx,
@@ -2334,7 +2425,7 @@ class CyberGameEngine {
                 maxLife: 1.6,
                 radius: 4,
                 color: isOverdrive ? '#ff00ff' : '#00ffff',
-                mesh: bMesh
+                mesh: boltGroup
             });
         });
 
@@ -2347,13 +2438,23 @@ class CyberGameEngine {
                 const sbx = this.player.pos.x - Math.sin(this.player.angle) * -4.2;
                 const sbz = this.player.pos.z - Math.cos(this.player.angle) * -4.2;
 
-                const bGeom = new THREE.CylinderGeometry(0.35, 0.35, 2.4, 8);
-                bGeom.rotateX(Math.PI / 2);
-                const bMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
-                const bMesh = new THREE.Mesh(bGeom, bMat);
-                bMesh.position.set(sbx, 2.2, sbz);
-                bMesh.rotation.y = sAngle;
-                this.scene.add(bMesh);
+                const spreadGroup = new THREE.Group();
+                const scoreGeom = new THREE.CylinderGeometry(0.18, 0.28, 5.2, 6);
+                scoreGeom.rotateX(Math.PI / 2);
+                spreadGroup.add(new THREE.Mesh(scoreGeom, new THREE.MeshBasicMaterial({ color: 0xffffff })));
+
+                const sshroudGeom = new THREE.CylinderGeometry(0.42, 0.62, 5.8, 6);
+                sshroudGeom.rotateX(Math.PI / 2);
+                spreadGroup.add(new THREE.Mesh(sshroudGeom, new THREE.MeshBasicMaterial({
+                    color: 0xffaa00,
+                    transparent: true,
+                    opacity: 0.85,
+                    blending: THREE.AdditiveBlending
+                })));
+
+                spreadGroup.position.set(sbx, 2.2, sbz);
+                spreadGroup.rotation.y = sAngle;
+                this.scene.add(spreadGroup);
 
                 this.bullets.push({
                     x: sbx,
@@ -2365,7 +2466,7 @@ class CyberGameEngine {
                     maxLife: 1.5,
                     radius: 4,
                     color: '#ffaa00',
-                    mesh: bMesh
+                    mesh: spreadGroup
                 });
             });
         }
@@ -2417,15 +2518,17 @@ class CyberGameEngine {
     }
 
     fireBossBullet(originX, originZ, dirX, dirZ, bulletSpeed = 165, damage = 26, colorHex = 0xff00aa) {
+        const bulletAngle = Math.atan2(-dirX, -dirZ);
         const bulletGroup = new THREE.Group();
 
-        // Inner Core
-        const coreGeom = new THREE.SphereGeometry(1.8, 8, 8);
+        // Directional heavy plasma torpedo
+        const coreGeom = new THREE.CylinderGeometry(0.32, 0.52, 5.8, 8);
+        coreGeom.rotateX(Math.PI / 2);
         const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
         bulletGroup.add(new THREE.Mesh(coreGeom, coreMat));
 
-        // Outer Aura
-        const auraGeom = new THREE.SphereGeometry(3.2, 12, 12);
+        const auraGeom = new THREE.CylinderGeometry(0.65, 0.95, 6.4, 8);
+        auraGeom.rotateX(Math.PI / 2);
         const auraMat = new THREE.MeshBasicMaterial({
             color: colorHex,
             transparent: true,
@@ -2435,6 +2538,7 @@ class CyberGameEngine {
         bulletGroup.add(new THREE.Mesh(auraGeom, auraMat));
 
         bulletGroup.position.set(originX, 2.2, originZ);
+        bulletGroup.rotation.y = bulletAngle;
         this.scene.add(bulletGroup);
 
         this.enemyBullets.push({
@@ -2514,29 +2618,30 @@ class CyberGameEngine {
         const dirZ = dz / dist;
         const bulletSpeed = (e.type === 'heavy') ? 135 : 155;
 
-        // 3D Enemy Projectile Mesh: Blazing Tron Plasma Bolt with additive neon halo
+        // 3D Enemy Projectile Mesh: Slender High-Velocity Plasma Dart
+        const bulletAngle = Math.atan2(-dirX, -dirZ);
         const bulletGroup = new THREE.Group();
-        const coreColor = 0xffffff;
         const auraColor = (e.type === 'heavy') ? 0xff4400 : 0xff0055;
 
-        // Intense inner core
-        const coreGeom = new THREE.SphereGeometry(1.4, 8, 8);
-        const coreMat = new THREE.MeshBasicMaterial({ color: coreColor });
-        const coreMesh = new THREE.Mesh(coreGeom, coreMat);
-        bulletGroup.add(coreMesh);
+        // Intense inner needle core
+        const coreGeom = new THREE.CylinderGeometry(0.18, 0.32, 4.2, 6);
+        coreGeom.rotateX(Math.PI / 2);
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        bulletGroup.add(new THREE.Mesh(coreGeom, coreMat));
 
-        // Blazing outer glow sphere
-        const auraGeom = new THREE.SphereGeometry(2.4, 12, 12);
+        // Blazing outer glow dart
+        const auraGeom = new THREE.CylinderGeometry(0.42, 0.68, 4.8, 6);
+        auraGeom.rotateX(Math.PI / 2);
         const auraMat = new THREE.MeshBasicMaterial({
             color: auraColor,
             transparent: true,
-            opacity: 0.8,
+            opacity: 0.82,
             blending: THREE.AdditiveBlending
         });
-        const auraMesh = new THREE.Mesh(auraGeom, auraMat);
-        bulletGroup.add(auraMesh);
+        bulletGroup.add(new THREE.Mesh(auraGeom, auraMat));
 
         bulletGroup.position.set(e.x, 2.0, e.z);
+        bulletGroup.rotation.y = bulletAngle;
         this.scene.add(bulletGroup);
 
         this.enemyBullets.push({
@@ -2647,7 +2752,6 @@ class CyberGameEngine {
         // Clean existing entities in 3D scene
         this.enemies.forEach(e => {
             if (e.mesh) this.scene.remove(e.mesh);
-            if (e.trailMesh) this.scene.remove(e.trailMesh);
             if (e.targetingLaser) this.scene.remove(e.targetingLaser);
         });
         this.bullets.forEach(b => { if (b.mesh) this.scene.remove(b.mesh); });
@@ -2681,7 +2785,6 @@ class CyberGameEngine {
         this.player.dashCharges = 2;
         this.player.heat = 0;
         this.player.isOverheated = false;
-        this.player.trailPoints = [];
         this.player.invulnerableTimer = 2.5; // Overcharge grace period on respawn
         this.score = 0;
         this.isGameOver = false;
@@ -3037,22 +3140,7 @@ class CyberGameEngine {
         this.player.pos.x += this.player.vel.x * dt;
         this.player.pos.z += this.player.vel.z * dt;
 
-        // Phase 6: Arena Perimeter Forcefield Containment (Keeps dogfight inside illuminated ring)
-        const pDist = Math.hypot(this.player.pos.x, this.player.pos.z);
-        if (pDist > 265) {
-            const nx = this.player.pos.x / pDist;
-            const nz = this.player.pos.z / pDist;
-            this.player.pos.x = nx * 265;
-            this.player.pos.z = nz * 265;
-            const dot = this.player.vel.x * nx + this.player.vel.z * nz;
-            if (dot > 0) {
-                this.player.vel.x -= nx * dot * 1.4;
-                this.player.vel.z -= nz * dot * 1.4;
-            }
-            if (this.forcefieldWall) {
-                this.forcefieldWall.material.opacity = 0.45;
-            }
-        }
+
 
         // Smooth angle slerp
         let diff = this.player.targetAngle - this.player.angle;
@@ -3064,14 +3152,6 @@ class CyberGameEngine {
         const targetBank = -diff * 1.8;
         this.player.bankAngle += (targetBank - this.player.bankAngle) * Math.min(1.0, dt * 10);
         this.player.bankAngle = Math.max(-0.6, Math.min(0.6, this.player.bankAngle));
-
-        // Player Light Ribbon Point History - Attached strictly to rear thruster nozzles (+Z wake)
-        const tx = this.player.pos.x + Math.sin(this.player.angle) * 4.0;
-        const tz = this.player.pos.z + Math.cos(this.player.angle) * 4.0;
-        this.player.trailPoints.unshift(new THREE.Vector3(tx, 2.2, tz));
-        if (this.player.trailPoints.length > this.player.maxTrailPoints) {
-            this.player.trailPoints.pop();
-        }
     }
 
     updateEnemies(dt) {
@@ -3210,14 +3290,6 @@ class CyberGameEngine {
             const fwdZ = -Math.cos(e.angle);
             e.x += fwdX * currentSpeed * dt;
             e.z += fwdZ * currentSpeed * dt;
-
-            // Update Stalker Light Trail Points - Connected strictly to rear wheel stern (+Z)
-            if (e.type === 'stalker') {
-                const rx = e.x + Math.sin(e.angle) * 3.4;
-                const rz = e.z + Math.cos(e.angle) * 3.4;
-                e.trailPoints.unshift(new THREE.Vector3(rx, 1.8, rz));
-                if (e.trailPoints.length > 45) e.trailPoints.pop();
-            }
 
             // Shooting & Boss Attack Patterns
             if (e.type === 'boss') {
@@ -3410,7 +3482,6 @@ class CyberGameEngine {
         }
 
         if (e.mesh) this.scene.remove(e.mesh);
-        if (e.trailMesh) this.scene.remove(e.trailMesh);
         if (e.targetingLaser) this.scene.remove(e.targetingLaser);
 
         this.enemies.splice(idx, 1);
@@ -3540,17 +3611,11 @@ class CyberGameEngine {
             });
         }
 
-        // 2. Sync Player Light Ribbon Trail
-        this.updatePlayer3DLightTrail();
-
-        // 3. Sync Enemies 3D Meshes & Light Trails
+        // 3. Sync Enemies 3D Meshes
         this.enemies.forEach(e => {
             if (e.mesh) {
                 e.mesh.position.set(e.x, e.type === 'boss' ? 14 : 2.0, e.z);
                 e.mesh.rotation.y = e.angle;
-            }
-            if (e.type === 'stalker' && e.trailMesh) {
-                this.updateCycleLightTrail(e);
             }
         });
 
@@ -3654,7 +3719,7 @@ class CyberGameEngine {
             }
         }
 
-        // 5. Update Cyber Dust (Drifts with velocity for speed sensation)
+        // 5. Update Cyber Dust (Centered around player within close flight envelope)
         if (this.dustParticles) {
             const posAttr = this.dustParticles.geometry.attributes.position;
             const px = this.player.pos.x;
@@ -3664,15 +3729,28 @@ class CyberGameEngine {
                 let x = posAttr.getX(i);
                 let z = posAttr.getZ(i);
 
-                if (x - px > 250) x -= 500;
-                if (x - px < -250) x += 500;
-                if (z - pz > 250) z -= 500;
-                if (z - pz < -250) z += 500;
+                if (x - px > 110) x -= 220;
+                if (x - px < -110) x += 220;
+                if (z - pz > 110) z -= 220;
+                if (z - pz < -110) z += 220;
 
                 posAttr.setX(i, x);
                 posAttr.setZ(i, z);
             }
             posAttr.needsUpdate = true;
+        }
+
+        // Infinite Grid Snapping (moves with player in grid cell increments)
+        if (this.gridHelper && this.subGridHelper) {
+            const cs = this.gridCellSize || 25;
+            this.gridHelper.position.x = Math.floor(this.player.pos.x / cs) * cs;
+            this.gridHelper.position.z = Math.floor(this.player.pos.z / cs) * cs;
+            this.subGridHelper.position.x = Math.floor(this.player.pos.x / (cs * 2)) * (cs * 2);
+            this.subGridHelper.position.z = Math.floor(this.player.pos.z / (cs * 2)) * (cs * 2);
+            if (this.floorMesh) {
+                this.floorMesh.position.x = this.player.pos.x;
+                this.floorMesh.position.z = this.player.pos.z;
+            }
         }
 
         // Dynamic Warp Speed FOV kick (dilates FOV from 62° to 74° on gate surge with smooth recovery)
@@ -3690,11 +3768,33 @@ class CyberGameEngine {
             this.forcefieldWall.rotation.y += dt * 0.05;
             this.forcefieldWall.material.opacity = 0.20 + 0.06 * Math.sin(performance.now() * 0.003);
         }
-        if (this.sectorPulseRings && this.sectorPulseRings.length > 0) {
-            const time = performance.now() * 0.002;
-            this.sectorPulseRings.forEach((ring, idx) => {
-                ring.material.opacity = 0.22 + 0.15 * Math.sin(time + idx * 1.2);
-            });
+
+        // Dynamic CyberPost Shader Uniform Updates: Crystal-clear optics, zero split during regular flight
+        if (this.cyberPostPass && this.hasCyberPost) {
+            const u = this.cyberPostPass.uniforms;
+            u['uTime'].value = performance.now() * 0.001;
+            u['uScreenShake'].value = this.screenShake;
+            // Razor-sharp optical clarity: only momentary micro-fringe during damage impacts
+            u['uChromaticStrength'].value = Math.min(0.0018, this.screenShake * 0.0002);
+        }
+
+        // Wave 1: Animate Data Node Pulsing in Starfield Dome
+        if (this.dataNodeMesh && this._dataNodeBasePositions) {
+            const time = performance.now() * 0.001;
+            const dummy = new THREE.Object3D();
+            const nodeCount = this._dataNodeBasePositions.length / 3;
+            for (let i = 0; i < nodeCount; i++) {
+                const bx = this._dataNodeBasePositions[i * 3];
+                const by = this._dataNodeBasePositions[i * 3 + 1];
+                const bz = this._dataNodeBasePositions[i * 3 + 2];
+                const pulse = 1.0 + 0.3 * Math.sin(time * 1.5 + i * 0.8);
+                dummy.position.set(bx, by, bz);
+                dummy.scale.set(pulse * 2.0, pulse * 2.0, pulse * 2.0);
+                dummy.rotation.set(time * 0.3 + i, time * 0.2, 0);
+                dummy.updateMatrix();
+                this.dataNodeMesh.setMatrixAt(i, dummy.matrix);
+            }
+            this.dataNodeMesh.instanceMatrix.needsUpdate = true;
         }
 
         // 7. Three.js Render (UnrealBloomPass Post-Processing or Standard Renderer)
@@ -3925,72 +4025,7 @@ class CyberGameEngine {
         ctx.restore();
     }
 
-    updatePlayer3DLightTrail() {
-        if (!this.playerTrailMesh || this.player.trailPoints.length < 2) return;
 
-        const geom = this.playerTrailMesh.geometry;
-        const posAttr = geom.attributes.position;
-        const colAttr = geom.attributes.color;
-        const points = this.player.trailPoints;
-        let vIdx = 0;
-
-        for (let i = 0; i < points.length - 1; i++) {
-            const p0 = points[i];
-            const p1 = points[i + 1];
-            const alpha0 = 1.0 - (i / points.length);
-            const alpha1 = 1.0 - ((i + 1) / points.length);
-
-            // Vertical quad: p0 bottom, p0 top, p1 bottom, p1 top
-            const height = 3.2;
-
-            // Triangle 1
-            posAttr.setXYZ(vIdx, p0.x, 0.1, p0.z); colAttr.setXYZ(vIdx, 0, alpha0, alpha0); vIdx++;
-            posAttr.setXYZ(vIdx, p0.x, height, p0.z); colAttr.setXYZ(vIdx, 0, alpha0, alpha0); vIdx++;
-            posAttr.setXYZ(vIdx, p1.x, 0.1, p1.z); colAttr.setXYZ(vIdx, 0, alpha1, alpha1); vIdx++;
-
-            // Triangle 2
-            posAttr.setXYZ(vIdx, p1.x, 0.1, p1.z); colAttr.setXYZ(vIdx, 0, alpha1, alpha1); vIdx++;
-            posAttr.setXYZ(vIdx, p0.x, height, p0.z); colAttr.setXYZ(vIdx, 0, alpha0, alpha0); vIdx++;
-            posAttr.setXYZ(vIdx, p1.x, height, p1.z); colAttr.setXYZ(vIdx, 0, alpha1, alpha1); vIdx++;
-        }
-
-        geom.setDrawRange(0, vIdx);
-        posAttr.needsUpdate = true;
-        colAttr.needsUpdate = true;
-    }
-
-    updateCycleLightTrail(e) {
-        if (!e.trailMesh || e.trailPoints.length < 2) return;
-
-        const geom = e.trailMesh.geometry;
-        const posAttr = geom.attributes.position;
-        const colAttr = geom.attributes.color;
-        const points = e.trailPoints;
-        let vIdx = 0;
-
-        for (let i = 0; i < points.length - 1; i++) {
-            const p0 = points[i];
-            const p1 = points[i + 1];
-            const alpha0 = 1.0 - (i / points.length);
-            const alpha1 = 1.0 - ((i + 1) / points.length);
-
-            const height = 2.4;
-
-            // Triangle 1
-            posAttr.setXYZ(vIdx, p0.x, 0.1, p0.z); colAttr.setXYZ(vIdx, alpha0, 0, alpha0 * 0.3); vIdx++;
-            posAttr.setXYZ(vIdx, p0.x, height, p0.z); colAttr.setXYZ(vIdx, alpha0, 0, alpha0 * 0.3); vIdx++;
-            posAttr.setXYZ(vIdx, p1.x, 0.1, p1.z); colAttr.setXYZ(vIdx, 0, alpha1, alpha1); vIdx++;
-
-            // Triangle 2
-            posAttr.setXYZ(vIdx, p1.x, 0.1, p1.z); colAttr.setXYZ(vIdx, alpha1, 0, alpha1 * 0.3); vIdx++;
-            posAttr.setXYZ(vIdx, p0.x, height, p0.z); colAttr.setXYZ(vIdx, alpha0, 0, alpha0 * 0.3); vIdx++;
-            posAttr.setXYZ(vIdx, p1.x, height, p1.z); colAttr.setXYZ(vIdx, alpha1, 0, alpha1 * 0.3); vIdx++;
-        }
-
-        geom.setDrawRange(0, vIdx);
-        posAttr.needsUpdate = true;
-        colAttr.needsUpdate = true;
-    }
 
     update3DCamera() {
         const p = this.player.pos;
@@ -4353,102 +4388,7 @@ class CyberGameEngine {
     }
 
     checkLightRibbonCollisions(dt) {
-        const distSqToSegment = (px, pz, ax, az, bx, bz) => {
-            const l2 = (bx - ax) * (bx - ax) + (bz - az) * (bz - az);
-            if (l2 === 0) return (px - ax) * (px - ax) + (pz - az) * (pz - az);
-            let t = ((px - ax) * (bx - ax) + (pz - az) * (bz - az)) / l2;
-            t = Math.max(0, Math.min(1, t));
-            const projX = ax + t * (bx - ax);
-            const projZ = az + t * (bz - az);
-            return (px - projX) * (px - projX) + (pz - projZ) * (pz - projZ);
-        };
-
-        // 1. ENEMY HITTING PLAYER'S CYAN LIGHT WALL
-        if (this.player.trailPoints && this.player.trailPoints.length > 5) {
-            // Skip first 4 segments right behind player's stern
-            for (let s = 4; s < this.player.trailPoints.length - 1; s++) {
-                const p0 = this.player.trailPoints[s];
-                const p1 = this.player.trailPoints[s + 1];
-
-                for (let j = this.enemies.length - 1; j >= 0; j--) {
-                    const e = this.enemies[j];
-                    const thresh = (e.radius + 2.8) * (e.radius + 2.8);
-                    const dSq = distSqToSegment(e.x, e.z, p0.x, p0.z, p1.x, p1.z);
-
-                    if (dSq < thresh) {
-                        // ENEMY DEREZ!
-                        e.hp -= 260;
-                        this.spawnVoxelExplosion(e.x, e.z, 0x00ffff, 36);
-                        this.spawnShockwave(e.x, e.z, 35, 0x00ffff);
-
-                        if (e.hp <= 0) {
-                            this.destroyEnemy(j);
-                            this.registerComboAction(300, 'ribbon');
-                            this.spawnFloatingText("TRON DEREZ! +300", e.x, e.z, '#00ffff');
-                            if (window.audioManager && window.audioManager.playDerez) {
-                                window.audioManager.playDerez();
-                            }
-                        } else {
-                            this.spawnFloatingText("-260 DEREZ", e.x, e.z, '#00ffff');
-                        }
-                    }
-                }
-            }
-        }
-
-        const segmentsIntersect = (x1, z1, x2, z2, x3, z3, x4, z4) => {
-            const ccw = (ax, az, bx, bz, cx, cz) => (cz - az) * (bx - ax) > (bz - az) * (cx - ax);
-            return (ccw(x1, z1, x3, z3, x4, z4) !== ccw(x2, z2, x3, z3, x4, z4)) &&
-                   (ccw(x1, z1, x2, z2, x3, z3) !== ccw(x1, z1, x2, z2, x4, z4));
-        };
-
-        // 2. PLAYER HITTING ENEMY STALKER'S RED LIGHT WALL
-        const isBlinking = (this.player.isBlinking || this.player.blinkInvulnTimer > 0);
-
-        for (const e of this.enemies) {
-            if (e.type === 'stalker' && e.trailPoints && e.trailPoints.length > 4) {
-                // Check each segment (skipping first 3 points behind cycle)
-                for (let s = 3; s < e.trailPoints.length - 1; s++) {
-                    const ep0 = e.trailPoints[s];
-                    const ep1 = e.trailPoints[s + 1];
-
-                    if (isBlinking && this.player.blinkOrigin) {
-                        const hopped = segmentsIntersect(
-                            this.player.blinkOrigin.x, this.player.blinkOrigin.z,
-                            this.player.pos.x, this.player.pos.z,
-                            ep0.x, ep0.z, ep1.x, ep1.z
-                        );
-                        if (hopped && !this.player.wallHoppedThisBlink) {
-                            this.player.wallHoppedThisBlink = true;
-                            this.comboTimer = this.maxComboTimer;
-                            this.registerComboAction(150, 'wallhop');
-                            this.spawnFloatingText("WALL HOP! +150", this.player.pos.x, this.player.pos.z, '#00ffff');
-                            this.spawnVoxelExplosion(this.player.pos.x, this.player.pos.z, 0x00ffff, 18);
-                            if (window.audioManager && window.audioManager.playWallHop) {
-                                window.audioManager.playWallHop();
-                            }
-                        }
-                    } else if (!isBlinking) {
-                        const thresh = (this.player.radius + 2.4) * (this.player.radius + 2.4);
-                        const dSq = distSqToSegment(this.player.pos.x, this.player.pos.z, ep0.x, ep0.z, ep1.x, ep1.z);
-                        if (dSq < thresh) {
-                            // Player takes hazard burn!
-                            this.damagePlayer(45 * dt);
-                            this.player.shieldHitFlash = 1.0;
-                            this.player.vel.x *= -0.4;
-                            this.player.vel.z *= -0.4;
-                            if (performance.now() - (this.lastWallHazardAlertTime || 0) > 800) {
-                                this.spawnFloatingText("LIGHT WALL HAZARD!", this.player.pos.x, this.player.pos.z, '#ff0055');
-                                if (window.audioManager && window.audioManager.playAlert) {
-                                    window.audioManager.playAlert();
-                                }
-                                this.lastWallHazardAlertTime = performance.now();
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        // Tron tracing and collisions removed for better gameplay flow.
     }
 
     spawnShockwave(x, z, maxRadius = 45, color = 0x00ffff) {
@@ -4814,34 +4754,6 @@ class CyberGameEngine {
             ctx.stroke();
             ctx.setLineDash([]);
             ctx.restore();
-        });
-
-        // Draw Player Light Ribbon Trail in 2D
-        if (this.player.trailPoints.length > 1) {
-            ctx.strokeStyle = 'rgba(0, 255, 204, 0.4)';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            for (let i = 0; i < this.player.trailPoints.length; i++) {
-                const pt = this.player.trailPoints[i];
-                if (i === 0) ctx.moveTo(pt.x, pt.z);
-                else ctx.lineTo(pt.x, pt.z);
-            }
-            ctx.stroke();
-        }
-
-        // Draw Stalker Red Light Ribbon Trails in 2D
-        this.enemies.forEach(e => {
-            if (e.type === 'stalker' && e.trailPoints && e.trailPoints.length > 1) {
-                ctx.strokeStyle = 'rgba(255, 0, 85, 0.6)';
-                ctx.lineWidth = 4;
-                ctx.beginPath();
-                for (let i = 0; i < e.trailPoints.length; i++) {
-                    const pt = e.trailPoints[i];
-                    if (i === 0) ctx.moveTo(pt.x, pt.z);
-                    else ctx.lineTo(pt.x, pt.z);
-                }
-                ctx.stroke();
-            }
         });
 
         // Draw Identity Disc in 2D
