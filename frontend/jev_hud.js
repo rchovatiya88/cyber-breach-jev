@@ -180,11 +180,11 @@ class JevHUD {
 
         meterFill.style.width = `${pct}%`;
         if (pct > 70) {
-            meterFill.style.backgroundColor = '#ff0055';
+            meterFill.style.backgroundColor = '#f43f5e';
         } else if (pct > 40) {
             meterFill.style.backgroundColor = '#ffbb00';
         } else {
-            meterFill.style.backgroundColor = '#00ffcc';
+            meterFill.style.backgroundColor = '#5eead4';
         }
     }
 

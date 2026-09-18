@@ -1,18 +1,34 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
 
 :root {
-    --bg-dark: #050811;
-    --bg-panel: rgba(8, 14, 26, 0.88);
-    --border-neon: #00ffcc;
-    --border-dim: rgba(0, 255, 204, 0.25);
-    --text-neon: #00ffcc;
-    --text-dim: #7f99b2;
-    --accent-pink: #ff0055;
-    --accent-amber: #ffaa00;
+    /* Breach Protocol — Luminous Architectural Cyberpunk Palette */
+    --bg-dark: #0f1328;
+    --bg-panel: rgba(15, 19, 40, 0.65);
+    --border-neon: #5eead4;
+    --border-dim: rgba(94, 234, 212, 0.20);
+    --text-neon: #5eead4;
+    --text-dim: #8b9cc2;
+    --accent-pink: #f43f5e;
+    --accent-amber: #C5A059;
     --accent-blue: #00a2ff;
-    --glow-cyan: 0 0 14px rgba(0, 255, 204, 0.55);
-    --glow-pink: 0 0 16px rgba(255, 0, 85, 0.65);
-    --glow-tron-orange: 0 0 14px rgba(255, 136, 0, 0.6);
+    --accent-coral: #fb7185;
+    --accent-lavender: #9D8DF1;
+    --accent-gold: #C5A059;
+    --accent-mint: #00FFD1;
+    --glow-cyan: 0 0 14px rgba(0, 255, 209, 0.45);
+    --glow-pink: 0 0 16px rgba(157, 141, 241, 0.55);
+    --glow-tron-orange: 0 0 14px rgba(197, 160, 89, 0.5);
+
+    /* Typography System */
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-display: 'Orbitron', sans-serif;
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    /* Glassmorphism */
+    --glass-bg: rgba(15, 19, 40, 0.65);
+    --glass-border: rgba(94, 234, 212, 0.15);
+    --glass-border-top: rgba(94, 234, 212, 0.30);
+    --glass-blur: blur(12px);
 }
 
 * {
@@ -24,14 +40,14 @@
 body {
     background-color: var(--bg-dark);
     color: #e2e8f0;
-    font-family: 'Share Tech Mono', monospace;
+    font-family: var(--font-sans);
     overflow: hidden;
     height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
-/* CRT Scanline Overlay */
+/* Holographic Scan Overlay (replaces CRT) */
 #crt-overlay {
     position: fixed;
     top: 0;
@@ -40,27 +56,35 @@ body {
     height: 100%;
     pointer-events: none;
     z-index: 999;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
-    background-size: 100% 3px, 6px 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(94, 234, 212, 0.015) 2px,
+        rgba(94, 234, 212, 0.015) 4px
+    );
+    background-size: 100% 4px;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
 
 #crt-overlay.active {
-    opacity: 0.85;
+    opacity: 0.75;
 }
 
-/* Header */
+/* Header — Glassmorphism */
 header {
     height: 52px;
-    background: rgba(6, 10, 20, 0.95);
-    border-bottom: 1px solid var(--border-dim);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid var(--glass-border);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 10px;
     z-index: 10;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
 .logo-area {
@@ -81,7 +105,7 @@ header {
 
 .logo-tag {
     font-size: 0.7rem;
-    background: rgba(255, 170, 0, 0.2);
+    background: rgba(197, 160, 89, 0.2);
     color: var(--accent-amber);
     border: 1px solid var(--accent-amber);
     padding: 2px 6px;
@@ -91,9 +115,9 @@ header {
 
 .logo-3d-badge {
     font-size: 0.68rem;
-    background: rgba(255, 0, 255, 0.2);
-    color: #ff00ff;
-    border: 1px solid rgba(255, 0, 255, 0.4);
+    background: rgba(157, 141, 241, 0.2);
+    color: #9d8df1;
+    border: 1px solid rgba(157, 141, 241, 0.4);
     padding: 2px 6px;
     border-radius: 4px;
     letter-spacing: 1px;
@@ -204,21 +228,21 @@ header {
 }
 
 .view-btn {
-    border-color: #ff00ff !important;
-    color: #ff00ff !important;
+    border-color: var(--accent-lavender) !important;
+    color: var(--accent-lavender) !important;
     font-weight: bold;
-    background: rgba(255, 0, 255, 0.12) !important;
-    box-shadow: 0 0 10px rgba(255, 0, 255, 0.35);
+    background: rgba(157, 141, 241, 0.12) !important;
+    box-shadow: 0 0 10px rgba(157, 141, 241, 0.35);
     transition: all 0.2s ease;
 }
 
 .view-btn:hover {
-    background: rgba(255, 0, 255, 0.28) !important;
-    box-shadow: 0 0 16px rgba(255, 0, 255, 0.65);
+    background: rgba(157, 141, 241, 0.28) !important;
+    box-shadow: 0 0 16px rgba(157, 141, 241, 0.65);
     color: #fff !important;
 }
 
-/* Cockpit Futuristic Tron Canopy HUD */
+/* Cockpit Futuristic Luminous Canopy HUD */
 #cockpit-overlay {
     position: absolute;
     top: 0;
@@ -229,6 +253,7 @@ header {
     z-index: 4;
     display: none;
     overflow: hidden;
+    background: radial-gradient(circle at 50% 45%, rgba(197, 160, 89, 0.04) 0%, rgba(18, 26, 53, 0.15) 75%, rgba(15, 19, 40, 0.35) 100%);
 }
 
 /* Top Visor Arch */
@@ -238,9 +263,9 @@ header {
     left: 0;
     right: 0;
     height: 36px;
-    background: linear-gradient(180deg, rgba(4, 14, 30, 0.95) 0%, rgba(4, 14, 30, 0.6) 70%, transparent 100%);
-    border-bottom: 1.5px solid rgba(0, 240, 255, 0.45);
-    box-shadow: 0 4px 20px rgba(0, 240, 255, 0.2);
+    background: linear-gradient(180deg, rgba(15, 19, 40, 0.95) 0%, rgba(15, 19, 40, 0.6) 70%, transparent 100%);
+    border-bottom: 1.5px solid rgba(0, 255, 209, 0.45);
+    box-shadow: 0 4px 20px rgba(0, 255, 209, 0.2);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -252,16 +277,16 @@ header {
 .visor-line {
     width: 80px;
     height: 2px;
-    background: linear-gradient(90deg, #00f0ff, transparent);
-    box-shadow: 0 0 8px #00f0ff;
+    background: linear-gradient(90deg, #00ffd1, transparent);
+    box-shadow: 0 0 8px #00ffd1;
 }
 
 .visor-tag {
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 2px;
-    color: rgba(0, 240, 255, 0.7);
-    text-shadow: 0 0 6px rgba(0, 240, 255, 0.5);
+    color: rgba(0, 255, 209, 0.7);
+    text-shadow: 0 0 6px rgba(0, 255, 209, 0.5);
 }
 
 /* Angled Tron A-Pillar Canopy Struts */
@@ -271,9 +296,9 @@ header {
     bottom: 65px;
     left: 0;
     width: 95px;
-    background: linear-gradient(90deg, rgba(3, 10, 24, 0.92) 0%, rgba(5, 16, 36, 0.4) 80%, transparent 100%);
-    border-right: 2px solid rgba(0, 240, 255, 0.55);
-    box-shadow: inset -2px 0 16px rgba(0, 240, 255, 0.25), 2px 0 12px rgba(0, 240, 255, 0.3);
+    background: linear-gradient(90deg, rgba(15, 19, 40, 0.92) 0%, rgba(15, 19, 40, 0.4) 80%, transparent 100%);
+    border-right: 2px solid rgba(0, 255, 209, 0.55);
+    box-shadow: inset -2px 0 16px rgba(0, 255, 209, 0.25), 2px 0 12px rgba(0, 255, 209, 0.3);
     clip-path: polygon(0 0, 85px 0, 24px 100%, 0 100%);
     z-index: 3;
 }
@@ -284,9 +309,9 @@ header {
     bottom: 65px;
     right: 0;
     width: 95px;
-    background: linear-gradient(-90deg, rgba(3, 10, 24, 0.92) 0%, rgba(5, 16, 36, 0.4) 80%, transparent 100%);
-    border-left: 2px solid rgba(0, 240, 255, 0.55);
-    box-shadow: inset 2px 0 16px rgba(0, 240, 255, 0.25), -2px 0 12px rgba(0, 240, 255, 0.3);
+    background: linear-gradient(-90deg, rgba(15, 19, 40, 0.92) 0%, rgba(15, 19, 40, 0.4) 80%, transparent 100%);
+    border-left: 2px solid rgba(0, 255, 209, 0.55);
+    box-shadow: inset 2px 0 16px rgba(0, 255, 209, 0.25), -2px 0 12px rgba(0, 255, 209, 0.3);
     clip-path: polygon(10px 0, 100% 0, 100% 100%, 71px 100%);
     z-index: 3;
 }
@@ -298,9 +323,9 @@ header {
     left: 0;
     right: 0;
     height: 68px;
-    background: linear-gradient(0deg, rgba(2, 8, 18, 0.98) 0%, rgba(5, 15, 32, 0.9) 70%, rgba(0, 240, 255, 0.12) 100%);
-    border-top: 2px solid rgba(0, 240, 255, 0.65);
-    box-shadow: 0 -4px 28px rgba(0, 240, 255, 0.3);
+    background: linear-gradient(0deg, rgba(15, 19, 40, 0.98) 0%, rgba(15, 19, 40, 0.9) 70%, rgba(0, 255, 209, 0.12) 100%);
+    border-top: 2px solid rgba(0, 255, 209, 0.65);
+    box-shadow: 0 -4px 28px rgba(0, 255, 209, 0.3);
     clip-path: polygon(0 38%, 110px 0, calc(100% - 110px) 0, 100% 38%, 100% 100%, 0 100%);
     display: flex;
     justify-content: center;
@@ -323,8 +348,8 @@ header {
     left: 15%;
     right: 15%;
     height: 100%;
-    background-image: linear-gradient(rgba(0, 240, 255, 0.08) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(0, 240, 255, 0.08) 1px, transparent 1px);
+    background-image: linear-gradient(rgba(0, 255, 209, 0.08) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0, 255, 209, 0.08) 1px, transparent 1px);
     background-size: 20px 20px;
     pointer-events: none;
 }
@@ -336,9 +361,9 @@ header {
     transform: translate(-50%, -50%);
     width: 74px;
     height: 74px;
-    border: 1.5px dashed rgba(0, 255, 204, 0.45);
+    border: 1.5px dashed rgba(94, 234, 212, 0.45);
     border-radius: 50%;
-    box-shadow: 0 0 14px rgba(0, 255, 204, 0.25);
+    box-shadow: 0 0 14px rgba(94, 234, 212, 0.25);
     z-index: 2;
 }
 
@@ -349,7 +374,7 @@ header {
     left: -14px;
     right: -14px;
     height: 1px;
-    background: rgba(0, 255, 204, 0.6);
+    background: rgba(94, 234, 212, 0.6);
 }
 
 .cockpit-reticle::after {
@@ -359,7 +384,7 @@ header {
     top: -14px;
     bottom: -14px;
     width: 1px;
-    background: rgba(0, 255, 204, 0.6);
+    background: rgba(94, 234, 212, 0.6);
 }
 
 .cockpit-hud-info {
@@ -376,20 +401,22 @@ header {
     font-size: 11px;
     letter-spacing: 1.5px;
     color: var(--neon-cyan);
-    background: rgba(8, 24, 48, 0.9);
-    border: 1px solid rgba(0, 255, 255, 0.6);
-    box-shadow: 0 0 14px rgba(0, 255, 255, 0.35);
+    background: rgba(15, 19, 40, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 255, 209, 0.6);
+    box-shadow: 0 0 14px rgba(0, 255, 209, 0.35);
     padding: 4px 12px;
     border-radius: 4px;
     text-shadow: 0 0 8px var(--neon-cyan);
 }
 
 .copilot-badge {
-    color: #ffaa00;
+    color: #C5A059;
     background: rgba(36, 20, 6, 0.9);
-    border: 1px solid #ffaa00;
+    border: 1px solid #C5A059;
     box-shadow: 0 0 14px rgba(255, 170, 0, 0.35);
-    text-shadow: 0 0 8px #ffaa00;
+    text-shadow: 0 0 8px #C5A059;
 }
 
 #cockpit-hud-canvas {
@@ -449,7 +476,7 @@ header {
 
 #hud-hp-bar { background: #00ff88; box-shadow: 0 0 8px #00ff88; }
 #hud-shield-bar { background: #00a2ff; box-shadow: 0 0 8px #00a2ff; }
-#hud-heat-bar { background: #ffaa00; }
+#hud-heat-bar { background: #C5A059; }
 
 .dash-dots {
     display: flex;
@@ -465,8 +492,8 @@ header {
 }
 
 .dash-dot.charged {
-    background: #00ffff;
-    box-shadow: 0 0 8px #00ffff;
+    background: #00ffd1;
+    box-shadow: 0 0 8px #00ffd1;
 }
 
 /* Holographic Tron Radar */
@@ -477,9 +504,9 @@ header {
     width: 140px;
     height: 140px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(0, 40, 40, 0.65) 0%, rgba(2, 8, 16, 0.85) 100%);
+    background: radial-gradient(circle, rgba(10, 18, 40, 0.65) 0%, rgba(8, 14, 30, 0.85) 100%);
     border: 1.5px solid var(--border-neon);
-    box-shadow: 0 0 15px rgba(0, 255, 204, 0.3), inset 0 0 15px rgba(0, 255, 204, 0.15);
+    box-shadow: 0 0 15px rgba(94, 234, 212, 0.3), inset 0 0 15px rgba(94, 234, 212, 0.15);
     pointer-events: none;
     z-index: 5;
     overflow: hidden;
@@ -498,7 +525,7 @@ header {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: conic-gradient(from 0deg, rgba(0, 255, 204, 0.3) 0deg, rgba(0, 255, 204, 0) 60deg);
+    background: conic-gradient(from 0deg, rgba(0, 255, 209, 0.25) 0deg, rgba(0, 255, 209, 0) 60deg);
     animation: radar-spin 2.5s linear infinite;
     pointer-events: none;
 }
@@ -541,26 +568,27 @@ header {
     left: 50%;
     transform: translateX(-50%);
     width: 184px;
-    background: radial-gradient(circle, rgba(4, 14, 30, 0.92) 0%, rgba(2, 8, 18, 0.96) 100%);
-    border: 1.5px solid rgba(0, 255, 204, 0.4);
+    background: radial-gradient(circle, rgba(12, 18, 35, 0.90) 0%, rgba(15, 19, 40, 0.96) 100%);
+    border: 1.5px solid rgba(94, 234, 212, 0.4);
     border-radius: 6px;
-    box-shadow: 0 4px 20px rgba(0, 255, 204, 0.2), inset 0 0 12px rgba(0, 255, 204, 0.1);
+    box-shadow: 0 4px 20px rgba(94, 234, 212, 0.2), inset 0 0 12px rgba(94, 234, 212, 0.1);
     z-index: 6;
     cursor: pointer;
     overflow: hidden;
     transition: all 0.2s ease;
     backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 .rearview-container:hover {
-    border-color: #00ffcc;
-    box-shadow: 0 0 22px rgba(0, 255, 204, 0.5), inset 0 0 16px rgba(0, 255, 204, 0.2);
+    border-color: #5eead4;
+    box-shadow: 0 0 22px rgba(94, 234, 212, 0.5), inset 0 0 16px rgba(94, 234, 212, 0.2);
     transform: translateX(-50%) scale(1.03);
 }
 
 .rearview-container.threat-alert {
-    border-color: #ff0055;
-    box-shadow: 0 0 24px rgba(255, 0, 85, 0.7), inset 0 0 16px rgba(255, 0, 85, 0.35);
+    border-color: #f43f5e;
+    box-shadow: 0 0 24px rgba(244, 63, 94, 0.7), inset 0 0 16px rgba(244, 63, 94, 0.35);
     animation: threat-pulse 0.8s infinite alternate;
 }
 
@@ -569,14 +597,14 @@ header {
     justify-content: space-between;
     align-items: center;
     padding: 3px 8px;
-    background: rgba(0, 255, 204, 0.08);
-    border-bottom: 1px solid rgba(0, 255, 204, 0.25);
+    background: rgba(94, 234, 212, 0.08);
+    border-bottom: 1px solid rgba(94, 234, 212, 0.25);
     font-size: 0.62rem;
     letter-spacing: 1px;
 }
 
 .rearview-title {
-    color: #00ffcc;
+    color: #5eead4;
     font-weight: bold;
     font-family: 'Orbitron', sans-serif;
 }
@@ -584,10 +612,10 @@ header {
 .rearview-badge {
     color: var(--accent-amber);
     font-size: 0.58rem;
-    background: rgba(255, 170, 0, 0.15);
+    background: rgba(197, 160, 89, 0.15);
     padding: 1px 4px;
     border-radius: 3px;
-    border: 1px solid rgba(255, 170, 0, 0.3);
+    border: 1px solid rgba(197, 160, 89, 0.3);
 }
 
 #rearview-canvas {
@@ -605,7 +633,7 @@ header {
     letter-spacing: 1px;
     font-weight: bold;
     background: rgba(0, 0, 0, 0.4);
-    border-top: 1px solid rgba(0, 255, 204, 0.15);
+    border-top: 1px solid rgba(94, 234, 212, 0.15);
 }
 
 /* Directional Rear Threat Warning Banner */
@@ -620,10 +648,10 @@ header {
     gap: 10px;
     padding: 6px 18px;
     border-radius: 4px;
-    background: rgba(255, 0, 85, 0.28);
-    border: 1.5px solid #ff0055;
+    background: rgba(244, 63, 94, 0.28);
+    border: 1.5px solid #f43f5e;
     color: #fff;
-    box-shadow: 0 0 25px rgba(255, 0, 85, 0.8), inset 0 0 15px rgba(255, 0, 85, 0.3);
+    box-shadow: 0 0 25px rgba(244, 63, 94, 0.8), inset 0 0 15px rgba(244, 63, 94, 0.3);
     font-family: 'Orbitron', sans-serif;
     font-size: 0.76rem;
     font-weight: 900;
@@ -636,9 +664,9 @@ header {
 }
 
 .threat-chevron {
-    color: #ff0055;
+    color: #f43f5e;
     font-size: 1rem;
-    text-shadow: 0 0 10px #ff0055;
+    text-shadow: 0 0 10px #f43f5e;
 }
 
 @keyframes threat-pulse {
@@ -662,8 +690,8 @@ header {
     padding: 4px 16px;
     border-radius: 4px;
     background: rgba(0, 255, 204, 0.18);
-    border: 1px solid #00ffcc;
-    color: #00ffcc;
+    border: 1px solid #5eead4;
+    color: #5eead4;
     font-family: 'Orbitron', sans-serif;
     font-size: 0.72rem;
     font-weight: bold;
@@ -672,7 +700,7 @@ header {
     width: max-content;
     z-index: 6;
     pointer-events: none;
-    text-shadow: 0 0 10px #00ffcc;
+    text-shadow: 0 0 10px #5eead4;
 }
 
 /* Bottom Arena Controls Bar */
@@ -781,10 +809,45 @@ header {
     font-weight: bold;
 }
 
+/* Swiss Cyberpunk Corner Bracket Framing Pattern */
+.choice-box, .score-box, .noul-box, .modal-card {
+    position: relative;
+}
+
+.choice-box::before, .score-box::before, .noul-box::before, .modal-card::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    width: 8px;
+    height: 8px;
+    border-top: 1.5px solid var(--border-neon);
+    border-left: 1.5px solid var(--border-neon);
+    border-top-left-radius: 4px;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.choice-box::after, .score-box::after, .noul-box::after, .modal-card::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 8px;
+    height: 8px;
+    border-bottom: 1.5px solid var(--border-neon);
+    border-right: 1.5px solid var(--border-neon);
+    border-bottom-right-radius: 4px;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
 /* Choice Box */
 .choice-box {
-    background: rgba(6, 10, 18, 0.65);
-    border: 1px solid rgba(0, 255, 204, 0.15);
+    background: rgba(15, 19, 40, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(94, 234, 212, 0.15);
     border-radius: 5px;
     padding: 10px;
 }
@@ -798,7 +861,7 @@ header {
 }
 
 .badge-choice {
-    color: #00ffcc;
+    color: #5eead4;
     font-weight: bold;
     text-shadow: var(--glow-cyan);
 }
@@ -849,7 +912,7 @@ header {
 }
 
 .prob-row.winner .prob-bar-fill {
-    background: #00ffcc;
+    background: #5eead4;
     box-shadow: var(--glow-cyan);
 }
 
@@ -860,8 +923,10 @@ header {
 
 /* Score Box */
 .score-box {
-    background: rgba(6, 10, 18, 0.65);
-    border: 1px solid rgba(0, 255, 204, 0.15);
+    background: rgba(15, 19, 40, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(94, 234, 212, 0.15);
     border-radius: 5px;
     padding: 10px;
 }
@@ -884,7 +949,7 @@ header {
 }
 
 .score-step.active {
-    background: rgba(255, 0, 85, 0.25);
+    background: rgba(244, 63, 94, 0.25);
     border-color: var(--accent-pink);
     color: #fff;
     font-weight: bold;
@@ -893,8 +958,10 @@ header {
 
 /* Noul Box */
 .noul-box {
-    background: rgba(6, 10, 18, 0.65);
-    border: 1px solid rgba(0, 255, 204, 0.15);
+    background: rgba(15, 19, 40, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(94, 234, 212, 0.15);
     border-radius: 5px;
     padding: 10px;
 }
@@ -910,7 +977,7 @@ header {
 
 .noul-fill {
     height: 100%;
-    background: #00ffcc;
+    background: #5eead4;
     transition: width 0.2s ease, background-color 0.2s ease;
 }
 
@@ -933,12 +1000,12 @@ header {
 }
 
 .hist-time { color: #506882; }
-.hist-src.stalker { color: #00ffaa; }
+.hist-src.stalker { color: #5eead4; }
 .hist-src.drone { color: #ffcc00; }
-.hist-src.heavy { color: #ff0055; }
-.hist-src.boss { color: #ff00ff; }
-.hist-src.director { color: #00ffff; }
-.hist-src.autopilot { color: #ffaa00; }
+.hist-src.heavy { color: #f43f5e; }
+.hist-src.boss { color: #9d8df1; }
+.hist-src.director { color: #00ffd1; }
+.hist-src.autopilot { color: #C5A059; }
 .hist-action { color: #e2e8f0; font-weight: bold; }
 .hist-lat { color: #64748b; }
 
@@ -1064,10 +1131,10 @@ header {
     transform: translateX(-50%);
     width: 480px;
     max-width: 90vw;
-    background: radial-gradient(circle, rgba(20, 2, 12, 0.95) 0%, rgba(8, 1, 6, 0.98) 100%);
-    border: 1.5px solid #ff0055;
+    background: radial-gradient(circle, rgba(20, 12, 25, 0.95) 0%, rgba(12, 8, 18, 0.98) 100%);
+    border: 1.5px solid #f43f5e;
     border-radius: 6px;
-    box-shadow: 0 0 25px rgba(255, 0, 85, 0.4), inset 0 0 15px rgba(255, 0, 85, 0.2);
+    box-shadow: 0 0 25px rgba(244, 63, 94, 0.4), inset 0 0 15px rgba(244, 63, 94, 0.2);
     padding: 8px 14px;
     z-index: 10;
     pointer-events: none;
@@ -1075,9 +1142,9 @@ header {
 }
 
 @keyframes boss-banner-pulse {
-    0% { box-shadow: 0 0 20px rgba(255, 0, 85, 0.35); }
-    50% { box-shadow: 0 0 35px rgba(255, 0, 85, 0.7); }
-    100% { box-shadow: 0 0 20px rgba(255, 0, 85, 0.35); }
+    0% { box-shadow: 0 0 20px rgba(244, 63, 94, 0.35); }
+    50% { box-shadow: 0 0 35px rgba(244, 63, 94, 0.7); }
+    100% { box-shadow: 0 0 20px rgba(244, 63, 94, 0.35); }
 }
 
 .boss-hud-header {
@@ -1091,7 +1158,7 @@ header {
 }
 
 .boss-hud-warning-pulse {
-    color: #ffaa00;
+    color: #C5A059;
     font-weight: bold;
     font-size: 0.65rem;
     animation: blink-warning 0.8s infinite alternate;
@@ -1103,19 +1170,19 @@ header {
 }
 
 .boss-hud-name {
-    color: #ff0055;
+    color: #f43f5e;
     font-weight: 800;
-    text-shadow: 0 0 8px #ff0055;
+    text-shadow: 0 0 8px #f43f5e;
 }
 
 .boss-hud-phase {
-    color: #00ffff;
+    color: #00ffd1;
     font-size: 0.65rem;
     font-weight: bold;
-    background: rgba(0, 255, 255, 0.15);
+    background: rgba(0, 255, 209, 0.15);
     padding: 2px 6px;
     border-radius: 3px;
-    border: 1px solid rgba(0, 255, 255, 0.4);
+    border: 1px solid rgba(0, 255, 209, 0.4);
 }
 
 .boss-meter-frame {
@@ -1123,7 +1190,7 @@ header {
     width: 100%;
     height: 12px;
     background: rgba(0, 0, 0, 0.7);
-    border: 1px solid rgba(255, 0, 85, 0.5);
+    border: 1px solid rgba(244, 63, 94, 0.5);
     border-radius: 3px;
     overflow: hidden;
     margin-bottom: 4px;
@@ -1131,8 +1198,8 @@ header {
 
 .boss-meter-fill {
     height: 100%;
-    background: linear-gradient(90deg, #ff00aa 0%, #ff0055 50%, #ff3300 100%);
-    box-shadow: 0 0 12px rgba(255, 0, 85, 0.8);
+    background: linear-gradient(90deg, #9d8df1 0%, #f43f5e 50%, #fb7185 100%);
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.8);
     transition: width 0.15s ease-out;
 }
 
@@ -1180,8 +1247,8 @@ header {
 .combo-decay-fill {
     height: 100%;
     width: 100%;
-    background: #ff00aa;
-    box-shadow: 0 0 6px #ff00aa;
+    background: #9d8df1;
+    box-shadow: 0 0 6px #9d8df1;
     transition: width 0.1s linear;
 }
 
@@ -1199,7 +1266,7 @@ header {
 
 .audio-eq-item:hover {
     background: rgba(0, 255, 204, 0.15);
-    border-color: #00ffcc;
+    border-color: #5eead4;
     box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
 }
 
@@ -1216,16 +1283,16 @@ header {
 .eq-bar {
     width: 3px;
     height: 4px;
-    background: #00ffcc;
+    background: #5eead4;
     border-radius: 1px;
-    box-shadow: 0 0 6px rgba(0, 255, 204, 0.8);
+    box-shadow: 0 0 6px rgba(94, 234, 212, 0.8);
     transition: height 0.08s ease, background 0.2s ease;
 }
 
 .eq-bar:nth-child(2) { background: #38bdf8; box-shadow: 0 0 6px #38bdf8; }
-.eq-bar:nth-child(3) { background: #a855f7; box-shadow: 0 0 6px #a855f7; }
-.eq-bar:nth-child(4) { background: #ec4899; box-shadow: 0 0 6px #ec4899; }
-.eq-bar:nth-child(5) { background: #00ffff; box-shadow: 0 0 6px #00ffff; }
+.eq-bar:nth-child(3) { background: #9d8df1; box-shadow: 0 0 6px #9d8df1; }
+.eq-bar:nth-child(4) { background: #fb7185; box-shadow: 0 0 6px #fb7185; }
+.eq-bar:nth-child(5) { background: #00ffd1; box-shadow: 0 0 6px rgba(0, 255, 209, 0.8); }
 
 .audio-unlock-banner {
     position: absolute;
@@ -1237,7 +1304,7 @@ header {
     align-items: center;
     gap: 10px;
     background: rgba(4, 12, 28, 0.92);
-    border: 1.5px solid #00f0ff;
+    border: 1.5px solid #00ffd1;
     border-radius: 6px;
     padding: 9px 20px;
     cursor: pointer;
@@ -1265,7 +1332,7 @@ header {
     font-size: 0.78rem;
     letter-spacing: 1.8px;
     color: #ffffff;
-    text-shadow: 0 0 10px #00f0ff;
+    text-shadow: 0 0 10px #00ffd1;
 }
 
 @keyframes bannerGlowPulse {

@@ -176,10 +176,10 @@ class CyberGameEngine {
         const width = this.container.clientWidth || (window.innerWidth - 370);
         const height = this.container.clientHeight || (window.innerHeight - 52);
 
-        // Scene & Fog (Luminous Tron Cyber Horizon)
+        // Scene & Fog (Breach Protocol — Luminous Twilight Atmosphere)
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x06142a);
-        this.scene.fog = new THREE.FogExp2(0x06142a, 0.0009);
+        this.scene.background = new THREE.Color(0x121a35);
+        this.scene.fog = new THREE.FogExp2(0x121a35, 0.0007);
 
         // Perspective Camera
         this.camera = new THREE.PerspectiveCamera(62, width / height, 0.5, 3500);
@@ -206,8 +206,8 @@ class CyberGameEngine {
                 try {
                     const renderPass = new THREE.RenderPass(this.scene, this.camera);
                     const bloomRes = new THREE.Vector2(width, height);
-                    // Calibrated High-Contrast Bloom: threshold 0.82 (laser-tight glow), strength 1.15, radius 0.22
-                    this.bloomPass = new THREE.UnrealBloomPass(bloomRes, 1.15, 0.22, 0.82);
+                    // Breach Protocol Selective Bloom: threshold 0.90 (only emitters glow), strength 0.85, radius 0.35
+                    this.bloomPass = new THREE.UnrealBloomPass(bloomRes, 0.85, 0.35, 0.90);
                     this.composer = new THREE.EffectComposer(this.renderer);
                     this.composer.addPass(renderPass);
                     this.composer.addPass(this.bloomPass);
@@ -218,10 +218,10 @@ class CyberGameEngine {
                         this.cyberPostPass = new THREE.ShaderPass(THREE.CyberPostShader);
                         this.cyberPostPass.uniforms['uResolution'].value.set(width, height);
                         // Clean, razor-sharp default optical clarity
-                        this.cyberPostPass.uniforms['uVignetteStrength'].value = 0.22;
+                        this.cyberPostPass.uniforms['uVignetteStrength'].value = 0.15;
                         this.cyberPostPass.uniforms['uChromaticStrength'].value = 0.0;
                         this.cyberPostPass.uniforms['uBarrelDistortion'].value = 0.0;
-                        this.cyberPostPass.uniforms['uScanlineIntensity'].value = 0.0;
+                        this.cyberPostPass.uniforms['uHoloScanIntensity'].value = 0.0;
                         this.cyberPostPass.renderToScreen = true;
                         this.composer.addPass(this.cyberPostPass);
                         this.hasCyberPost = true;
@@ -242,52 +242,52 @@ class CyberGameEngine {
             this.renderMode = '2d';
         }
 
-        // Deep Infinite Cyber Void Atmospheric Fog
-        this.scene.fog = new THREE.FogExp2(0x01050e, 0.0016);
-        if (this.renderer) this.renderer.setClearColor(0x01050e, 1.0);
+        // Breach Protocol Atmospheric Depth Fog
+        this.scene.fog = new THREE.FogExp2(0x0f1328, 0.0011);
+        if (this.renderer) this.renderer.setClearColor(0x0f1328, 1.0);
 
-        // Precision Tron Lighting Rig (Deep Void Contrast, No Specular Blowouts)
-        // 1. Sky/Ground Hemisphere Light (Subtle Ambient Cyber Fill)
-        this.hemiLight = new THREE.HemisphereLight(0x1e3a5f, 0x080b18, 0.55);
+        // Breach Protocol Lighting Rig (Luminous Twilight Architecture)
+        // 1. Sky/Ground Hemisphere Light (Twilight Ambient Fill)
+        this.hemiLight = new THREE.HemisphereLight(0x2a3a6f, 0x0c1020, 0.65);
         this.scene.add(this.hemiLight);
 
-        // 2. Primary Key Sun Light (Cool Cyber Blue)
-        this.sunLight = new THREE.DirectionalLight(0x4a90e2, 0.85);
+        // 2. Primary Key Sun Light (Frosted Blue-Silver)
+        this.sunLight = new THREE.DirectionalLight(0x6882b8, 0.75);
         this.sunLight.position.set(90, 180, 90);
         this.scene.add(this.sunLight);
 
-        // 3. Secondary Rim Fill Light (Subtle Magenta Accent)
-        this.rimLight = new THREE.DirectionalLight(0x881144, 0.45);
+        // 3. Secondary Rim Fill Light (Soft Purple Accent)
+        this.rimLight = new THREE.DirectionalLight(0x5a3d7a, 0.35);
         this.rimLight.position.set(-90, 130, -90);
         this.scene.add(this.rimLight);
 
-        // 4. Player Forward Flight Spotlight (Focused road beam, non-blinding)
-        this.playerHeadlight = new THREE.SpotLight(0x00f0ff, 1.6, 280, Math.PI / 4.5, 0.5, 1.2);
+        // 4. Player Forward Flight Spotlight (Electric Mint)
+        this.playerHeadlight = new THREE.SpotLight(0x00FFD1, 1.4, 280, Math.PI / 4.5, 0.5, 1.2);
         this.playerHeadlight.position.set(0, 3.5, 0);
         this.playerHeadlightTarget = new THREE.Object3D();
         this.scene.add(this.playerHeadlightTarget);
         this.playerHeadlight.target = this.playerHeadlightTarget;
         this.scene.add(this.playerHeadlight);
 
-        // Infinite Tron Floor Grids (Radiant Neon Architecture)
+        // Breach Protocol Architectural Floor Grids
         this.gridCellSize = 25;
-        // Primary Cyan Glowing Grid
-        this.gridHelper = new THREE.GridHelper(1200, 48, 0x00ffff, 0x0099bb);
+        // Primary Electric Mint Grid
+        this.gridHelper = new THREE.GridHelper(1200, 48, 0x00ffd1, 0x007a6b);
         this.gridHelper.position.y = 0;
         this.scene.add(this.gridHelper);
 
-        // Electric Purple Radiant Sub-Grid
-        this.subGridHelper = new THREE.GridHelper(2400, 96, 0xd946ef, 0x3b0764);
+        // Frosted Lavender Architectural Sub-Grid
+        this.subGridHelper = new THREE.GridHelper(2400, 96, 0x9d8df1, 0x2a1f5c);
         this.subGridHelper.position.y = -0.05;
         this.scene.add(this.subGridHelper);
 
-        // High-Gloss Obsidian Tron Digital Highway Floor Plane (Reflective Cyber Mirror)
+        // Dark Blue-Carbon Reflective Floor Plane (Breach Protocol Digital Surface)
         const floorGeom = new THREE.PlaneGeometry(3200, 3200);
         const floorMat = new THREE.MeshStandardMaterial({
-            color: 0x010204,
-            roughness: 0.02,
-            metalness: 0.98,
-            emissive: 0x000105,
+            color: 0x0a0f1a,
+            roughness: 0.08,
+            metalness: 0.92,
+            emissive: 0x030818,
             depthWrite: false
         });
         this.floorMesh = new THREE.Mesh(floorGeom, floorMat);
@@ -341,28 +341,27 @@ class CyberGameEngine {
         this.proceduralRoot = new THREE.Group();
         this.scene.add(this.proceduralRoot);
 
-        // Luminous Monolith & Architectural Materials
-        // Luminous Dark Carbon Obelisks & Architectural Materials
+        // Breach Protocol Architectural Materials
         this.monolithMaterial = new THREE.MeshStandardMaterial({
-            color: 0x02050b,
-            roughness: 0.70,
-            metalness: 0.20,
-            emissive: 0x000000
+            color: 0x121830,
+            roughness: 0.25,
+            metalness: 0.55,
+            emissive: 0x040810
         });
-        this.neonCyanMat = new THREE.LineBasicMaterial({ color: 0x00f0ff, linewidth: 2.0 });
-        this.neonMagentaMat = new THREE.LineBasicMaterial({ color: 0xff0088, linewidth: 2.0 });
-        this.neonAmberMat = new THREE.LineBasicMaterial({ color: 0xffaa00, linewidth: 2.0 });
+        this.neonCyanMat = new THREE.LineBasicMaterial({ color: 0x00ffd1, linewidth: 2.0 });
+        this.neonMagentaMat = new THREE.LineBasicMaterial({ color: 0x9d8df1, linewidth: 2.0 });
+        this.neonAmberMat = new THREE.LineBasicMaterial({ color: 0xC5A059, linewidth: 2.0 });
 
-        // Radiant Energy Gate Materials
+        // Energy Gate Materials (Electric Mint)
         this.gateRingMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0x00ffd1,
             side: THREE.DoubleSide
         });
         this.gateFieldMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0x00ffd1,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.20,
+            opacity: 0.18,
             blending: THREE.AdditiveBlending
         });
     }
@@ -460,7 +459,7 @@ class CyberGameEngine {
 
                     // Outer accent ring
                     const outerRingGeom = new THREE.TorusGeometry(18, 0.6, 8, 24);
-                    const outerRingMat = new THREE.MeshBasicMaterial({ color: 0xff00aa, wireframe: true });
+                    const outerRingMat = new THREE.MeshBasicMaterial({ color: 0x9d8df1, wireframe: true });
                     const outerRingMesh = new THREE.Mesh(outerRingGeom, outerRingMat);
                     gateGroup.add(outerRingMesh);
 
@@ -469,7 +468,7 @@ class CyberGameEngine {
                     gateGroup.add(fieldMesh);
 
                     // Calibrated Point Light
-                    const gateLight = new THREE.PointLight(0x00ffff, 1.2, 45, 1.2);
+                    const gateLight = new THREE.PointLight(0x00ffd1, 1.2, 45, 1.2);
                     gateGroup.add(gateLight);
 
                     gateGroup.position.set(gateX, 6.5, gateZ);
@@ -504,7 +503,7 @@ class CyberGameEngine {
 
                     // Underside Radiant Highway Light Beam
                     const beamGeom = new THREE.PlaneGeometry(44, 10);
-                    const beamMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide });
+                    const beamMat = new THREE.MeshBasicMaterial({ color: 0x00ffd1, side: THREE.DoubleSide });
                     const beamMesh = new THREE.Mesh(beamGeom, beamMat);
                     beamMesh.rotation.x = Math.PI / 2;
                     beamMesh.position.y = -2.6;
@@ -580,7 +579,7 @@ class CyberGameEngine {
                 gate.lastTrigger = now;
                 this.player.speedBoostTimer = 4.0;
                 this.player.shield = Math.min(this.player.maxShield, this.player.shield + 25);
-                this.spawnFloatingText("⚡ ENERGY GATE SURGE: +35% WARP / +25 SHIELD", pX, pZ, '#00ffcc');
+                this.spawnFloatingText("⚡ ENERGY GATE SURGE: +35% WARP / +25 SHIELD", pX, pZ, '#5eead4');
                 if (window.audioManager && window.audioManager.playPowerup) {
                     window.audioManager.playPowerup();
                 } else if (window.audioManager && window.audioManager.playBlink) {
@@ -592,16 +591,19 @@ class CyberGameEngine {
 
     buildTronSkyline() {
         this.skylineGroup = new THREE.Group();
+        // Breach Protocol: Frosted architectural tower material
         const monolithMat = new THREE.MeshStandardMaterial({
-            color: 0x030814,
-            roughness: 0.20,
-            metalness: 0.92,
-            emissive: 0x01040d
+            color: 0x1a2040,
+            roughness: 0.15,
+            metalness: 0.70,
+            emissive: 0x050a18,
+            transparent: true,
+            opacity: 0.85
         });
 
-        const neonCyan = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
-        const neonPink = new THREE.MeshBasicMaterial({ color: 0xff00aa });
-        const neonAmber = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
+        const neonMint = new THREE.MeshBasicMaterial({ color: 0x00ffd1 });
+        const neonLavender = new THREE.MeshBasicMaterial({ color: 0x9d8df1 });
+        const neonGold = new THREE.MeshBasicMaterial({ color: 0xC5A059 });
 
         // 36 Monolithic Cyber Towers on perimeter with clean emissive strip lights
         for (let i = 0; i < 36; i++) {
@@ -615,8 +617,8 @@ class CyberGameEngine {
             const tower = new THREE.Mesh(boxGeom, monolithMat);
 
             const isAccent = (i % 3 === 0);
-            const isAmber = (i % 6 === 1);
-            const stripeMat = isAccent ? neonPink : (isAmber ? neonAmber : neonCyan);
+            const isGold = (i % 6 === 1);
+            const stripeMat = isAccent ? neonLavender : (isGold ? neonGold : neonMint);
 
             // Vertical Emissive Neon Conduit Strips (Solid mesh, zero wireframe aliasing)
             const stripWidth = 2.4;
@@ -664,26 +666,26 @@ class CyberGameEngine {
             this.skylineGroup.add(tower);
         }
 
-        // Primary Radiant Horizon Neon Ring
+        // Primary Radiant Horizon Ring (Electric Mint)
         const ringGeom = new THREE.RingGeometry(850, 866, 64);
         const ringMat = new THREE.MeshBasicMaterial({
-            color: 0x00f0ff,
+            color: 0x00ffd1,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.50
+            opacity: 0.45
         });
         const horizonRing = new THREE.Mesh(ringGeom, ringMat);
         horizonRing.rotation.x = -Math.PI / 2;
         horizonRing.position.y = 0.5;
         this.skylineGroup.add(horizonRing);
 
-        // Secondary Outer Magenta Ring
+        // Secondary Outer Ring (Frosted Lavender)
         const outerRingGeom = new THREE.RingGeometry(940, 954, 64);
         const outerRingMat = new THREE.MeshBasicMaterial({
-            color: 0xd946ef,
+            color: 0x9d8df1,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.40
+            opacity: 0.35
         });
         const outerHorizonRing = new THREE.Mesh(outerRingGeom, outerRingMat);
         outerHorizonRing.rotation.x = -Math.PI / 2;
@@ -699,8 +701,33 @@ class CyberGameEngine {
     buildCyberStarfield() {
         this.starfieldGroup = new THREE.Group();
 
-        // --- 2000 Neon Stars via InstancedMesh (single draw call) ---
-        const starCount = 2000;
+        // --- Twilight Sky Gradient Hemisphere (Atmospheric Depth) ---
+        const domeGeom = new THREE.SphereGeometry(1480, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.5);
+        const domeColors = [];
+        const pos = domeGeom.attributes.position;
+        // Zenith: #121a35, Horizon: #1e2a4a
+        const cZenith = [0.071, 0.102, 0.208];
+        const cHorizon = [0.118, 0.165, 0.290];
+        for (let i = 0; i < pos.count; i++) {
+            const y = pos.getY(i);
+            const t = Math.max(0, Math.min(1, y / 1480));
+            const r = cHorizon[0] * (1 - t) + cZenith[0] * t;
+            const g = cHorizon[1] * (1 - t) + cZenith[1] * t;
+            const b = cHorizon[2] * (1 - t) + cZenith[2] * t;
+            domeColors.push(r, g, b);
+        }
+        domeGeom.setAttribute('color', new THREE.Float32BufferAttribute(domeColors, 3));
+        const domeMat = new THREE.MeshBasicMaterial({
+            vertexColors: true,
+            side: THREE.BackSide,
+            depthWrite: false
+        });
+        const skyDomeMesh = new THREE.Mesh(domeGeom, domeMat);
+        skyDomeMesh.position.y = -15;
+        this.starfieldGroup.add(skyDomeMesh);
+
+        // --- 1500 Neon Stars via InstancedMesh (single draw call) ---
+        const starCount = 1500;
         const starGeo = new THREE.SphereGeometry(0.5, 4, 3); // Low-poly diamond
         const starMat = new THREE.MeshBasicMaterial({
             color: 0xffffff,
@@ -712,13 +739,13 @@ class CyberGameEngine {
         this.starfieldMesh = new THREE.InstancedMesh(starGeo, starMat, starCount);
         this.starfieldMesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 
-        // Per-instance colors: Tron palette distribution
+        // Per-instance colors: Breach Protocol palette distribution
         const starColors = new Float32Array(starCount * 3);
         const palette = [
-            [0.0, 1.0, 0.95],   // Cyan (40%)
-            [0.85, 0.15, 0.65], // Magenta (25%)
-            [1.0, 0.7, 0.0],    // Amber (15%)
-            [0.9, 0.95, 1.0]    // White-blue (20%)
+            [0.0, 1.0, 0.82],   // Electric Mint (40%)
+            [0.62, 0.55, 0.95],  // Frosted Lavender (25%)
+            [0.98, 0.44, 0.52],  // Warm Coral (15%)
+            [0.91, 0.88, 0.94]   // Ice White (20%)
         ];
         const paletteWeights = [0.40, 0.65, 0.80, 1.0];
 
@@ -764,9 +791,9 @@ class CyberGameEngine {
         const nodeCount = 40;
         const nodeGeo = new THREE.OctahedronGeometry(1.5, 0);
         const nodeMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0x00ffd1,
             transparent: true,
-            opacity: 0.85,
+            opacity: 0.80,
             blending: THREE.AdditiveBlending,
             depthWrite: false
         });
@@ -793,7 +820,7 @@ class CyberGameEngine {
             dummy.updateMatrix();
             this.dataNodeMesh.setMatrixAt(i, dummy.matrix);
 
-            // Data nodes glow in cyan/magenta/amber
+            // Data nodes glow in mint/lavender/coral
             const nCol = palette[Math.floor(Math.random() * 3)];
             nodeColors[i * 3] = nCol[0];
             nodeColors[i * 3 + 1] = nCol[1];
@@ -818,19 +845,19 @@ class CyberGameEngine {
 
         const pylonGeom = new THREE.CylinderGeometry(2.4, 3.8, 85, 6);
         const pylonMat = new THREE.MeshStandardMaterial({
-            color: 0x040e1c,
-            metalness: 0.85,
-            roughness: 0.4,
-            emissive: 0x000000
+            color: 0x141a30,
+            metalness: 0.75,
+            roughness: 0.3,
+            emissive: 0x030610
         });
 
         pylonCoords.forEach(([px, pz], idx) => {
             const pylon = new THREE.Mesh(pylonGeom, pylonMat);
             pylon.position.set(px, 42.5, pz);
 
-            const isPink = (idx % 2 === 1);
+            const isLavender = (idx % 2 === 1);
             const edgeMat = new THREE.LineBasicMaterial({
-                color: isPink ? 0xff00aa : 0x00f0ff,
+                color: isLavender ? 0x9d8df1 : 0x00ffd1,
                 linewidth: 2.0
             });
             pylon.add(new THREE.LineSegments(new THREE.EdgesGeometry(pylonGeom), edgeMat));
@@ -838,9 +865,9 @@ class CyberGameEngine {
             // Top beacon orb (Calibrated non-glaring node)
             const orbGeom = new THREE.SphereGeometry(1.6, 8, 8);
             const orbMat = new THREE.MeshBasicMaterial({
-                color: isPink ? 0xff00aa : 0x00f0ff,
+                color: isLavender ? 0x9d8df1 : 0x00ffd1,
                 transparent: true,
-                opacity: 0.65
+                opacity: 0.60
             });
             const orb = new THREE.Mesh(orbGeom, orbMat);
             orb.position.set(0, 44, 0);
@@ -851,9 +878,9 @@ class CyberGameEngine {
                 const ringGeom = new THREE.RingGeometry(2.6, 3.4, 16);
                 ringGeom.rotateX(-Math.PI / 2);
                 const ringMat = new THREE.MeshBasicMaterial({
-                    color: isPink ? 0xff00aa : 0x00f0ff,
+                    color: isLavender ? 0x9d8df1 : 0x00ffd1,
                     transparent: true,
-                    opacity: 0.45
+                    opacity: 0.40
                 });
                 const ring = new THREE.Mesh(ringGeom, ringMat);
                 ring.position.y = yOff;
@@ -881,7 +908,7 @@ class CyberGameEngine {
         const ringGeom = new THREE.TorusGeometry(3.0, 0.45, 8, 32);
         ringGeom.rotateX(Math.PI / 2);
         const ringMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0x9d8df1,
             transparent: true,
             opacity: 0.95
         });
@@ -892,7 +919,7 @@ class CyberGameEngine {
         const auraGeom = new THREE.RingGeometry(2.4, 3.6, 24);
         auraGeom.rotateX(-Math.PI / 2);
         const auraMat = new THREE.MeshBasicMaterial({
-            color: 0x00f0ff,
+            color: 0x00ffd1,
             side: THREE.DoubleSide,
             transparent: true,
             opacity: 0.45
@@ -903,7 +930,7 @@ class CyberGameEngine {
         const coreGeom = new THREE.CylinderGeometry(1.6, 1.6, 0.25, 16);
         const coreMat = new THREE.MeshStandardMaterial({
             color: 0x112233,
-            emissive: 0xffaa00,
+            emissive: 0xfb7185,
             metalness: 0.9,
             roughness: 0.1
         });
@@ -970,7 +997,7 @@ class CyberGameEngine {
         ];
         diamondGeom.setAttribute('position', new THREE.Float32BufferAttribute(dPoints, 3));
         const lineMat = new THREE.LineBasicMaterial({
-            color: 0x00ffff,
+            color: 0x00ffd1,
             linewidth: 2,
             transparent: true,
             opacity: 0.95,
@@ -983,7 +1010,7 @@ class CyberGameEngine {
         // 2. Outer bracket ring
         const ringGeom = new THREE.RingGeometry(4.6, 5.2, 24);
         const ringMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0x00ffd1,
             side: THREE.DoubleSide,
             transparent: true,
             opacity: 0.65,
@@ -1022,7 +1049,7 @@ class CyberGameEngine {
 
         geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         const mat = new THREE.LineBasicMaterial({
-            color: 0x00ffff,
+            color: 0x00ffd1,
             transparent: true,
             opacity: 0.0,
             blending: THREE.AdditiveBlending,
@@ -1034,26 +1061,26 @@ class CyberGameEngine {
     }
 
     initCyberDust() {
-        const dustCount = 300;
+        const dustCount = 500;
         const dustGeom = new THREE.BufferGeometry();
         const positions = new Float32Array(dustCount * 3);
         const colors = new Float32Array(dustCount * 3);
 
         for (let i = 0; i < dustCount; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 220;
-            positions[i * 3 + 1] = 1.0 + Math.random() * 14.0;
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 220;
+            positions[i * 3] = (Math.random() - 0.5) * 240;
+            positions[i * 3 + 1] = 0.8 + Math.random() * 16.0;
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 240;
 
             const r = Math.random();
-            if (r > 0.65) {
-                // Subtle cyan mote
-                colors[i * 3] = 0.0; colors[i * 3 + 1] = 0.9; colors[i * 3 + 2] = 1.0;
-            } else if (r > 0.3) {
-                // Soft electric blue
-                colors[i * 3] = 0.1; colors[i * 3 + 1] = 0.5; colors[i * 3 + 2] = 1.0;
+            if (r > 0.60) {
+                // Soft electric mint mote (40%)
+                colors[i * 3] = 0.0; colors[i * 3 + 1] = 1.0; colors[i * 3 + 2] = 0.82;
+            } else if (r > 0.25) {
+                // Frosted lavender accent (35%)
+                colors[i * 3] = 0.62; colors[i * 3 + 1] = 0.55; colors[i * 3 + 2] = 0.95;
             } else {
-                // Subtle magenta accent
-                colors[i * 3] = 0.8; colors[i * 3 + 1] = 0.1; colors[i * 3 + 2] = 0.6;
+                // Warm white luminous particle (25%)
+                colors[i * 3] = 0.91; colors[i * 3 + 1] = 0.88; colors[i * 3 + 2] = 0.94;
             }
         }
 
@@ -1061,11 +1088,11 @@ class CyberGameEngine {
         dustGeom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
         const dustMat = new THREE.PointsMaterial({
-            size: 0.85,
+            size: 1.5,
             sizeAttenuation: true, // Naturally scales and fades with perspective distance
             vertexColors: true,
             transparent: true,
-            opacity: 0.35,
+            opacity: 0.38,
             blending: THREE.AdditiveBlending,
             depthWrite: false
         });
@@ -1084,7 +1111,7 @@ class CyberGameEngine {
         bodyGeom.rotateX(Math.PI / 2); // Point cone along -Z
         bodyGeom.scale(1.15, 0.55, 1.0); // Flatten slightly for aerodynamic profile
         const bodyMat = new THREE.MeshStandardMaterial({
-            color: 0x050f1c,
+            color: 0x1a2040,
             roughness: 0.18,
             metalness: 0.92,
             emissive: 0x011324,
@@ -1095,7 +1122,7 @@ class CyberGameEngine {
 
         const bodyEdges = new THREE.LineSegments(
             new THREE.EdgesGeometry(bodyGeom),
-            new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2.5 })
+            new THREE.LineBasicMaterial({ color: 0x00ffd1, linewidth: 2.5 })
         );
         bodyEdges.position.copy(this.playerBody.position);
         this.playerGroup.add(bodyEdges);
@@ -1103,14 +1130,14 @@ class CyberGameEngine {
         // Forward High-Glow Needle Prow Spear (-Z = -7.2 to -9.0) - High-contrast Front Indicator
         const needleGeom = new THREE.CylinderGeometry(0.12, 0.45, 3.6, 8);
         needleGeom.rotateX(Math.PI / 2);
-        const needleMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+        const needleMat = new THREE.MeshBasicMaterial({ color: 0x00ffd1 });
         const needle = new THREE.Mesh(needleGeom, needleMat);
         needle.position.set(0, 0.2, -7.4);
         this.playerGroup.add(needle);
 
         // Needle Tip Beacon Node (Subtle cyan apex point, non-blinding)
         const tipGeom = new THREE.SphereGeometry(0.20, 8, 8);
-        const tipMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+        const tipMat = new THREE.MeshBasicMaterial({ color: 0x00ffd1 });
         const tip = new THREE.Mesh(tipGeom, tipMat);
         tip.position.set(0, 0.2, -9.2);
         this.playerGroup.add(tip);
@@ -1120,8 +1147,8 @@ class CyberGameEngine {
         canopyGeom.rotateX(Math.PI / 2);
         canopyGeom.scale(0.85, 0.40, 1.0);
         const canopyMat = new THREE.MeshStandardMaterial({
-            color: 0x02162a,
-            emissive: 0x00223a,
+            color: 0xC5A059,
+            emissive: 0xC5A059,
             roughness: 0.12,
             metalness: 0.92,
             transparent: true,
@@ -1133,7 +1160,7 @@ class CyberGameEngine {
 
         const canopyEdges = new THREE.LineSegments(
             new THREE.EdgesGeometry(canopyGeom),
-            new THREE.LineBasicMaterial({ color: 0x00f0ff, linewidth: 2.5 })
+            new THREE.LineBasicMaterial({ color: 0x00ffd1, linewidth: 2.5 })
         );
         canopyEdges.position.copy(this.cockpitCanopy.position);
         this.playerGroup.add(canopyEdges);
@@ -1147,7 +1174,7 @@ class CyberGameEngine {
                 1.1, 0.82, zPos + 0.55
             ]);
             chevGeom.setAttribute('position', new THREE.BufferAttribute(chevVerts, 3));
-            const chevMat = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 3 });
+            const chevMat = new THREE.LineBasicMaterial({ color: 0x00ffd1, linewidth: 3 });
             const chevLine = new THREE.Line(chevGeom, chevMat);
             this.playerGroup.add(chevLine);
         });
@@ -1177,7 +1204,7 @@ class CyberGameEngine {
         wingGeom.computeVertexNormals();
 
         const wingMat = new THREE.MeshStandardMaterial({
-            color: 0x040c18,
+            color: 0x1a2040,
             roughness: 0.18,
             metalness: 0.88,
             side: THREE.DoubleSide,
@@ -1188,16 +1215,16 @@ class CyberGameEngine {
 
         const wingEdges = new THREE.LineSegments(
             new THREE.EdgesGeometry(wingGeom),
-            new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2.5 })
+            new THREE.LineBasicMaterial({ color: 0x00ffd1, linewidth: 2.5 })
         );
         this.playerGroup.add(wingEdges);
 
         // Wingtip Navigation Energy Beacons
-        const leftNav = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+        const leftNav = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00ffd1 }));
         leftNav.position.set(-8.6, 0.15, 3.8);
         this.playerGroup.add(leftNav);
 
-        const rightNav = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff00aa }));
+        const rightNav = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshBasicMaterial({ color: 0x9d8df1 }));
         rightNav.position.set(8.6, 0.15, 3.8);
         this.playerGroup.add(rightNav);
 
@@ -1209,7 +1236,7 @@ class CyberGameEngine {
             cannon.position.set(xOff, 0.1, -2.8);
             this.playerGroup.add(cannon);
 
-            const muzzle = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.8, 8), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+            const muzzle = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.8, 8), new THREE.MeshBasicMaterial({ color: 0x00ffd1 }));
             muzzle.geometry.rotateX(Math.PI / 2);
             muzzle.position.set(xOff, 0.1, -5.0);
             this.playerGroup.add(muzzle);
@@ -1229,7 +1256,7 @@ class CyberGameEngine {
             finGeom.computeVertexNormals();
 
             const finMat = new THREE.MeshStandardMaterial({
-                color: 0x051222,
+                color: 0x1a2040,
                 roughness: 0.15,
                 metalness: 0.9,
                 side: THREE.DoubleSide,
@@ -1242,7 +1269,7 @@ class CyberGameEngine {
             // Glowing neon spine along vertical tail fin
             const finEdge = new THREE.LineSegments(
                 new THREE.EdgesGeometry(finGeom),
-                new THREE.LineBasicMaterial({ color: (idx === 0 ? 0x00ffff : 0x00d4ff), linewidth: 3.0 })
+                new THREE.LineBasicMaterial({ color: (idx === 0 ? 0x00ffd1 : 0x00ffd1), linewidth: 3.0 })
             );
             finEdge.position.set(xOff, 0, 0);
             this.playerGroup.add(finEdge);
@@ -1260,7 +1287,7 @@ class CyberGameEngine {
 
             // Recessed glowing turbine ring (non-blinding aperture)
             const rimGeom = new THREE.RingGeometry(0.35, 0.85, 16);
-            const rimMesh = new THREE.Mesh(rimGeom, new THREE.MeshBasicMaterial({ color: 0x00a2ff, side: THREE.DoubleSide }));
+            const rimMesh = new THREE.Mesh(rimGeom, new THREE.MeshBasicMaterial({ color: 0x00ffd1, side: THREE.DoubleSide }));
             rimMesh.position.set(xOff, 0.25, 5.72);
             this.playerGroup.add(rimMesh);
         });
@@ -1269,7 +1296,7 @@ class CyberGameEngine {
         const plumeGeom = new THREE.ConeGeometry(0.50, 4.2, 10);
         plumeGeom.rotateX(-Math.PI / 2);
         const plumeMat = new THREE.MeshBasicMaterial({
-            color: 0x00f0ff,
+            color: 0x00ffd1,
             transparent: true,
             opacity: 0.35,
             blending: THREE.AdditiveBlending
@@ -1286,7 +1313,7 @@ class CyberGameEngine {
         this.exhaustPlumes.push(leftPlume, rightPlume);
 
         // Dynamic Thruster Point Light (Calibrated intensity)
-        this.thrusterLight = new THREE.PointLight(0x00a2ff, 1.4, 25);
+        this.thrusterLight = new THREE.PointLight(0x00ffd1, 1.4, 25);
         this.thrusterLight.position.set(0, 0.8, 5.5);
         this.playerGroup.add(this.thrusterLight);
 
@@ -1296,7 +1323,7 @@ class CyberGameEngine {
         const glowGeom = new THREE.RingGeometry(5.2, 5.6, 32);
         glowGeom.rotateX(-Math.PI / 2);
         const glowMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0x00ffd1,
             side: THREE.DoubleSide,
             transparent: true,
             opacity: 0.30
@@ -1312,7 +1339,7 @@ class CyberGameEngine {
             2.4, 0.01, -3.2
         ]);
         arrowGeom.setAttribute('position', new THREE.BufferAttribute(arrowVerts, 3));
-        const arrowLine = new THREE.Line(arrowGeom, new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2.5 }));
+        const arrowLine = new THREE.Line(arrowGeom, new THREE.LineBasicMaterial({ color: 0x00ffd1, linewidth: 2.5 }));
         underGlowGroup.add(arrowLine);
 
         underGlowGroup.position.set(0, -2.15, 0); // Position exactly on the ground plane (Y = 0.05 in world space)
@@ -1323,7 +1350,7 @@ class CyberGameEngine {
         // Wireframe energy shell hugs the ship contours without obscuring the fuselage or visor
         const shieldGeom = new THREE.IcosahedronGeometry(7.0, 1);
         this.shieldMat = new THREE.MeshBasicMaterial({
-            color: 0x00f0ff,
+            color: 0x9d8df1,
             wireframe: true,
             transparent: true,
             opacity: 0.0,
@@ -1344,7 +1371,7 @@ class CyberGameEngine {
         const ringGeom = new THREE.RingGeometry(3.6, 4.4, 32);
         ringGeom.rotateX(-Math.PI / 2);
         this.reticleRingMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0x00ffd1,
             side: THREE.DoubleSide,
             transparent: true,
             opacity: 0.8,
@@ -1354,7 +1381,7 @@ class CyberGameEngine {
         this.reticleGroup.add(this.reticleRing);
 
         // 2. High-Tech Crosshair Brackets
-        const tickMat = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 });
+        const tickMat = new THREE.LineBasicMaterial({ color: 0x00ffd1, linewidth: 2 });
         const tickPoints = [
             new THREE.Vector3(-6.5, 0.1, 0), new THREE.Vector3(-4.8, 0.1, 0),
             new THREE.Vector3(4.8, 0.1, 0), new THREE.Vector3(6.5, 0.1, 0),
@@ -1370,7 +1397,7 @@ class CyberGameEngine {
         diamondGeom.rotateX(-Math.PI / 2);
         diamondGeom.rotateY(Math.PI / 4);
         this.reticleDiamondMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0x00ffd1,
             side: THREE.DoubleSide,
             transparent: true,
             opacity: 0.9,
@@ -1428,7 +1455,7 @@ class CyberGameEngine {
 
     setRenderMode(mode) {
         if (mode === '3d' && !this.hasWebGL) {
-            this.spawnFloatingText("3D WebGL NOT SUPPORTED", this.player.pos.x, this.player.pos.z, '#ff0055');
+            this.spawnFloatingText("3D WebGL NOT SUPPORTED", this.player.pos.x, this.player.pos.z, '#f43f5e');
             mode = '2d';
         }
         this.renderMode = mode;
@@ -1448,7 +1475,7 @@ class CyberGameEngine {
             const rearContainer = document.getElementById('rearview-mirror-container');
             if (rearContainer) rearContainer.style.display = 'none';
 
-            this.spawnFloatingText("VIEW: 2D RETRO ARENA", this.player.pos.x, this.player.pos.z, '#00ffcc');
+            this.spawnFloatingText("VIEW: 2D RETRO ARENA", this.player.pos.x, this.player.pos.z, '#5eead4');
             if (window.audioManager) window.audioManager.playBlink();
         } else {
             this.canvas2d.style.display = 'none';
@@ -1457,8 +1484,8 @@ class CyberGameEngine {
                 this.cockpitOverlay.style.display = 'block';
             }
 
-            if (btn) btn.innerHTML = '🎮 VIEW: 3D TRON [G]';
-            if (badge) badge.innerText = '3D TRON INFINITE';
+            if (btn) btn.innerHTML = '🎮 VIEW: 3D BREACH [G]';
+            if (badge) badge.innerText = '3D BREACH INFINITE';
             if (camBtn) camBtn.style.opacity = '1.0';
 
             const rearContainer = document.getElementById('rearview-mirror-container');
@@ -1466,7 +1493,7 @@ class CyberGameEngine {
 
             // Sync all 3D mesh positions immediately
             this.sync3DSceneAfterModeSwitch();
-            this.spawnFloatingText("VIEW: 3D TRON INFINITE", this.player.pos.x, this.player.pos.z, '#ff00ff');
+            this.spawnFloatingText("VIEW: 3D BREACH INFINITE", this.player.pos.x, this.player.pos.z, '#9d8df1');
             if (window.audioManager) window.audioManager.playOverdrive();
         }
 
@@ -1513,7 +1540,7 @@ class CyberGameEngine {
             this.cockpitOverlay.style.display = (this.cameraMode === 'cockpit') ? 'block' : 'none';
         }
 
-        this.spawnFloatingText(`CAM: ${this.cameraMode.toUpperCase()}`, this.player.pos.x, this.player.pos.z, '#00ffff');
+        this.spawnFloatingText(`CAM: ${this.cameraMode.toUpperCase()}`, this.player.pos.x, this.player.pos.z, '#00ffd1');
         if (window.audioManager) window.audioManager.playBlink();
     }
 
@@ -1650,34 +1677,37 @@ class CyberGameEngine {
             this.autoPilot ? "JEV AUTOPILOT ENGAGED" : "MANUAL CONTROL RESTORED",
             this.player.pos.x,
             this.player.pos.z,
-            this.autoPilot ? "#ffaa00" : "#00ffcc"
+            this.autoPilot ? "#C5A059" : "#5eead4"
         );
         if (window.audioManager) window.audioManager.playBlink();
     }
 
     toggleCRT() {
-        // Prefer GPU CyberPost shader CRT (barrel distortion + scanlines + phosphor triads)
+        // Holographic Scanlines / Clean Optics Toggle [C]
         if (this.cyberPostPass && this.hasCyberPost) {
             const u = this.cyberPostPass.uniforms;
-            const isActive = u['uScanlineIntensity'].value > 0.05;
+            const isActive = u['uHoloScanIntensity'].value > 0.05;
             if (isActive) {
-                // Turn off CRT shader
-                u['uScanlineIntensity'].value = 0.0;
+                u['uHoloScanIntensity'].value = 0.0;
                 u['uBarrelDistortion'].value = 0.0;
-                console.log("📺 CRT Shader OFF");
+                this.spawnFloatingText("HOLO SCAN: OFF", this.player.pos.x, this.player.pos.z, '#8b9cc2');
+                console.log("🌐 Holo Scan OFF");
             } else {
-                // Turn on CRT shader with barrel curve
-                u['uScanlineIntensity'].value = 0.25;
-                u['uBarrelDistortion'].value = 0.12;
-                console.log("📺 CRT Shader ON (scanlines + barrel warp)");
+                // Engage crisp holographic scan effect (zero barrel warp)
+                u['uHoloScanIntensity'].value = 0.85;
+                u['uBarrelDistortion'].value = 0.0;
+                this.spawnFloatingText("HOLO SCAN: ENGAGED", this.player.pos.x, this.player.pos.z, '#00ffd1');
+                console.log("🌐 Holo Scan ON (clean optics)");
             }
-            // Also sync CSS overlay off when using shader version
             const crt = document.getElementById('crt-overlay');
             if (crt) crt.classList.remove('active');
         } else {
             // Fallback: CSS overlay
             const crt = document.getElementById('crt-overlay');
-            if (crt) crt.classList.toggle('active');
+            if (crt) {
+                const active = crt.classList.toggle('active');
+                this.spawnFloatingText(active ? "HOLO SCAN: ENGAGED" : "HOLO SCAN: OFF", this.player.pos.x, this.player.pos.z, active ? '#00ffd1' : '#8b9cc2');
+            }
         }
     }
 
@@ -1731,7 +1761,7 @@ class CyberGameEngine {
         if (pacing === 'spawn_reinforcements' || pacing === 'ambush') {
             this.spawnEnemy('stalker');
             this.spawnEnemy(Math.random() > 0.5 ? 'drone' : 'heavy');
-            this.spawnFloatingText("DIRECTOR: REINFORCEMENTS INBOUND", this.player.pos.x, this.player.pos.z, '#ffaa00');
+            this.spawnFloatingText("DIRECTOR: REINFORCEMENTS INBOUND", this.player.pos.x, this.player.pos.z, '#C5A059');
         } else if (pacing === 'spawn_pickup') {
             this.spawnPickup(Math.random() > 0.5 ? 'shield' : 'overdrive');
         }
@@ -1871,7 +1901,7 @@ class CyberGameEngine {
         this.player.invulnerableTimer = 2.5;
 
         this.spawnPickup('shield');
-        this.spawnFloatingText(`GRID INVASION: WAVE ${w}`, this.player.pos.x, this.player.pos.z, '#00ffff');
+        this.spawnFloatingText(`GRID INVASION: WAVE ${w}`, this.player.pos.x, this.player.pos.z, '#00ffd1');
         this.spawnFloatingText(`OVERCHARGE SHIELD ACTIVE (2.5s)`, this.player.pos.x, this.player.pos.z - 25, '#00a2ff');
         if (window.audioManager) window.audioManager.playOverdrive();
     }
@@ -1886,7 +1916,7 @@ class CyberGameEngine {
         let hp = 35;
         let speed = 90;
         let radius = 14;
-        let color = 0xff0055;
+        let color = 0xf43f5e;
         let mesh;
 
         if (type === 'stalker') {
@@ -1895,7 +1925,7 @@ class CyberGameEngine {
             speed = 78;
             hp = 32;
             radius = 12;
-            color = 0xff0055;
+            color = 0xf43f5e;
         } else if (type === 'drone') {
             // Tron Bit: Dual compound polyhedra with pulsating glowing core
             mesh = this.buildTronBitMesh();
@@ -1916,7 +1946,7 @@ class CyberGameEngine {
             speed = 52;
             hp = 700 + this.wave * 140;
             radius = 35;
-            color = 0xff00aa;
+            color = 0x9d8df1;
         }
 
         mesh.position.set(x, type === 'boss' ? 14 : 2.0, z);
@@ -1956,7 +1986,7 @@ class CyberGameEngine {
             if (window.audioManager && window.audioManager.playBossWarning) {
                 window.audioManager.playBossWarning();
             }
-            this.spawnFloatingText('CRITICAL WARNING: COMMAND RECOGNIZER DETECTED!', this.player.pos.x, this.player.pos.z - 30, '#ff0055');
+            this.spawnFloatingText('CRITICAL WARNING: COMMAND RECOGNIZER DETECTED!', this.player.pos.x, this.player.pos.z - 30, '#f43f5e');
         }
 
         this.enemies.push(enemyObj);
@@ -1968,14 +1998,14 @@ class CyberGameEngine {
     buildTronLightCycleMesh() {
         const group = new THREE.Group();
         const chassisMat = new THREE.MeshStandardMaterial({
-            color: 0x080104,
+            color: 0x2a1a3a,
             roughness: 0.12,
             metalness: 0.95,
             emissive: 0x140005
         });
-        const neonCrimson = new THREE.MeshBasicMaterial({ color: 0xff0055 });
-        const neonCore = new THREE.MeshBasicMaterial({ color: 0xff3377 });
-        const edgeCrimson = new THREE.LineBasicMaterial({ color: 0xff0055, linewidth: 2 });
+        const neonCrimson = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
+        const neonCore = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
+        const edgeCrimson = new THREE.LineBasicMaterial({ color: 0xf43f5e, linewidth: 2 });
 
         // 1. Central Aerodynamic Fairing & Chassis
         const chassisGeom = new THREE.BoxGeometry(2.0, 1.8, 6.4);
@@ -2048,24 +2078,33 @@ class CyberGameEngine {
         const outerGeom = new THREE.IcosahedronGeometry(3.2, 0);
         const outerWire = new THREE.LineSegments(
             new THREE.EdgesGeometry(outerGeom),
-            new THREE.LineBasicMaterial({ color: 0xffbb00, linewidth: 2 })
+            new THREE.LineBasicMaterial({ color: 0x9d8df1, linewidth: 2 })
         );
         group.add(outerWire);
 
-        // Inner Pulsating Solid Core Octahedron
+        // Inner Pulsating Solid Core Octahedron (Blue-slate with lavender edge)
         const innerGeom = new THREE.OctahedronGeometry(1.8, 0);
-        const innerMat = new THREE.MeshBasicMaterial({ color: 0xffe600 });
+        const innerMat = new THREE.MeshStandardMaterial({
+            color: 0x1a2a3a,
+            emissive: 0x221a3a,
+            metalness: 0.85,
+            roughness: 0.2
+        });
         const innerMesh = new THREE.Mesh(innerGeom, innerMat);
+        innerMesh.add(new THREE.LineSegments(
+            new THREE.EdgesGeometry(innerGeom),
+            new THREE.LineBasicMaterial({ color: 0x9d8df1, linewidth: 1.5 })
+        ));
         group.add(innerMesh);
 
-        // Under-glow ring
+        // Under-glow ring (Frosted Lavender)
         const glowGeom = new THREE.RingGeometry(0.3, 3.2, 16);
         glowGeom.rotateX(-Math.PI / 2);
         const glowMesh = new THREE.Mesh(glowGeom, new THREE.MeshBasicMaterial({
-            color: 0xffbb00,
+            color: 0x9d8df1,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.3
+            opacity: 0.35
         }));
         glowMesh.position.y = -4.5;
         group.add(glowMesh);
@@ -2078,13 +2117,13 @@ class CyberGameEngine {
     buildTronTankMesh() {
         const group = new THREE.Group();
         const mat = new THREE.MeshStandardMaterial({
-            color: 0x140602,
+            color: 0x2a2530,
             roughness: 0.25,
             metalness: 0.85,
-            emissive: 0x180400
+            emissive: 0x0a0810
         });
-        const edgeMat = new THREE.LineBasicMaterial({ color: 0xff4400, linewidth: 2 });
-        const neonOrange = new THREE.MeshBasicMaterial({ color: 0xff5500 });
+        const edgeMat = new THREE.LineBasicMaterial({ color: 0xfb7185, linewidth: 2 });
+        const neonOrange = new THREE.MeshBasicMaterial({ color: 0xfb7185 });
 
         // Heavy Base Chassis
         const bodyGeom = new THREE.BoxGeometry(7.5, 2.5, 9.5);
@@ -2143,13 +2182,14 @@ class CyberGameEngine {
     buildTronRecognizerMesh() {
         const group = new THREE.Group();
         const mat = new THREE.MeshStandardMaterial({
-            color: 0x14020c,
+            color: 0x1a1530,
             roughness: 0.15,
             metalness: 0.9,
-            emissive: 0x220010
+            emissive: 0x080414
         });
-        const edgeMat = new THREE.LineBasicMaterial({ color: 0xff0055, linewidth: 2 });
-        const neonEye = new THREE.MeshBasicMaterial({ color: 0xff0055 });
+        const edgeMat = new THREE.LineBasicMaterial({ color: 0xf43f5e, linewidth: 2 });
+        const legEdgeMat = new THREE.LineBasicMaterial({ color: 0xC5A059, linewidth: 2 });
+        const neonEye = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
 
         // Overhead Bridge
         const topGeom = new THREE.BoxGeometry(32, 5.5, 14);
@@ -2157,23 +2197,23 @@ class CyberGameEngine {
         top.add(new THREE.LineSegments(new THREE.EdgesGeometry(topGeom), edgeMat));
         group.add(top);
 
-        // Left Leg Pylon
+        // Left Leg Pylon (Champagne Gold accent framing)
         const legGeom = new THREE.BoxGeometry(6.5, 20, 12);
         const leftLeg = new THREE.Mesh(legGeom, mat);
         leftLeg.position.set(-12.5, -10, 0);
-        leftLeg.add(new THREE.LineSegments(new THREE.EdgesGeometry(legGeom), edgeMat));
+        leftLeg.add(new THREE.LineSegments(new THREE.EdgesGeometry(legGeom), legEdgeMat));
         group.add(leftLeg);
 
-        // Right Leg Pylon
+        // Right Leg Pylon (Champagne Gold accent framing)
         const rightLeg = new THREE.Mesh(legGeom, mat);
         rightLeg.position.set(12.5, -10, 0);
-        rightLeg.add(new THREE.LineSegments(new THREE.EdgesGeometry(legGeom), edgeMat));
+        rightLeg.add(new THREE.LineSegments(new THREE.EdgesGeometry(legGeom), legEdgeMat));
         group.add(rightLeg);
 
         // Heavy Pylon Pulse Cannons (Bottom of legs)
         const cannonGeom = new THREE.CylinderGeometry(0.9, 1.2, 5.5, 8);
         cannonGeom.rotateX(Math.PI / 2);
-        const cannonMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
+        const cannonMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
         const leftCannon = new THREE.Mesh(cannonGeom, cannonMat);
         leftCannon.name = "leftCannon";
         leftCannon.position.set(-12.5, -20.2, -4.5);
@@ -2186,7 +2226,7 @@ class CyberGameEngine {
 
         // Central Pulsating Core Reactor (Suspended beneath top bridge)
         const coreGeom = new THREE.OctahedronGeometry(3.5, 0);
-        const coreMat = new THREE.MeshBasicMaterial({ color: 0xff00aa, wireframe: false });
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0x9d8df1, wireframe: false });
         const reactorCore = new THREE.Mesh(coreGeom, coreMat);
         reactorCore.name = "reactorCore";
         reactorCore.position.set(0, -6.5, 0);
@@ -2195,7 +2235,7 @@ class CyberGameEngine {
         const coreRingGeom = new THREE.RingGeometry(4.2, 4.8, 16);
         coreRingGeom.rotateX(Math.PI / 2);
         const coreRing = new THREE.Mesh(coreRingGeom, new THREE.MeshBasicMaterial({
-            color: 0xff00aa,
+            color: 0x9d8df1,
             side: THREE.DoubleSide,
             transparent: true,
             opacity: 0.8
@@ -2215,7 +2255,7 @@ class CyberGameEngine {
         const spotGeom = new THREE.RingGeometry(1.0, 16, 32);
         spotGeom.rotateX(-Math.PI / 2);
         const spotMat = new THREE.MeshBasicMaterial({
-            color: 0xff0055,
+            color: 0xf43f5e,
             side: THREE.DoubleSide,
             transparent: true,
             opacity: 0.4
@@ -2243,7 +2283,7 @@ class CyberGameEngine {
         let color = 0x00ffcc;
         if (type === 'shield') color = 0x0088ff;
         else if (type === 'overdrive') color = 0xff00ff;
-        else if (type === 'tri_plasma') color = 0xffaa00;
+        else if (type === 'tri_plasma') color = 0xC5A059;
         else if (type === 'nuke') color = 0xffff00;
 
         // 3D Pickup Mesh: Floating spinning crystal with glowing aura ring
@@ -2290,7 +2330,7 @@ class CyberGameEngine {
             isHorizontal ? 2.5 : 1200
         );
         const wallMat = new THREE.MeshBasicMaterial({
-            color: 0xff0055,
+            color: 0xf43f5e,
             transparent: true,
             opacity: 0.25,
             wireframe: true
@@ -2313,7 +2353,7 @@ class CyberGameEngine {
         });
     }
 
-    spawnFloatingText(text, x, z, color = '#00ffcc') {
+    spawnFloatingText(text, x, z, color = '#5eead4') {
         this.floatingTexts.push({
             text,
             x,
@@ -2362,8 +2402,8 @@ class CyberGameEngine {
         this.player.wallHoppedThisBlink = false;
 
         // Voxel dash trail
-        this.spawnVoxelExplosion(this.player.pos.x, this.player.pos.z, 0x00ffff, 20);
-        this.spawnFloatingText("QUANTUM BLINK (HOP)", this.player.pos.x, this.player.pos.z, '#00ffff');
+        this.spawnVoxelExplosion(this.player.pos.x, this.player.pos.z, 0x00ffd1, 20);
+        this.spawnFloatingText("QUANTUM BLINK (HOP)", this.player.pos.x, this.player.pos.z, '#00ffd1');
         if (window.audioManager) window.audioManager.playBlink();
     }
 
@@ -2376,7 +2416,7 @@ class CyberGameEngine {
 
         if (this.player.heat >= 100) {
             this.player.isOverheated = true;
-            this.spawnFloatingText("OVERHEATED!", this.player.pos.x, this.player.pos.z, '#ff0055');
+            this.spawnFloatingText("OVERHEATED!", this.player.pos.x, this.player.pos.z, '#f43f5e');
         }
 
         // Projectile direction: forward in 3D ground plane (Local -Z is Forward)
@@ -2404,7 +2444,7 @@ class CyberGameEngine {
             const shroudGeom = new THREE.CylinderGeometry(0.42, 0.62, 5.8, 6);
             shroudGeom.rotateX(Math.PI / 2);
             const shroudMat = new THREE.MeshBasicMaterial({
-                color: isOverdrive ? 0xff00ff : 0x00f0ff,
+                color: isOverdrive ? 0xff00ff : 0x00ffd1,
                 transparent: true,
                 opacity: 0.85,
                 blending: THREE.AdditiveBlending
@@ -2424,7 +2464,7 @@ class CyberGameEngine {
                 life: 1.6,
                 maxLife: 1.6,
                 radius: 4,
-                color: isOverdrive ? '#ff00ff' : '#00ffff',
+                color: isOverdrive ? '#9d8df1' : '#00ffd1',
                 mesh: boltGroup
             });
         });
@@ -2446,7 +2486,7 @@ class CyberGameEngine {
                 const sshroudGeom = new THREE.CylinderGeometry(0.42, 0.62, 5.8, 6);
                 sshroudGeom.rotateX(Math.PI / 2);
                 spreadGroup.add(new THREE.Mesh(sshroudGeom, new THREE.MeshBasicMaterial({
-                    color: 0xffaa00,
+                    color: 0xC5A059,
                     transparent: true,
                     opacity: 0.85,
                     blending: THREE.AdditiveBlending
@@ -2465,7 +2505,7 @@ class CyberGameEngine {
                     life: 1.5,
                     maxLife: 1.5,
                     radius: 4,
-                    color: '#ffaa00',
+                    color: '#C5A059',
                     mesh: spreadGroup
                 });
             });
@@ -2509,15 +2549,15 @@ class CyberGameEngine {
         }
 
         this.discCooldown = this.maxDiscCooldown;
-        this.spawnFloatingText("IDENTITY DISC!", this.identityDisc.x, this.identityDisc.z, '#ffaa00');
-        this.spawnVoxelExplosion(this.identityDisc.x, this.identityDisc.z, 0x00ffff, 14);
+        this.spawnFloatingText("IDENTITY DISC!", this.identityDisc.x, this.identityDisc.z, '#C5A059');
+        this.spawnVoxelExplosion(this.identityDisc.x, this.identityDisc.z, 0x00ffd1, 14);
 
         if (window.audioManager && window.audioManager.playDiscThrow) {
             window.audioManager.playDiscThrow();
         }
     }
 
-    fireBossBullet(originX, originZ, dirX, dirZ, bulletSpeed = 165, damage = 26, colorHex = 0xff00aa) {
+    fireBossBullet(originX, originZ, dirX, dirZ, bulletSpeed = 165, damage = 26, colorHex = 0x9d8df1) {
         const bulletAngle = Math.atan2(-dirX, -dirZ);
         const bulletGroup = new THREE.Group();
 
@@ -2550,7 +2590,7 @@ class CyberGameEngine {
             life: 2.8,
             maxLife: 2.8,
             radius: 6.5,
-            color: colorHex === 0xff5500 ? '#ff5500' : '#ff00aa',
+            color: colorHex === 0xfb7185 ? '#fb7185' : '#9d8df1',
             mesh: bulletGroup
         });
     }
@@ -2568,7 +2608,7 @@ class CyberGameEngine {
         const dz = this.player.pos.z - oz;
         const dist = Math.hypot(dx, dz) || 1;
 
-        this.fireBossBullet(ox, oz, dx / dist, dz / dist, 175, 28, 0xff00aa);
+        this.fireBossBullet(ox, oz, dx / dist, dz / dist, 175, 28, 0x9d8df1);
         if (window.audioManager && window.audioManager.playHeavyLaser) {
             window.audioManager.playHeavyLaser();
         }
@@ -2580,7 +2620,7 @@ class CyberGameEngine {
             const ang = (i / boltCount) * Math.PI * 2;
             const dirX = Math.cos(ang);
             const dirZ = Math.sin(ang);
-            this.fireBossBullet(e.x, e.z, dirX, dirZ, 115, 22, 0xff5500);
+            this.fireBossBullet(e.x, e.z, dirX, dirZ, 115, 22, 0xfb7185);
         }
         this.spawnShockwave(e.x, e.z);
         if (window.audioManager && window.audioManager.playShockwave) {
@@ -2594,7 +2634,7 @@ class CyberGameEngine {
             const a = baseAngle + spread;
             const dirX = Math.sin(a);
             const dirZ = Math.cos(a);
-            this.fireBossBullet(e.x, e.z, dirX, dirZ, 195, 30, 0xff0022);
+            this.fireBossBullet(e.x, e.z, dirX, dirZ, 195, 30, 0xf43f5e);
         });
         if (window.audioManager && window.audioManager.playHeavyLaser) {
             window.audioManager.playHeavyLaser();
@@ -2621,7 +2661,7 @@ class CyberGameEngine {
         // 3D Enemy Projectile Mesh: Slender High-Velocity Plasma Dart
         const bulletAngle = Math.atan2(-dirX, -dirZ);
         const bulletGroup = new THREE.Group();
-        const auraColor = (e.type === 'heavy') ? 0xff4400 : 0xff0055;
+        const auraColor = (e.type === 'heavy') ? 0xfb7185 : 0x9d8df1;
 
         // Intense inner needle core
         const coreGeom = new THREE.CylinderGeometry(0.18, 0.32, 4.2, 6);
@@ -2653,17 +2693,20 @@ class CyberGameEngine {
             life: 2.4,
             maxLife: 2.4,
             radius: 5,
-            color: (e.type === 'heavy') ? '#ff4400' : '#ff0055',
+            color: (e.type === 'heavy') ? '#fb7185' : '#9d8df1',
             mesh: bulletGroup
         });
     }
 
     spawnVoxelExplosion(x, z, colorHex, count = 24) {
-        // 1. 3D Voxel debris shards
+        const breachPalette = [0x00ffd1, 0x9d8df1, 0xfb7185, 0xC5A059];
+        // 1. 3D Voxel debris shards (Breach Protocol palette-infused)
         for (let i = 0; i < count; i++) {
             const size = 0.5 + Math.random() * 1.2;
             const geom = new THREE.BoxGeometry(size, size, size);
-            const mat = new THREE.MeshBasicMaterial({ color: colorHex, wireframe: Math.random() > 0.4 });
+            // 70% primary explosion color, 30% accented Breach Protocol palette shard
+            const pCol = (Math.random() < 0.70 || !colorHex) ? colorHex : breachPalette[Math.floor(Math.random() * breachPalette.length)];
+            const mat = new THREE.MeshBasicMaterial({ color: pCol, wireframe: Math.random() > 0.4 });
             const mesh = new THREE.Mesh(geom, mat);
             mesh.position.set(x, 2.0 + Math.random() * 2.0, z);
             this.scene.add(mesh);
@@ -2683,16 +2726,19 @@ class CyberGameEngine {
         }
 
         // 2. 2D Vector particles for 2D mode
+        const breachPaletteHex = ['#00ffd1', '#9d8df1', '#fb7185', '#C5A059'];
         for (let i = 0; i < count; i++) {
             const ang = Math.random() * Math.PI * 2;
             const spd = 40 + Math.random() * 120;
+            const baseHex = (typeof colorHex === 'number') ? '#' + colorHex.toString(16).padStart(6, '0') : colorHex;
+            const pColor = (Math.random() < 0.70) ? baseHex : breachPaletteHex[Math.floor(Math.random() * breachPaletteHex.length)];
             this.particles2d.push({
                 x,
                 y: z,
                 vx: Math.cos(ang) * spd,
                 vy: Math.sin(ang) * spd,
                 radius: 2 + Math.random() * 3,
-                color: (typeof colorHex === 'number') ? '#' + colorHex.toString(16).padStart(6, '0') : colorHex,
+                color: pColor,
                 life: 0.6 + Math.random() * 0.4,
                 maxLife: 1.0
             });
@@ -2719,7 +2765,7 @@ class CyberGameEngine {
 
         if (amount > 0) {
             this.player.hp = Math.max(0, this.player.hp - amount);
-            this.spawnFloatingText(`-${Math.round(amount)} HP`, this.player.pos.x, this.player.pos.z, '#ff0055');
+            this.spawnFloatingText(`-${Math.round(amount)} HP`, this.player.pos.x, this.player.pos.z, '#f43f5e');
             if (window.audioManager) window.audioManager.playExplosion();
         }
 
@@ -2730,7 +2776,7 @@ class CyberGameEngine {
 
     triggerGameOver() {
         this.isGameOver = true;
-        this.spawnVoxelExplosion(this.player.pos.x, this.player.pos.z, 0x00ffff, 48);
+        this.spawnVoxelExplosion(this.player.pos.x, this.player.pos.z, 0x00ffd1, 48);
 
         const modal = document.getElementById('game-over-modal');
         const fWave = document.getElementById('final-wave');
@@ -2930,7 +2976,7 @@ class CyberGameEngine {
                 const dist = Math.hypot(b.x - e.x, b.z - e.z);
                 if (dist < e.radius + b.radius) {
                     e.hp -= b.damage;
-                    this.spawnFloatingText(`-${b.damage}`, e.x, e.z, '#00ffcc');
+                    this.spawnFloatingText(`-${b.damage}`, e.x, e.z, '#5eead4');
                     this.spawnVoxelExplosion(e.x, e.z, e.color, 6);
                     hit = true;
 
@@ -3204,7 +3250,7 @@ class CyberGameEngine {
                     if (e.chargeTimer <= 0 && dist < 250 && Math.abs(facingDiff) < 0.7) {
                         e.chargeState = 'telegraph';
                         e.chargeTimer = 0.6; // 600ms reaction telegraph window!
-                        this.spawnFloatingText("⚠️ CHARGE", e.x, e.z, '#ffaa00');
+                        this.spawnFloatingText("⚠️ CHARGE", e.x, e.z, '#C5A059');
                     }
                 } else if (e.chargeState === 'telegraph') {
                     // Pre-attack telegraph: slow down, rev up, jitter
@@ -3261,7 +3307,7 @@ class CyberGameEngine {
                         if (window.audioManager && window.audioManager.playBossWarning) {
                             window.audioManager.playBossWarning();
                         }
-                        this.spawnFloatingText('CORE OVERLOAD: ESCORT DRONES DEPLOYED!', e.x, e.z, '#ff0055');
+                        this.spawnFloatingText('CORE OVERLOAD: ESCORT DRONES DEPLOYED!', e.x, e.z, '#f43f5e');
                     }
                 } else if (e.bossPhase === 2) {
                     currentSpeed = 58;
@@ -3307,14 +3353,14 @@ class CyberGameEngine {
                         if (window.audioManager && window.audioManager.playBossCharge) {
                             window.audioManager.playBossCharge();
                         }
-                        this.spawnFloatingText('⚠ GRID SWEEP CHARGING ⚠', e.x, e.z, '#ffaa00');
+                        this.spawnFloatingText('⚠ GRID SWEEP CHARGING ⚠', e.x, e.z, '#C5A059');
                     }
 
                     if (e.gridSweepTimer <= 0) {
                         e.isChargingSweep = false;
                         e.gridSweepTimer = (e.bossPhase === 3) ? 3.8 : 4.6;
                         this.fireBossGridSweep(e);
-                        this.spawnFloatingText('GRID SWEEP BARRAGE!', e.x, e.z, '#ff0055');
+                        this.spawnFloatingText('GRID SWEEP BARRAGE!', e.x, e.z, '#f43f5e');
                     }
                 }
             } else {
@@ -3347,7 +3393,7 @@ class CyberGameEngine {
                     pool.position.x = Math.sin(performance.now() * 0.002) * 12;
                     pool.position.z = Math.cos(performance.now() * 0.002) * 12;
                     if (pool.material) {
-                        pool.material.color.setHex(e.isChargingSweep ? 0xff5500 : (e.bossPhase === 3 ? 0xff0022 : 0xff00aa));
+                        pool.material.color.setHex(e.isChargingSweep ? 0xfb7185 : (e.bossPhase === 3 ? 0xf43f5e : 0x9d8df1));
                     }
                 }
 
@@ -3355,7 +3401,7 @@ class CyberGameEngine {
                 if (reactor) {
                     reactor.rotation.y += dt * (e.bossPhase === 3 ? 5.0 : 2.5);
                     if (reactor.material) {
-                        reactor.material.color.setHex(e.bossPhase === 3 ? 0xff0022 : (e.bossPhase === 2 ? 0xff5500 : 0xff00aa));
+                        reactor.material.color.setHex(e.bossPhase === 3 ? 0xf43f5e : (e.bossPhase === 2 ? 0xfb7185 : 0x9d8df1));
                     }
                 }
 
@@ -3365,8 +3411,8 @@ class CyberGameEngine {
                 }
 
                 const eye = e.mesh.getObjectByName("visorEye");
-                if (eye && eye.material) {
-                    eye.material.color.setHex(e.isChargingSweep ? 0xffaa00 : (e.bossPhase === 3 ? 0xff0000 : 0xff0055));
+                if (eye) {
+                    eye.material.color.setHex(e.isChargingSweep ? 0xC5A059 : (e.bossPhase === 3 ? 0xf43f5e : 0xf43f5e));
                 }
             }
 
@@ -3380,7 +3426,7 @@ class CyberGameEngine {
                         window.audioManager.playRamImpact();
                     }
                     this.registerComboAction(200, 'ram');
-                    this.spawnFloatingText('KINETIC RAM DEREZ! +200 PTS', e.x, e.z, '#ff00ff');
+                    this.spawnFloatingText('KINETIC RAM DEREZ! +200 PTS', e.x, e.z, '#9d8df1');
                     return;
                 }
 
@@ -3432,7 +3478,7 @@ class CyberGameEngine {
             if (window.audioManager && window.audioManager.playComboUp) {
                 window.audioManager.playComboUp(tier);
             }
-            this.spawnFloatingText(`x${newMult.toFixed(1)} ${newRank}!`, this.player.pos.x, this.player.pos.z - 20, '#ff00aa');
+            this.spawnFloatingText(`x${newMult.toFixed(1)} ${newRank}!`, this.player.pos.x, this.player.pos.z - 20, '#9d8df1');
         } else {
             this.comboMultiplier = newMult;
             this.comboRank = newRank;
@@ -3454,10 +3500,10 @@ class CyberGameEngine {
             // EPIC BOSS FINISHING BLOW: Temporal dilation slow-motion + super explosion
             this.timeDilation = 0.22;
             this.timeDilationTimer = 0.45;
-            this.spawnVoxelExplosion(e.x, e.z, 0xff00aa, 120);
+            this.spawnVoxelExplosion(e.x, e.z, 0x9d8df1, 120);
             this.spawnShockwave(e.x, e.z);
             this.spawnShockwave(e.x + 8, e.z + 8);
-            this.spawnFloatingText(`+${earnedScore} PTS: COMMAND RECOGNIZER DEREZZED!`, e.x, e.z, '#ff00aa');
+            this.spawnFloatingText(`+${earnedScore} PTS: COMMAND RECOGNIZER DEREZZED!`, e.x, e.z, '#9d8df1');
 
             // Guaranteed full suite of power-ups dropped
             this.spawnPickup('shield', e.x - 18, e.z);
@@ -3515,10 +3561,10 @@ class CyberGameEngine {
                     this.spawnFloatingText("SHIELD RESTORED +45", this.player.pos.x, this.player.pos.z, '#0088ff');
                 } else if (p.type === 'overdrive') {
                     this.player.overdriveTimer = 8.0;
-                    this.spawnFloatingText("OVERDRIVE MATRIX", this.player.pos.x, this.player.pos.z, '#ff00ff');
+                    this.spawnFloatingText("OVERDRIVE MATRIX", this.player.pos.x, this.player.pos.z, '#9d8df1');
                 } else if (p.type === 'tri_plasma') {
                     this.player.triPlasmaTimer = 14.0;
-                    this.spawnFloatingText("TRI-SPREAD CANNONS!", this.player.pos.x, this.player.pos.z, '#ffaa00');
+                    this.spawnFloatingText("TRI-SPREAD CANNONS!", this.player.pos.x, this.player.pos.z, '#C5A059');
                 }
 
                 this.spawnVoxelExplosion(p.x, p.z, p.color, 16);
@@ -3640,12 +3686,12 @@ class CyberGameEngine {
                 }
 
                 if (isLocked) {
-                    this.reticleRingMat.color.setHex(0xff0055);
-                    this.reticleDiamondMat.color.setHex(0xff0055);
+                    this.reticleRingMat.color.setHex(0xf43f5e);
+                    this.reticleDiamondMat.color.setHex(0xf43f5e);
                     this.reticleGroup.scale.set(1.2, 1.2, 1.2);
                 } else {
-                    this.reticleRingMat.color.setHex(0x00ffff);
-                    this.reticleDiamondMat.color.setHex(0x00ffff);
+                    this.reticleRingMat.color.setHex(0x00ffd1);
+                    this.reticleDiamondMat.color.setHex(0x00ffd1);
                     this.reticleGroup.scale.set(1.0, 1.0, 1.0);
                 }
             }
@@ -3687,7 +3733,7 @@ class CyberGameEngine {
                     if (ring) ring.rotation.z += dt * 3.5;
 
                     const diamond = this.targetLockMesh.getObjectByName("diamond");
-                    const targetColor = isDirectLock ? 0xff0055 : 0x00ffff;
+                    const targetColor = isDirectLock ? 0xf43f5e : 0x00ffd1;
 
                     if (ring && ring.material) ring.material.color.setHex(targetColor);
                     if (diamond && diamond.material) diamond.material.color.setHex(targetColor);
@@ -3879,7 +3925,7 @@ class CyberGameEngine {
         });
 
         // Center Flight Path Marker (FPM)
-        ctx.strokeStyle = '#00ffff';
+        ctx.strokeStyle = '#00ffd1';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.arc(0, 0, 6, 0, Math.PI * 2);
@@ -3909,7 +3955,7 @@ class CyberGameEngine {
             ctx.restore();
 
             // Speed boost active banner
-            ctx.fillStyle = '#ffaa00';
+            ctx.fillStyle = '#C5A059';
             ctx.font = 'bold 12px "Orbitron", monospace';
             ctx.textAlign = 'center';
             ctx.fillText(`⚡ COHERENT WARP SURGE ACTIVE (${this.player.speedBoostTimer.toFixed(1)}s)`, cx, cy - 68);
@@ -3941,7 +3987,7 @@ class CyberGameEngine {
                 const boxSize = Math.max(24, Math.min(70, 900 / Math.max(1, dist)));
                 const half = boxSize / 2;
 
-                const color = (e.type === 'boss' ? '#ff0055' : (e.type === 'heavy' ? '#ffaa00' : '#00ffff'));
+                const color = (e.type === 'boss' ? '#f43f5e' : (e.type === 'heavy' ? '#C5A059' : '#00ffd1'));
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 1.8;
 
@@ -3976,7 +4022,7 @@ class CyberGameEngine {
                 const hpPct = Math.max(0, e.hp / e.maxHp);
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                 ctx.fillRect(screenX - half, screenY + half + 4, boxSize, 3);
-                ctx.fillStyle = (hpPct > 0.5 ? '#00ffaa' : (hpPct > 0.25 ? '#ffaa00' : '#ff0055'));
+                ctx.fillStyle = (hpPct > 0.5 ? '#5eead4' : (hpPct > 0.25 ? '#C5A059' : '#f43f5e'));
                 ctx.fillRect(screenX - half, screenY + half + 4, boxSize * hpPct, 3);
             } else {
                 // Off-screen / Behind: Clamped perimeter warning chevron
@@ -3996,7 +4042,7 @@ class CyberGameEngine {
                 ctx.translate(edgeX, edgeY);
                 ctx.rotate(-angle + Math.PI / 2);
 
-                const color = (e.type === 'boss' ? '#ff0055' : '#ff2255');
+                const color = (e.type === 'boss' ? '#f43f5e' : '#f43f5e');
                 ctx.fillStyle = color;
                 ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 1;
@@ -4152,7 +4198,7 @@ class CyberGameEngine {
         }
 
         if (this.isLookingBack) {
-            this.spawnFloatingText("<<< REAR VIEW ENGAGED >>>", this.player.pos.x, this.player.pos.z, '#00ffff');
+            this.spawnFloatingText("<<< REAR VIEW ENGAGED >>>", this.player.pos.x, this.player.pos.z, '#00ffd1');
             if (window.audioManager) window.audioManager.playBlink();
         }
     }
@@ -4180,7 +4226,7 @@ class CyberGameEngine {
 
         const ringGeom = new THREE.RingGeometry(2.6, 3.4, 24);
         ringGeom.rotateX(-Math.PI / 2);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffd1, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
         const ring = new THREE.Mesh(ringGeom, ringMat);
         ring.position.y = 0.22;
         group.add(ring);
@@ -4188,7 +4234,7 @@ class CyberGameEngine {
         // Expanding pulse ring
         const pulseGeom = new THREE.RingGeometry(0.5, 1.2, 24);
         pulseGeom.rotateX(-Math.PI / 2);
-        const pulseMat = new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
+        const pulseMat = new THREE.MeshBasicMaterial({ color: 0x00ffd1, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
         const pulse = new THREE.Mesh(pulseGeom, pulseMat);
         pulse.position.y = 0.24;
         group.add(pulse);
@@ -4206,7 +4252,7 @@ class CyberGameEngine {
             pulseMesh: pulse
         });
 
-        this.spawnFloatingText("⚡ EMP MINE DEPLOYED", mx, mz, '#00ffcc');
+        this.spawnFloatingText("⚡ EMP MINE DEPLOYED", mx, mz, '#5eead4');
         if (window.audioManager) window.audioManager.playDash();
     }
 
@@ -4221,16 +4267,16 @@ class CyberGameEngine {
         if (mineBar && mineVal) {
             if (this.mineCooldown <= 0) {
                 mineBar.style.width = '100%';
-                mineBar.style.background = '#00ffcc';
+                mineBar.style.background = '#5eead4';
                 mineVal.innerText = 'RDY';
-                mineVal.style.color = '#00ffcc';
+                mineVal.style.color = '#5eead4';
                 if (btnMine) btnMine.innerHTML = '⚡ EMP MINE [E]';
             } else {
                 const pct = Math.round((1.0 - (this.mineCooldown / this.maxMineCooldown)) * 100);
                 mineBar.style.width = `${pct}%`;
-                mineBar.style.background = '#ffaa00';
+                mineBar.style.background = '#C5A059';
                 mineVal.innerText = `${this.mineCooldown.toFixed(1)}s`;
-                mineVal.style.color = '#ffaa00';
+                mineVal.style.color = '#C5A059';
                 if (btnMine) btnMine.innerHTML = `⚡ EMP: ${this.mineCooldown.toFixed(1)}s`;
             }
         }
@@ -4263,7 +4309,7 @@ class CyberGameEngine {
                     if (window.audioManager) window.audioManager.playExplosion();
 
                     // Voxel EMP shockwave particles
-                    this.spawnVoxelExplosion(m.x, m.z, 0x00ffff, 28);
+                    this.spawnVoxelExplosion(m.x, m.z, 0x00ffd1, 28);
                     this.spawnVoxelExplosion(m.x, m.z, 0xff00ff, 18);
 
                     // Damage all nearby enemies
@@ -4272,7 +4318,7 @@ class CyberGameEngine {
                         if (d < blastRadius) {
                             const dmg = Math.round(140 * (1.0 - d / blastRadius));
                             e.hp -= dmg;
-                            this.spawnFloatingText(`💥 EMP -${dmg}`, e.x, e.z, '#00ffff');
+                            this.spawnFloatingText(`💥 EMP -${dmg}`, e.x, e.z, '#00ffd1');
                         }
                     });
                 }
@@ -4309,7 +4355,7 @@ class CyberGameEngine {
                 d.active = false;
                 d.returning = false;
                 if (d.mesh) d.mesh.visible = false;
-                this.spawnFloatingText("DISC RECOVERED", this.player.pos.x, this.player.pos.z, '#00ffff');
+                this.spawnFloatingText("DISC RECOVERED", this.player.pos.x, this.player.pos.z, '#00ffd1');
                 if (window.audioManager && window.audioManager.playPowerup) window.audioManager.playPowerup();
                 return;
             }
@@ -4338,8 +4384,8 @@ class CyberGameEngine {
                             d.vx -= 2 * dot * nx;
                             d.vz -= 2 * dot * nz;
                             d.bounces++;
-                            this.spawnVoxelExplosion(d.x, d.z, 0xffaa00, 16);
-                            this.spawnFloatingText("RICOCHET!", d.x, d.z, '#ffaa00');
+                            this.spawnVoxelExplosion(d.x, d.z, 0xC5A059, 16);
+                            this.spawnFloatingText("RICOCHET!", d.x, d.z, '#C5A059');
                             if (window.audioManager && window.audioManager.playDiscRicochet) {
                                 window.audioManager.playDiscRicochet();
                             }
@@ -4373,8 +4419,8 @@ class CyberGameEngine {
             const dist = Math.hypot(d.x - e.x, d.z - e.z);
             if (dist < e.radius + d.radius) {
                 e.hp -= 95;
-                this.spawnFloatingText("-95 DISC", e.x, e.z, '#ffaa00');
-                this.spawnVoxelExplosion(e.x, e.z, 0x00ffff, 14);
+                this.spawnFloatingText("-95 DISC", e.x, e.z, '#C5A059');
+                this.spawnVoxelExplosion(e.x, e.z, 0x00ffd1, 14);
 
                 if (window.audioManager && window.audioManager.playShieldHit) {
                     window.audioManager.playShieldHit();
@@ -4391,7 +4437,7 @@ class CyberGameEngine {
         // Tron tracing and collisions removed for better gameplay flow.
     }
 
-    spawnShockwave(x, z, maxRadius = 45, color = 0x00ffff) {
+    spawnShockwave(x, z, maxRadius = 45, color = 0x00ffd1) {
         if (this.renderMode === '3d') {
             const ringGeom = new THREE.RingGeometry(0.8, 2.4, 32);
             ringGeom.rotateX(-Math.PI / 2);
@@ -4530,7 +4576,7 @@ class CyberGameEngine {
             }
             if (rearStatus) {
                 rearStatus.innerText = `⚠️ PURSUER CLOSING: ${distM}m`;
-                rearStatus.style.color = '#ff0055';
+                rearStatus.style.color = '#f43f5e';
             }
 
             // Audio Warning Alert (rate-limited)
@@ -4592,7 +4638,7 @@ class CyberGameEngine {
         ctx.stroke();
 
         // Player craft silhouette at top pointing down
-        ctx.fillStyle = '#00ffcc';
+        ctx.fillStyle = '#5eead4';
         ctx.beginPath();
         ctx.moveTo(cx, cy + 6);
         ctx.lineTo(cx - 6, cy - 2);
@@ -4623,8 +4669,8 @@ class CyberGameEngine {
                 const py = cy + (behindDist / maxRange) * (h - 20);
 
                 if (px >= 6 && px <= w - 6 && py >= 4 && py <= h - 4) {
-                    ctx.fillStyle = (e.type === 'boss') ? '#ff00aa' : '#ff0055';
-                    ctx.shadowColor = '#ff0055';
+                    ctx.fillStyle = (e.type === 'boss') ? '#9d8df1' : '#f43f5e';
+                    ctx.shadowColor = '#f43f5e';
                     ctx.shadowBlur = 8;
                     ctx.beginPath();
                     ctx.arc(px, py, (e.type === 'boss') ? 4.5 : 3.2, 0, Math.PI * 2);
@@ -4684,9 +4730,9 @@ class CyberGameEngine {
                 ctx.stroke();
                 ctx.setLineDash([]);
             } else {
-                ctx.strokeStyle = '#ff0055';
+                ctx.strokeStyle = '#f43f5e';
                 ctx.lineWidth = hz.width * 2;
-                ctx.shadowColor = '#ff0055';
+                ctx.shadowColor = '#f43f5e';
                 ctx.shadowBlur = 16;
                 ctx.beginPath();
                 if (hz.isHorizontal) {
@@ -4706,10 +4752,10 @@ class CyberGameEngine {
             const scale = 1 + Math.sin(p.pulse) * 0.15;
             ctx.scale(scale, scale);
 
-            let col = '#00ffcc';
+            let col = '#5eead4';
             let label = '+';
             if (p.type === 'shield') { col = '#0088ff'; label = 'S'; }
-            else if (p.type === 'overdrive') { col = '#ff00ff'; label = '⚡'; }
+            else if (p.type === 'overdrive') { col = '#9d8df1'; label = '⚡'; }
 
             ctx.strokeStyle = col;
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
@@ -4735,10 +4781,10 @@ class CyberGameEngine {
             ctx.save();
             ctx.translate(m.x, m.z);
             const pulse = (performance.now() * 0.005) % (Math.PI * 2);
-            ctx.strokeStyle = '#00ffff';
+            ctx.strokeStyle = '#00ffd1';
             ctx.fillStyle = 'rgba(0, 255, 255, 0.15)';
             ctx.lineWidth = 2.5;
-            ctx.shadowColor = '#00ffff';
+            ctx.shadowColor = '#00ffd1';
             ctx.shadowBlur = 12;
             ctx.beginPath();
             ctx.arc(0, 0, 8 + Math.sin(pulse) * 2, 0, Math.PI * 2);
@@ -4761,7 +4807,7 @@ class CyberGameEngine {
             ctx.save();
             ctx.translate(this.identityDisc.x, this.identityDisc.z);
             ctx.rotate(this.identityDisc.spinAngle);
-            ctx.strokeStyle = '#00ffff';
+            ctx.strokeStyle = '#00ffd1';
             ctx.fillStyle = 'rgba(255, 170, 0, 0.5)';
             ctx.lineWidth = 3;
             ctx.beginPath();
@@ -4773,7 +4819,7 @@ class CyberGameEngine {
 
         // Draw 2D Shockwaves
         this.shockwaves.forEach(s => {
-            ctx.strokeStyle = '#00ffff';
+            ctx.strokeStyle = '#00ffd1';
             ctx.lineWidth = 2;
             ctx.globalAlpha = Math.max(0, 1.0 - s.radius / s.maxRadius);
             ctx.beginPath();
@@ -4810,7 +4856,7 @@ class CyberGameEngine {
             ctx.translate(e.x, e.z);
             ctx.rotate(e.angle);
 
-            const col = e.isBerserk ? '#ff0055' : (typeof e.color === 'number' ? '#' + e.color.toString(16).padStart(6, '0') : e.color);
+            const col = e.isBerserk ? '#f43f5e' : (typeof e.color === 'number' ? '#' + e.color.toString(16).padStart(6, '0') : e.color);
             ctx.strokeStyle = col;
             ctx.fillStyle = '#090f1e';
             ctx.lineWidth = 2.5;
@@ -4866,7 +4912,7 @@ class CyberGameEngine {
                 const barH = 4;
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
                 ctx.fillRect(-barW / 2, -e.radius - 12, barW, barH);
-                ctx.fillStyle = e.isBerserk ? '#ff0055' : '#00ffaa';
+                ctx.fillStyle = e.isBerserk ? '#f43f5e' : '#5eead4';
                 ctx.fillRect(-barW / 2, -e.radius - 12, barW * (e.hp / e.maxHp), barH);
             }
 
@@ -4952,8 +4998,8 @@ class CyberGameEngine {
         // Thruster Plume
         const isMoving = this.player.vel.length() > 10;
         if (isMoving) {
-            ctx.fillStyle = '#00ffff';
-            ctx.shadowColor = '#00ffff';
+            ctx.fillStyle = '#00ffd1';
+            ctx.shadowColor = '#00ffd1';
             ctx.shadowBlur = 14;
             ctx.beginPath();
             ctx.moveTo(-5, this.player.radius * 0.7);
@@ -4966,7 +5012,7 @@ class CyberGameEngine {
 
         // Interceptor Ship Triangle
         ctx.fillStyle = '#071224';
-        ctx.strokeStyle = this.player.overdriveTimer > 0 ? '#ff00ff' : '#00ffcc';
+        ctx.strokeStyle = this.player.overdriveTimer > 0 ? '#9d8df1' : '#5eead4';
         ctx.lineWidth = 2.5;
         ctx.shadowColor = ctx.strokeStyle;
         ctx.shadowBlur = 8;
@@ -5033,8 +5079,8 @@ class CyberGameEngine {
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(headingAngle);
-        ctx.fillStyle = '#00ffcc';
-        ctx.shadowColor = '#00ffcc';
+        ctx.fillStyle = '#5eead4';
+        ctx.shadowColor = '#5eead4';
         ctx.shadowBlur = 8;
         ctx.beginPath();
         ctx.moveTo(8, 0);       // Forward nose
@@ -5054,7 +5100,7 @@ class CyberGameEngine {
                 const bx = cx + (dx / radarRange) * (w / 2 - 8);
                 const by = cy + (dz / radarRange) * (h / 2 - 8);
 
-                ctx.fillStyle = (e.type === 'boss') ? '#ff00ff' : '#ff0055';
+                ctx.fillStyle = (e.type === 'boss') ? '#9d8df1' : '#f43f5e';
                 ctx.beginPath();
                 ctx.arc(bx, by, e.type === 'boss' ? 4 : 2.5, 0, Math.PI * 2);
                 ctx.fill();
@@ -5086,8 +5132,8 @@ class CyberGameEngine {
                 const bx = cx + (dx / radarRange) * (w / 2 - 8);
                 const by = cy + (dz / radarRange) * (h / 2 - 8);
 
-                ctx.fillStyle = '#00ffff';
-                ctx.shadowColor = '#00ffff';
+                ctx.fillStyle = '#00ffd1';
+                ctx.shadowColor = '#00ffd1';
                 ctx.shadowBlur = 5;
                 ctx.beginPath();
                 ctx.arc(bx, by, 2.2, 0, Math.PI * 2);
@@ -5131,7 +5177,7 @@ class CyberGameEngine {
         // Coordinate Display
         const coordDisp = document.getElementById('coord-display');
         if (coordDisp) {
-            const modeTag = (this.renderMode === '3d') ? '3D TRON' : '2D RETRO';
+            const modeTag = (this.renderMode === '3d') ? '3D BREACH' : '2D RETRO';
             coordDisp.innerText = `GRID: X: ${Math.round(this.player.pos.x)} | Z: ${Math.round(this.player.pos.z)} | [${modeTag}]`;
         }
 
@@ -5152,11 +5198,11 @@ class CyberGameEngine {
         if (discBar) {
             const pct = this.identityDisc.active ? 100 : Math.max(0, Math.min(100, (1.0 - (this.discCooldown / this.maxDiscCooldown)) * 100));
             discBar.style.width = `${pct}%`;
-            discBar.style.background = this.identityDisc.active ? '#00ffff' : '#ffaa00';
+            discBar.style.background = this.identityDisc.active ? '#00ffd1' : '#C5A059';
         }
         if (discVal) {
             discVal.innerText = this.identityDisc.active ? 'ACTIVE' : (this.discCooldown <= 0 ? 'RDY' : `${this.discCooldown.toFixed(1)}s`);
-            discVal.style.color = this.identityDisc.active ? '#00ffff' : '#ffaa00';
+            discVal.style.color = this.identityDisc.active ? '#00ffd1' : '#C5A059';
         }
 
         // Active Power-up Row
@@ -5166,11 +5212,11 @@ class CyberGameEngine {
             if (this.player.triPlasmaTimer > 0) {
                 powerupRow.style.display = 'flex';
                 powerupVal.innerText = `TRI-PLASMA: ${Math.ceil(this.player.triPlasmaTimer)}s`;
-                powerupVal.style.color = '#ffaa00';
+                powerupVal.style.color = '#C5A059';
             } else if (this.player.overdriveTimer > 0) {
                 powerupRow.style.display = 'flex';
                 powerupVal.innerText = `OVERDRIVE: ${Math.ceil(this.player.overdriveTimer)}s`;
-                powerupVal.style.color = '#ff00ff';
+                powerupVal.style.color = '#9d8df1';
             } else {
                 powerupRow.style.display = 'none';
             }
@@ -5189,7 +5235,7 @@ class CyberGameEngine {
             if (bossPhase) {
                 const phaseNum = boss.bossPhase || 1;
                 bossPhase.innerText = (phaseNum === 1) ? 'PHASE 1: DUAL PYLONS' : ((phaseNum === 2) ? 'PHASE 2: GRID SWEEP' : 'PHASE 3: OVERLOAD');
-                bossPhase.style.color = (phaseNum === 3) ? '#ff0055' : ((phaseNum === 2) ? '#ffaa00' : '#00ffff');
+                bossPhase.style.color = (phaseNum === 3) ? '#f43f5e' : ((phaseNum === 2) ? '#C5A059' : '#00ffd1');
             }
             if (bossStatus) {
                 bossStatus.innerText = `CORE INTEGRITY: ${Math.round(hpPct)}% | ESCORT SYSTEMS: ${boss.bossPhase === 3 ? 'ENGAGED' : 'STANDBY'}`;

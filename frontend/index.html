@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CYBER-BREACH: 3D TRON PROTOCOL (JEV POWERED)</title>
+    <title>CYBER-BREACH: BREACH PROTOCOL (JEV POWERED)</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
         <div class="logo-area">
             <span class="logo-title">CYBER-BREACH</span>
             <span class="logo-tag">JEV PROTOCOL</span>
-            <span class="logo-3d-badge" id="hud-mode-badge">3D TRON INFINITE</span>
+            <span class="logo-3d-badge" id="hud-mode-badge">3D BREACH INFINITE</span>
         </div>
 
         <div class="header-stats">
@@ -28,17 +28,17 @@
                 <span class="stat-val" id="hud-score">0</span>
             </div>
             <div class="stat-item combo-item" id="hud-combo-container" style="display: none;">
-                <span class="stat-label" id="hud-combo-title" style="color: #ff00aa; font-weight: bold;">COMBO</span>
-                <span class="stat-val" id="hud-combo-val" style="color: #ff00aa; font-size: 0.88rem; font-weight: 800; text-shadow: 0 0 8px #ff00aa; white-space: nowrap;">x1.0</span>
+                <span class="stat-label" id="hud-combo-title" style="color: #9d8df1; font-weight: bold;">COMBO</span>
+                <span class="stat-val" id="hud-combo-val" style="color: #9d8df1; font-size: 0.88rem; font-weight: 800; text-shadow: 0 0 8px #9d8df1; white-space: nowrap;">x1.0</span>
                 <div class="combo-decay-track"><div id="hud-combo-fill" class="combo-decay-fill"></div></div>
             </div>
             <div class="stat-item">
                 <span class="stat-label">JEV DPS</span>
-                <span class="stat-val" id="jev-dps" style="color: #00ffcc;">0</span>
+                <span class="stat-val" id="jev-dps" style="color: #5eead4;">0</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">LATENCY</span>
-                <span class="stat-val" id="jev-latency" style="color: #ffaa00; font-size: 0.9rem;">--</span>
+                <span class="stat-val" id="jev-latency" style="color: #C5A059; font-size: 0.9rem;">--</span>
             </div>
             <div class="stat-item audio-eq-item" id="audio-eq-item" onclick="window.audioManager && window.audioManager.toggleMusic()" title="Click to toggle soundtrack" style="cursor: pointer;">
                 <span class="stat-label">AUDIO [M]</span>
@@ -53,7 +53,7 @@
         </div>
 
         <div class="header-controls">
-            <button class="ctrl-btn view-btn" id="btn-view-mode" onclick="window.game.toggleRenderMode()">🎮 VIEW: 3D TRON [G]</button>
+            <button class="ctrl-btn view-btn" id="btn-view-mode" onclick="window.game.toggleRenderMode()">🎮 VIEW: 3D BREACH [G]</button>
             <button class="ctrl-btn" id="btn-camera" onclick="window.game.toggleCameraView()">🎥 CAM: CHASE [V]</button>
             <button class="ctrl-btn" id="btn-lookback" onclick="window.game.toggleLookBack()">↩ REAR: OFF [R]</button>
             <button class="ctrl-btn" id="btn-mine" onclick="window.game.deployMine()">⚡ EMP MINE [E]</button>
@@ -64,12 +64,12 @@
 
     <!-- Main Game Wrapper -->
     <div class="main-wrapper">
-        <!-- Center Arena: Unbounded Dual-Mode Viewport (2D Retro / 3D Tron) -->
+        <!-- Center Arena: Unbounded Dual-Mode Viewport (2D Retro / 3D Breach) -->
         <main class="arena-container" id="arena-container">
             <!-- Interactive Audio Unlock Prompt Banner -->
             <div id="audio-unlock-banner" class="audio-unlock-banner" onclick="window.audioManager && window.audioManager.unlockAudioAndStartMusic()">
                 <span class="audio-banner-icon">🔊</span>
-                <span class="audio-banner-text">CLICK TO ENGAGE TRON SYNTHWAVE SOUNDTRACK [M]</span>
+                <span class="audio-banner-text">CLICK TO ENGAGE BREACH PROTOCOL SYNTHWAVE SOUNDTRACK [M]</span>
                 <span class="audio-banner-pulse"></span>
             </div>
 
@@ -120,16 +120,16 @@
                 <div class="bar-row" style="margin-top: 3px;">
                     <span class="bar-tag">EMP [E]</span>
                     <div class="meter-frame" style="height: 6px;">
-                        <div id="hud-mine-bar" class="meter-fill" style="width: 100%; background: #00ffcc;"></div>
+                        <div id="hud-mine-bar" class="meter-fill" style="width: 100%; background: #5eead4;"></div>
                     </div>
-                    <span id="hud-mine-val" style="color:#00ffcc; font-size:0.65rem; font-weight:bold; margin-left:4px;">RDY</span>
+                    <span id="hud-mine-val" style="color:#5eead4; font-size:0.65rem; font-weight:bold; margin-left:4px;">RDY</span>
                 </div>
                 <div class="bar-row" style="margin-top: 3px;">
                     <span class="bar-tag">DISC [Q]</span>
                     <div class="meter-frame" style="height: 6px;">
-                        <div id="hud-disc-bar" class="meter-fill" style="width: 100%; background: #ffaa00;"></div>
+                        <div id="hud-disc-bar" class="meter-fill" style="width: 100%; background: #C5A059;"></div>
                     </div>
-                    <span id="hud-disc-val" style="color:#ffaa00; font-size:0.65rem; font-weight:bold; margin-left:4px;">RDY</span>
+                    <span id="hud-disc-val" style="color:#C5A059; font-size:0.65rem; font-weight:bold; margin-left:4px;">RDY</span>
                 </div>
                 <div id="hud-powerup-row" class="bar-row" style="margin-top: 3px; display: none;">
                     <span class="bar-tag" style="color: #ff00ff;">BOOST</span>
@@ -224,7 +224,7 @@
                     <span id="jev-status-badge" class="status-badge simulated">● CALIBRATED PROTOCOL</span>
                 </div>
                 <div class="panel-meta">
-                    <span>Model: <strong id="jev-model-name" style="color:#00ffcc;">jev-latest</strong></span>
+                    <span>Model: <strong id="jev-model-name" style="color:#5eead4;">jev-latest</strong></span>
                     <span>Decisions: <strong id="jev-total-decisions" style="color:#fff;">0</strong></span>
                 </div>
             </div>
@@ -294,10 +294,10 @@
     <!-- Game Over Modal -->
     <div id="game-over-modal" class="modal-overlay">
         <div class="modal-card">
-            <h2 class="modal-title" style="color: #ff0055;">SYSTEM DE-REZZED</h2>
+            <h2 class="modal-title" style="color: #f43f5e;">SYSTEM DE-REZZED</h2>
             <p class="modal-desc">
                 Operative purged on the infinite digital grid.<br>
-                Final Wave: <strong id="final-wave" style="color:#00ffcc;">1</strong> | Score: <strong id="final-score" style="color:#ffaa00;">0</strong>
+                Final Wave: <strong id="final-wave" style="color:#5eead4;">1</strong> | Score: <strong id="final-score" style="color:#C5A059;">0</strong>
             </p>
             <div class="modal-actions">
                 <button class="btn-primary" onclick="window.game.restartGame()">REMATERIALIZE [ENTER]</button>

@@ -130,6 +130,7 @@ class CuaBrowserRunner:
             self.http_session = aiohttp.ClientSession()
 
         url = f"http://{self.cdp_host}:{self.cdp_port}/json"
+        self.ws_url = None
 
         for attempt in range(retries):
             try:
@@ -138,7 +139,14 @@ class CuaBrowserRunner:
                         tabs = await resp.json()
                         page_tabs = [t for t in tabs if t.get("type") == "page"]
                         if not page_tabs:
-                            page_tabs = tabs
+                            # Attempt to open a page tab if none exist
+                            try:
+                                async with self.http_session.put(f"http://{self.cdp_host}:{self.cdp_port}/json/new?http://localhost:8000", timeout=3.0) as new_resp:
+                                    if new_resp.status == 200:
+                                        new_t = await new_resp.json()
+                                        page_tabs = [new_t]
+                            except Exception:
+                                pass
                         if page_tabs:
                             target = next((t for t in page_tabs if "8000" in t.get("url", "")), page_tabs[0])
                             self.ws_url = target.get("webSocketDebuggerUrl")
